@@ -1,0 +1,404 @@
+{
+  "events": [
+  {
+    "id": 1,
+    "name": "Conférence sur l'IA",
+    "url":"",
+    "description": "Participez à notre conférence sur l’Intelligence Artificielle et découvrez comment l’IA transforme l’éducation, la santé et l’entrepreneuriat.",
+    "date": "10/10/2025",
+    "localisation": "Douala"
+  },
+  {
+    "id": 2,
+    "name": "Atelier Blockchain",
+    "url": "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg",
+    "description": "Découvrez les opportunités offertes par la technologie blockchain pour l’Afrique.",
+    "date": "15/10/2025",
+    "localisation": "Yaoundé"
+  },
+  {
+    "id": 3,
+    "name": "Bootcamp React & Node.js",
+    "url": "https://images.pexels.com/photos/1181354/pexels-photo-1181354.jpeg",
+    "description": "Atelier pratique sur le développement d’applications avec React et Node.js.",
+    "date": "20/10/2025",
+    "localisation": "Bafoussam"
+  },
+  {
+    "id": 4,
+    "name": "Hackathon Cybersécurité",
+    "url": "https://images.pexels.com/photos/546819/pexels-photo-546819.jpeg",
+    "description": "Challengez vos compétences en cybersécurité et gagnez des prix incroyables.",
+    "date": "25/10/2025",
+    "localisation": "Garoua"
+  },
+  {
+    "id": 5,
+    "name": "Séminaire E-commerce",
+    "url": "https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg",
+    "description": "Stratégies pour lancer et développer un business en ligne rentable.",
+    "date": "01/11/2025",
+    "localisation": "Maroua"
+  },
+  {
+    "id": 6,
+    "name": "Webinaire sur le Cloud",
+    "url": "https://images.pexels.com/photos/2007647/pexels-photo-2007647.jpeg",
+    "description": "Apprenez les bases des services Cloud avec AWS, Azure et Google Cloud.",
+    "date": "05/11/2025",
+    "localisation": "Bertoua"
+  },
+  {
+    "id": 7,
+    "name": "Conférence sur les Données",
+    "url": "https://images.pexels.com/photos/4050319/pexels-photo-4050319.jpeg",
+    "description": "Explorez l'analyse de données et le Big Data.",
+    "date": "12/11/2025",
+    "localisation": "Ebolowa"
+  },
+  {
+    "id": 8,
+    "name": "Hackathon Mobile Dev",
+    "url": "https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg",
+    "description": "Construisez des applications mobiles avec Flutter et React Native.",
+    "date": "18/11/2025",
+    "localisation": "Buea"
+  },
+  {
+    "id": 9,
+    "name": "Forum du Design UX/UI",
+    "url": "https://images.pexels.com/photos/326576/pexels-photo-326576.jpeg",
+    "description": "Conseils et astuces pour une conception centrée sur l'utilisateur.",
+    "date": "23/11/2025",
+    "localisation": "Limbe"
+  },
+  {
+    "id": 10,
+    "name": "Conférence Fintech",
+    "url": "https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg",
+    "description": "L'avenir de la finance et de la technologie en Afrique.",
+    "date": "28/11/2025",
+    "localisation": "Kribi"
+  },
+  {
+    "id": 11,
+    "name": "Séminaire sur la Gestion de Projet",
+    "url": "https://images.pexels.com/photos/259200/pexels-photo-259200.jpeg",
+    "description": "Méthodologies agiles et meilleures pratiques pour le succès de vos projets.",
+    "date": "05/12/2025",
+    "localisation": "Douala"
+  },
+  {
+    "id": 12,
+    "name": "Atelier de Robotique",
+    "url": "https://images.pexels.com/photos/207584/pexels-photo-207584.jpeg",
+    "description": "Introduction à la programmation de robots avec Arduino.",
+    "date": "10/12/2025",
+    "localisation": "Yaoundé"
+  },
+  {
+    "id": 13,
+    "name": "Webinaire sur la Santé Connectée",
+    "url": "https://images.pexels.com/photos/3277804/pexels-photo-3277804.jpeg",
+    "description": "L'impact de la technologie sur les soins de santé.",
+    "date": "15/12/2025",
+    "localisation": "Bafoussam"
+  },
+  {
+    "id": 14,
+    "name": "Forum sur le Marketing Digital",
+    "url": "https://images.pexels.com/photos/5668473/pexels-photo-5668473.jpeg",
+    "description": "Stratégies de croissance et de conversion en ligne.",
+    "date": "20/12/2025",
+    "localisation": "Garoua"
+  },
+  {
+    "id": 15,
+    "name": "Conférence sur l'Entrepreneuriat",
+    "url": "https://images.pexels.com/photos/5676742/pexels-photo-5676742.jpeg",
+    "description": "Histoires à succès et leçons de fondateurs camerounais.",
+    "date": "25/12/2025",
+    "localisation": "Maroua"
+  },
+  {
+    "id": 16,
+    "name": "Atelier sur la Réalité Virtuelle",
+    "url": "https://images.pexels.com/photos/4023246/pexels-photo-4023246.jpeg",
+    "description": "Découvrez le développement d'applications VR et AR.",
+    "date": "30/12/2025",
+    "localisation": "Bertoua"
+  },
+  {
+    "id": 17,
+    "name": "Séminaire sur l'AgroTech",
+    "url": "https://images.pexels.com/photos/4145929/pexels-photo-4145929.jpeg",
+    "description": "Comment la technologie modernise l'agriculture en Afrique.",
+    "date": "05/01/2026",
+    "localisation": "Ebolowa"
+  },
+  {
+    "id": 18,
+    "name": "Webinaire sur la Cybersécurité",
+    "url": "https://images.pexels.com/photos/416405/pexels-photo-416405.jpeg",
+    "description": "Protégez vos données et votre vie privée en ligne.",
+    "date": "10/01/2026",
+    "localisation": "Buea"
+  },
+  {
+    "id": 19,
+    "name": "Conférence sur la Durabilité",
+    "url": "https://images.pexels.com/photos/4145929/pexels-photo-4145929.jpeg",
+    "description": "Solutions technologiques pour un avenir durable.",
+    "date": "15/01/2026",
+    "localisation": "Limbe"
+  },
+  {
+    "id": 20,
+    "name": "Hackathon IoT",
+    "url": "https://images.pexels.com/photos/1039867/pexels-photo-1039867.jpeg",
+    "description": "Créez des objets connectés pour la maison et l'industrie.",
+    "date": "20/01/2026",
+    "localisation": "Kribi"
+  },
+  {
+    "id": 21,
+    "name": "Atelier sur l'IA Générative",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Explorez les possibilités créatives avec l'IA.",
+    "date": "25/01/2026",
+    "localisation": "Douala"
+  },
+  {
+    "id": 22,
+    "name": "Webinaire sur le Big Data",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Le rôle du Big Data dans la prise de décision stratégique.",
+    "date": "30/01/2026",
+    "localisation": "Yaoundé"
+  },
+  {
+    "id": 23,
+    "name": "Conférence sur la Médecine",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Innovations technologiques dans le domaine médical.",
+    "date": "05/02/2026",
+    "localisation": "Bafoussam"
+  },
+  {
+    "id": 24,
+    "name": "Séminaire sur la Réalité Augmentée",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Utilisations de la RA dans l'éducation et le divertissement.",
+    "date": "10/02/2026",
+    "localisation": "Garoua"
+  },
+  {
+    "id": 25,
+    "name": "Atelier sur le Machine Learning",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Développement de modèles prédictifs.",
+    "date": "15/02/2026",
+    "localisation": "Maroua"
+  },
+  {
+    "id": 26,
+    "name": "Forum sur le DevSecOps",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Intégration de la sécurité dans le cycle de développement logiciel.",
+    "date": "20/02/2026",
+    "localisation": "Bertoua"
+  },
+  {
+    "id": 27,
+    "name": "Conférence sur l'Open Source",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Le rôle du logiciel libre dans l'innovation technologique.",
+    "date": "25/02/2026",
+    "localisation": "Ebolowa"
+  },
+  {
+    "id": 28,
+    "name": "Webinaire sur l'Automatisation",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Automatisez vos tâches quotidiennes avec des scripts Python.",
+    "date": "02/03/2026",
+    "localisation": "Buea"
+  },
+  {
+    "id": 29,
+    "name": "Conférence sur les Drones",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Applications des drones dans l'agriculture et la surveillance.",
+    "date": "07/03/2026",
+    "localisation": "Limbe"
+  },
+  {
+    "id": 30,
+    "name": "Séminaire sur la Bioinformatique",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Analyse de données génomiques pour la recherche médicale.",
+    "date": "12/03/2026",
+    "localisation": "Kribi"
+  },
+  {
+    "id": 31,
+    "name": "Atelier sur l'API Design",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Création d'APIs RESTful performantes.",
+    "date": "17/03/2026",
+    "localisation": "Douala"
+  },
+  {
+    "id": 32,
+    "name": "Webinaire sur le SaaS",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Développez et monétisez des applications SaaS.",
+    "date": "22/03/2026",
+    "localisation": "Yaoundé"
+  },
+  {
+    "id": 33,
+    "name": "Conférence sur l'Edge Computing",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Le futur de l'informatique distribuée.",
+    "date": "27/03/2026",
+    "localisation": "Bafoussam"
+  },
+  {
+    "id": 34,
+    "name": "Séminaire sur la Sécurité des Systèmes",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Protégez vos infrastructures informatiques.",
+    "date": "01/04/2026",
+    "localisation": "Garoua"
+  },
+  {
+    "id": 35,
+    "name": "Atelier sur le No-Code/Low-Code",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Créez des applications sans ou avec peu de code.",
+    "date": "06/04/2026",
+    "localisation": "Maroua"
+  },
+  {
+    "id": 36,
+    "name": "Webinaire sur la Technologie Spatiale",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Innovations dans le domaine aérospatial.",
+    "date": "11/04/2026",
+    "localisation": "Bertoua"
+  },
+  {
+    "id": 37,
+    "name": "Conférence sur l'IA dans la Santé",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "L'IA au service du diagnostic et du traitement.",
+    "date": "16/04/2026",
+    "localisation": "Ebolowa"
+  },
+  {
+    "id": 38,
+    "name": "Séminaire sur la Smart City",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Technologies pour une ville plus intelligente et durable.",
+    "date": "21/04/2026",
+    "localisation": "Buea"
+  },
+  {
+    "id": 39,
+    "name": "Atelier sur le Web3",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Introduction aux applications décentralisées.",
+    "date": "26/04/2026",
+    "localisation": "Limbe"
+  },
+  {
+    "id": 40,
+    "name": "Webinaire sur la Réalité Mixte",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Combinez le meilleur de la réalité virtuelle et augmentée.",
+    "date": "01/05/2026",
+    "localisation": "Kribi"
+  },
+  {
+    "id": 41,
+    "name": "Conférence sur l'IA et l'Éthique",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Les défis moraux de l'intelligence artificielle.",
+    "date": "06/05/2026",
+    "localisation": "Douala"
+  },
+  {
+    "id": 42,
+    "name": "Séminaire sur la Micro-électronique",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Conception de puces électroniques.",
+    "date": "11/05/2026",
+    "localisation": "Yaoundé"
+  },
+  {
+    "id": 43,
+    "name": "Atelier sur l'UX Writing",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Rédiger des textes qui améliorent l'expérience utilisateur.",
+    "date": "16/05/2026",
+    "localisation": "Bafoussam"
+  },
+  {
+    "id": 44,
+    "name": "Webinaire sur la Modélisation 3D",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Techniques de modélisation pour jeux et applications.",
+    "date": "21/05/2026",
+    "localisation": "Garoua"
+  },
+  {
+    "id": 45,
+    "name": "Conférence sur la Quantique",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Les fondements de l'informatique quantique.",
+    "date": "26/05/2026",
+    "localisation": "Maroua"
+  },
+  {
+    "id": 46,
+    "name": "Séminaire sur la Cryptographie",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Comment sécuriser les communications et les données.",
+    "date": "31/05/2026",
+    "localisation": "Bertoua"
+  },
+  {
+    "id": 47,
+    "name": "Atelier sur le Data Mining",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Découvrir des connaissances cachées dans les bases de données.",
+    "date": "05/06/2026",
+    "localisation": "Ebolowa"
+  },
+  {
+    "id": 48,
+    "name": "Webinaire sur le DevOps",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Améliorez la collaboration entre les équipes de développement et d'opération.",
+    "date": "10/06/2026",
+    "localisation": "Buea"
+  },
+  {
+    "id": 49,
+    "name": "Conférence sur l'IA et l'Art",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Quand l'intelligence artificielle rencontre la créativité humaine.",
+    "date": "15/06/2026",
+    "localisation": "Limbe"
+  },
+  {
+    "id": 50,
+    "name": "Séminaire sur les Systèmes Embarqués",
+    "url": "https://images.pexels.com/photos/34153/pexels-photo.jpg",
+    "description": "Conception de systèmes pour des applications spécifiques.",
+    "date": "20/06/2026",
+    "localisation": "Kribi"
+  }
+]
+}
