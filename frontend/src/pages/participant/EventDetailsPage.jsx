@@ -1,36 +1,60 @@
+import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import EventDetails from "../../components/events/EventDetails";
 import MainLayout from "../../components/layouts/MainLayout";
-import { useState, useEffect } from "react";
+import { getEventById } from "../../services/eventService";
 
 const EventDetailsPage = () => {
-	const [event, setEvent] = useState({
-		id: 2,
-		name: "Atelier Blockchain",
-		url: "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg",
-		description:
-			"Découvrez les opportunités offertes par la technologie blockchain pour l’Afrique.",
-		date: "15/10/2025",
-		localisation: "Yaoundé",
-	});
-	// Récupérer lelement selectionne.
-	// const [selectedEventId, setSelectedEventId] = useState(null);
+  const { id } = useParams();
 
-	// const handleSelect = (id) => {
-	//     setSelectedEventId(id); // on met à jour l'état avec l'id sélectionné
-	//     console.log("Événement sélectionné :", id);
-	//   };
+  const {
+    data: event,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["event", id],
+    queryFn: () => getEventById(id),
+    staleTime: 1000 * 60 * 5,
+  });
 
-	return (
-		<MainLayout>
-			<EventDetails
-				imageUrl={event.url}
-				name={event.name}
-				description={event.description}
-				date={event.date}
-				localisation={event.localisation}
-			/>
-		</MainLayout>
-	);
+  if (isLoading)
+    return (
+      <MainLayout>
+        <p className="text-center py-10 text-gray-500">
+          Chargement de l'événement...
+        </p>
+      </MainLayout>
+    );
+
+  if (isError)
+    return (
+      <MainLayout>
+        <p className="text-center py-10 text-red-500">
+          Erreur lors du chargement de l'événement.
+        </p>
+      </MainLayout>
+    );
+
+  if (!event)
+    return (
+      <MainLayout>
+        <div className="text-center py-10 text-gray-500">
+          Aucun événement trouvé.
+        </div>
+      </MainLayout>
+    );
+
+  return (
+    <MainLayout>
+      <EventDetails
+        imageUrl={event.url}
+        name={event.name}
+        description={event.description}
+        date={event.date}
+        localisation={event.localisation}
+      />
+    </MainLayout>
+  );
 };
 
 export default EventDetailsPage;
