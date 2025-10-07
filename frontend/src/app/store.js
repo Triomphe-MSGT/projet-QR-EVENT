@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import eventReducer from "../reducer/eventSlice.js";
+import eventReducer from "../slices/eventSlice.js";
+import userProfileSlice from "../services/userProfile.js";
+import authReducer from "../slices/authSlice.js";
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
     events: eventReducer,
+    UserProfile: userProfileSlice,
+    auth: authReducer,
   },
 });
-
-export default store;

@@ -6,11 +6,12 @@ const Button = ({
   size = "md",
   onClick,
   disabled = false,
+  active = false, // <== ajouté pour gérer l’état actif du toggle
   className = "",
   type = "button",
 }) => {
   const baseStyles =
-    "rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
+    "rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2";
 
   const variants = {
     primary: "bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-400",
@@ -22,6 +23,20 @@ const Button = ({
       "border border-gray-400 text-gray-700 hover:bg-gray-100 focus:ring-gray-300",
     detail:
       "px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200",
+    google:
+      "w-full flex items-center justify-center gap-2 bg-white text-black border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 transition",
+    connecter: "w-full bg-green-500 text-white hover:bg-green-600",
+    inscrire: "w-full bg-green-500 text-white hover:bg-green-600",
+
+    // 🧩 Nouveau style "toggle" inspiré de tes boutons Connexion / Inscription
+    toggle: `
+      px-6 py-2 border-b-2 transition-all duration-300 font-medium
+      ${
+        active
+          ? "border-blue-500 text-blue-500 font-bold"
+          : "border-transparent text-gray-500 hover:text-blue-500 hover:border-blue-500"
+      }
+    `,
   };
 
   const sizes = {
