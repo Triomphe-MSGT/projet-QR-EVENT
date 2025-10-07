@@ -1,21 +1,26 @@
-import AuthForm2 from './components/ui/AuthForm2'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/participant/HomePage";
+import EventListPage from "./pages/participant/EventListPage";
+import EventForm from "./pages/organizer/CreateEventPage";
+import EventDetailsPage from "./pages/participant/EventDetailsPage";
+import OpenPage from "./pages/participant/OpenPage";
+import AuthFormRegister from "./components/ui/AuthFormRegister";
+import AuthFormRegisterConnection from "./components/ui/AuthFormConnection";
 
-import UserProfile from './components/userProfile'
-
-import OrganizerProfile from './pages/organizer/ProfilOrganisateur'
-const App = () => {
+function App() {
   return (
-    <>
-      {/* <AuthForm2 /> */}
-      <div>
-        <h1 className='text-3xl font-extrabold font-[Poppins] text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-green-400 mb-6'>
-          Mon Profil
-        </h1>
-        <UserProfile />
-        <hr />
-        {/* <OrganizerProfile /> */}
-      </div>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<OpenPage />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/categories/:name" element={<EventListPage />} />
+        <Route path="/createevent" element={<EventForm />} />
+        <Route path="events/:id" element={<EventDetailsPage />} />
+        <Route path="register" element={<AuthFormRegister />} />
+        <Route path="login" element={<AuthFormRegisterConnection />} />
+      </Routes>
+    </Router>
+  );
 }
-export default App
+
+export default App;
