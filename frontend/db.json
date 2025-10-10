@@ -1,0 +1,115 @@
+{
+  "categories": [
+    {
+      "id": "1",
+      "emoji": "🎤",
+      "name": "Conférences"
+    },
+    {
+      "id": "2",
+      "emoji": "🎶",
+      "name": "Concerts"
+    },
+    {
+      "id": "3",
+      "emoji": "🎂",
+      "name": "Anniversaires"
+    },
+    {
+      "id": "4",
+      "emoji": "💍",
+      "name": "Mariages"
+    },
+    {
+      "id": "5",
+      "emoji": "🎓",
+      "name": "Soutenances"
+    }
+  ],
+  "events": [
+    {
+      "id": "1",
+      "name": "Conférence sur l'IA",
+      "url": "",
+      "description": "Participez à notre conférence sur l’Intelligence Artificielle...",
+      "debut": "10/10/2025",
+      "fin": "10/10/2025",
+      "localisation": "Douala",
+      "price": "",
+      "qrReason": "",
+      "uniqueQr": "",
+      "type": "conférence",
+      "categoryId": 1
+    },
+    {
+      "id": "2",
+      "name": "Atelier Blockchain",
+      "url": "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg",
+      "description": "Découvrez les opportunités offertes par la blockchain...",
+      "debut": "15/10/2025",
+      "fin": "16/10/2025",
+      "localisation": "Yaoundé",
+      "price": "",
+      "qrReason": "",
+      "uniqueQr": "",
+      "type": "conférence",
+      "categoryId": 1
+    },
+    {
+      "id": "4",
+      "name": "Mariage de Jean & Marie",
+      "url": "https://images.pexels.com/photos/546819/pexels-photo-546819.jpeg",
+      "description": "Un mariage inoubliable...",
+      "debut": "10/10/2025",
+      "fin": "25/10/2025",
+      "localisation": "Garoua",
+      "price": "",
+      "qrReason": "",
+      "uniqueQr": "",
+      "type": "Anniversaires",
+      "categoryId": 4
+    },
+    {
+      "id": "1292",
+      "name": "projet moock",
+      "type": "conference",
+      "date": "2025-10-10",
+      "time": "12:03",
+      "location": "dschang",
+      "description": "les projet de fin de formation",
+      "price": "300000",
+      "qrReason": "",
+      "uniqueQr": true,
+      "image": null
+    },
+    {
+      "id": "f764",
+      "name": "projet moock",
+      "type": "conference",
+      "date": "2025-10-10",
+      "time": "13:07",
+      "location": "dschang",
+      "description": "",
+      "price": "300000",
+      "qrReason": "",
+      "uniqueQr": false,
+      "image": null
+    },
+    {
+      "id": "a60b",
+      "name": "vsa",
+      "type": "conference",
+      "debut": "",
+      "fin": "",
+      "time": "11:28",
+      "localisation": "",
+      "description": "",
+      "price": "",
+      "qrReason": "",
+      "uniqueQr": false,
+      "image": null,
+      "date": "2025-10-17",
+      "location": "dschang"
+    }
+  ]
+}
