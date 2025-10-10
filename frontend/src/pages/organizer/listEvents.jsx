@@ -1,78 +1,47 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
-  getEvents,
-  createEvent,
-  updateEvent,
-  deleteEvent,
-} from "../../services/eventService";
+  useEvents,
+  useCreateEvent,
+  useUpdateEvent,
+  useDeleteEvent,
+} from "../../hooks/useEvents";
 
 const ItemList = () => {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { data: items, isLoading, isError } = useEvents();
+  const createEvent = useCreateEvent();
+  const updateEvent = useUpdateEvent();
+  const deleteEvent = useDeleteEvent();
 
-  // 1️⃣ Récupérer les événements
-  const {
-    data: items,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["events"],
-    queryFn: getEvents,
-  });
-
-  // 2️⃣ Mutation pour modifier un événement
-  const updateItemMutation = useMutation({
-    mutationFn: updateEvent,
-    onSuccess: () => queryClient.invalidateQueries(["events"]),
-  });
-
-  // 3️⃣ Mutation pour supprimer un événement
-  const deleteItemMutation = useMutation({
-    mutationFn: deleteEvent,
-    onSuccess: () => queryClient.invalidateQueries(["events"]),
-  });
-
-  // 4️⃣ Mutation pour créer un événement + redirection
-  const createItemMutation = useMutation({
-    mutationFn: createEvent,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["events"]);
-      navigate("/my-events"); // Redirection après succès
-    },
-  });
-
+  console.log("✅ Événements récupérés :", items);
   if (isLoading) return <div>Chargement...</div>;
   if (isError) return <div>Erreur : impossible de récupérer les données</div>;
 
+  const handleCreate = () => {
+    createEvent.mutate(
+      { content: "Nouvel événement", userId: 1 },
+      {
+        onSuccess: () => navigate("/my-events"),
+      }
+    );
+  };
+
   return (
     <div>
-      <button
-        onClick={() =>
-          createItemMutation.mutate({
-            content: "Nouvel événement",
-            userId: 1, // si nécessaire
-          })
-        }
-      >
-        Créer un événement
-      </button>
+      <button onClick={handleCreate}>Créer un événement</button>
 
       <ul>
-        {items.map((item) => (
+        {items?.map((item) => (
           <li key={item.id}>
             {item.content}{" "}
             <button
               onClick={() =>
-                updateItemMutation.mutate({
-                  ...item,
-                  content: item.content + " ✔",
-                })
+                updateEvent.mutate({ ...item, content: item.content + " ✔" })
               }
             >
               Modifier
             </button>
-            <button onClick={() => deleteItemMutation.mutate(item.id)}>
+            <button onClick={() => deleteEvent.mutate(item.id)}>
               Supprimer
             </button>
           </li>

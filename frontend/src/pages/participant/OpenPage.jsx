@@ -99,12 +99,6 @@ const Header = () => (
     <h1 className="text-3xl font-bold font-['Poppins'] bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-green-400">
       Qr-Event
     </h1>
-    <button
-      aria-label="Menu"
-      className="p-2 text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
-    >
-      <Menu className="w-6 h-6" />
-    </button>
   </header>
 );
 
@@ -167,14 +161,14 @@ const MainContent = () => {
     if (!token || !user) {
       navigate("/login");
     } else {
-      navigate("/home");
+      navigate("/createevent");
     }
   };
   const handleGoHome = () => {
     if (!token || !user) {
-      navigate("/login"); // 🔒 redirection si non connecté
+      navigate("/login");
     } else {
-      navigate("/home"); // ✅ accès autorisé
+      navigate("/home");
     }
   };
 

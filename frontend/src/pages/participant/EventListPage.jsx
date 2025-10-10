@@ -4,6 +4,7 @@ import { getEvents } from "../../services/eventService";
 import EventListWithPagination from "../../components/events/EventList";
 import SearchAndFilter from "../../components/events/SearchFilter";
 import { useQuery } from "@tanstack/react-query";
+import { useEvents } from "../../hooks/useEvents";
 
 const EventListPage = () => {
   const [query, setQuery] = useState("");
@@ -12,16 +13,8 @@ const EventListPage = () => {
   const [selectedCity, setSelectedCity] = useState("Toutes");
 
   // ⚡ Récupération des événements via React Query
-  const {
-    data: events,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["events"],
-    queryFn: getEvents,
-    staleTime: 1000 * 60 * 5, // garde les données 5 minutes en cache
-  });
-
+  const { data: items, isLoading, isError } = useEvents();
+  const events = items;
   if (isLoading) return <p>Chargement des événements...</p>;
   if (isError) return <p>Erreur lors du chargement des événements.</p>;
 

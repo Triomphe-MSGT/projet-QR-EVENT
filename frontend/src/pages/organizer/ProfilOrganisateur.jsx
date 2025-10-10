@@ -1,60 +1,61 @@
-import React from 'react'
-import { useSelector } from 'react-redux'
-import ProfileHeader from '../../components/ui/ProfileHeader'
+import React from "react";
 
-import OrganizerEventList from './OrganizerEventList' // Composant à créer pour la liste d'événements de l'organisateur
+import { useUserProfile } from "../../slices/userprofilSlice";
+import ProfileHeader from "../../components/ui/ProfileHeader";
 
-// Composant pour le bouton de bascule vers le mode Participant
 const SwitchModeButton = () => (
-  <button className='text-blue-500 font-semibold py-2 px-6 rounded-full transition duration-150 flex items-center justify-center mb-6'>
-    <span className='mr-1'>✏️</span> Passer en mode Participant
+  <button className="text-blue-500 font-semibold py-2 px-6 rounded-full transition duration-150 flex items-center justify-center mb-6">
+    <span className="mr-1">✏️</span> Passer en mode Participant
   </button>
-)
+);
 
-// Composant pour le bouton de déconnexion (couleur rouge vue dans la capture)
 const LogoutButton = () => (
   <button
-    // NOTE: Ajoutez ici la logique de déconnexion (ex: onClick={handleLogout})
-    className='w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-xl transition duration-150 shadow-md mt-4'
+    onClick={() => {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }}
+    className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-xl transition duration-150 shadow-md mt-4"
   >
     Se déconnecter
   </button>
-)
+);
 
 const OrganizerProfile = () => {
-  // Réutilise le même état Redux 'UserProfile' (comme vous l'avez spécifié)
-  const profile = useSelector((state) => state.UserProfile)
+  const { data: profile, isLoading, error } = useUserProfile();
 
-  const avatarSource = profile.avatarUrl || 'assets/react.svg'
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Chargement du profil...</p>
+      </div>
+    );
 
-  // Simuler les événements CRÉÉS par l'organisateur (vous devrez charger ces données)
-  const organizerEvents = profile.eventsCreated || [
-    { title: 'Conférence sur l’IA', date: 'Le 15 septembre 2025' },
-    { title: 'Soutenance sur le Big Data', date: 'Le 20 septembre 2025' },
-  ]
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">Erreur : {error.message}</p>
+      </div>
+    );
+
+  const avatarSource = profile?.avatarUrl || "/assets/react.svg";
 
   return (
-    <div className='min-h-screen bg-gray-50 flex flex-col pb-16'>
-      <main className='flex-grow p-4 mx-auto w-full max-w-7xl flex flex-col items-center'>
-        {/* UTILISATION DU COMPOSANT RÉUTILISABLE PROFILE HEADER */}
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-16">
+      <main className="flex-grow p-4 mx-auto w-full max-w-7xl flex flex-col items-center">
         <ProfileHeader
-          name={profile.name}
-          info='Organisateur' // Le rôle est l'info secondaire
-          role={null} // Ne pas utiliser la prop role ici, car info suffit
+          name={profile?.name || "Utilisateur"}
+          info="Organisateur"
+          role={profile?.role || "organizer"}
           avatarUrl={avatarSource}
         >
-          {/* L'enfant est le bouton de changement de mode */}
           <SwitchModeButton />
         </ProfileHeader>
 
-        {/* Liste des événements CRÉÉS par l'organisateur (Similaire à EventDetailsPage, mais avec des actions d'édition/suppression) */}
-        <OrganizerEventList events={organizerEvents} />
-
-        {/* Bouton de Déconnexion qui s'étend sur la largeur */}
         <LogoutButton />
       </main>
     </div>
-  )
-}
+  );
+};
 
-export default OrganizerProfile
+export default OrganizerProfile;

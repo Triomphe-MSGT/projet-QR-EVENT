@@ -4,7 +4,8 @@ import Button from "../ui/Button";
 
 const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div className="max-w-3xl mx-auto bg-white dark:bg-[#242526] rounded-2xl shadow-lg dark:shadow-none overflow-hidden transition-colors duration-500">
+      {/* Image avec overlay adaptatif */}
       <div className="relative w-full h-72">
         {imageUrl ? (
           <img
@@ -17,7 +18,18 @@ const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
             {name}
           </div>
         )}
-        <div className="absolute inset-0 bg-blue-500 opacity-70"></div>
+
+        {/* Overlay adaptatif selon le thème */}
+        <div
+          className={`
+            absolute inset-0 transition-colors duration-500
+            bg-gradient-to-t
+            ${imageUrl ? "from-black/50 to-transparent" : ""}
+            dark:from-black/60 dark:to-black/30
+          `}
+        ></div>
+
+        {/* Titre centré */}
         <div className="absolute inset-0 flex items-center justify-center p-4">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white text-center drop-shadow-md">
             {name}
@@ -25,14 +37,18 @@ const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
         </div>
       </div>
 
-      {/* Détails */}
+      {/* Contenu */}
       <div className="p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">{name}</h2>
-        <p className="text-gray-600 mb-4">{description}</p>
-        <div className="flex items-center text-sm text-gray-500 mb-2">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-[#E4E6EB] mb-2">
+          {name}
+        </h2>
+        <p className="text-gray-600 dark:text-[#B0B3B8] mb-4">{description}</p>
+
+        {/* Date */}
+        <div className="flex items-center text-sm text-gray-500 dark:text-[#B0B3B8] mb-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2 text-gray-500"
+            className="h-5 w-5 mr-2 text-gray-500 dark:text-[#B0B3B8]"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -44,10 +60,12 @@ const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
           </svg>
           <span className="font-medium">{date}</span>
         </div>
-        <div className="flex items-center text-sm text-gray-500 mb-6">
+
+        {/* Localisation */}
+        <div className="flex items-center text-sm text-gray-500 dark:text-[#B0B3B8] mb-6">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2 text-gray-500"
+            className="h-5 w-5 mr-2 text-gray-500 dark:text-[#B0B3B8]"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -60,22 +78,24 @@ const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
           <span className="font-medium">{localisation}</span>
         </div>
 
-        {/* QR Code Section */}
+        {/* QR Code */}
         <div className="flex flex-col items-center mb-6">
-          <p className="text-gray-700 mb-2">
-            <strong>
-              Obtenez votre QR code unique pour participer à l'événement
-            </strong>
+          <p className="text-gray-700 dark:text-[#E4E6EB] mb-2 font-medium">
+            Obtenez votre QR code unique pour participer à l'événement
           </p>
-          <div className="w-32 h-32 bg-gray-100 flex items-center justify-center border rounded-lg">
+          <div className="w-32 h-32 bg-gray-100 dark:bg-[#3A3B3C] flex items-center justify-center border border-gray-300 dark:border-[#3E4042] rounded-lg text-gray-500 dark:text-gray-300">
             QR Code
           </div>
         </div>
-        <Button variant="primaryLarge" size="md">
-          Participer à l'événement
-        </Button>
 
-        {/* Localisation Map */}
+        {/* Bouton */}
+        <div className="text-center mb-6">
+          <Button variant="primaryLarge" size="md">
+            Participer à l'événement
+          </Button>
+        </div>
+
+        {/* Carte */}
         <div className="mt-6">
           <LocalisationCart
             location={{

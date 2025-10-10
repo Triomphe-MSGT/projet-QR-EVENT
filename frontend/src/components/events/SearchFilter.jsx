@@ -12,10 +12,10 @@ const SearchAndFilter = ({
       {/* Barre de recherche + filtre */}
       <div className="mb-4 flex items-center relative">
         {/* Champ de recherche */}
-        <div className="relative flex-grow mr-2 rounded-xl overflow-hidden shadow-sm border border-gray-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+        <div className="relative flex-grow mr-2 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-[#3E4042] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors duration-300">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg
-              className="h-5 w-5 text-gray-400"
+              className="h-5 w-5 text-gray-400 dark:text-[#B0B3B8]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -31,12 +31,12 @@ const SearchAndFilter = ({
           <input
             type="text"
             placeholder="Rechercher"
-            className="w-full pl-10 pr-4 py-2"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
-              setCurrentPage(1); // reset pagination
+              setCurrentPage(1);
             }}
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#3A3B3C] text-gray-800 dark:text-[#E4E6EB] placeholder-gray-400 dark:placeholder-[#B0B3B8] focus:outline-none rounded-xl transition-colors duration-300"
           />
         </div>
 
@@ -44,23 +44,25 @@ const SearchAndFilter = ({
         <div className="relative">
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="px-4 py-2 bg-gray-200 rounded-xl text-gray-700 font-semibold hover:bg-gray-300 transition-colors duration-200"
+            className="px-4 py-2 bg-gray-200 dark:bg-[#3A3B3C] rounded-xl text-gray-700 dark:text-[#E4E6EB] font-semibold hover:bg-gray-300 dark:hover:bg-[#4E4F50] transition-colors duration-200"
           >
             Filtre
           </button>
 
           {/* Dropdown filtre */}
           {isFilterOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#3A3B3C] rounded-lg shadow-lg dark:shadow-none z-10 border border-gray-200 dark:border-[#3E4042] transition-colors duration-300">
               <div className="p-4 space-y-4">
                 <div>
-                  <p className="font-semibold text-gray-800 mb-2">Ville</p>
+                  <p className="font-semibold text-gray-800 dark:text-[#E4E6EB] mb-2">
+                    Ville
+                  </p>
                   <select
-                    className="w-full p-2 border border-gray-300 rounded-md"
+                    className="w-full p-2 border border-gray-300 dark:border-[#3E4042] rounded-md bg-white dark:bg-[#3A3B3C] text-gray-800 dark:text-[#E4E6EB] transition-colors duration-300"
                     value={selectedCity}
                     onChange={(e) => {
                       setSelectedCity(e.target.value);
-                      setCurrentPage(1); // reset pagination
+                      setCurrentPage(1);
                     }}
                   >
                     <option>Toutes</option>

@@ -9,12 +9,12 @@ const Togglable = (props) => {
   const showInscription = () => setIsConnexionVisible(false);
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm transform transition-all duration-300">
+    <div className="bg-white dark:bg-[#242526] p-8 rounded-2xl shadow-xl dark:shadow-none w-full max-w-sm transform transition-all duration-300">
       <h1 className="text-3xl font-extrabold font-[Poppins] text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-green-400 mb-6">
         {props.title}
       </h1>
 
-      <div className="flex justify-center mb-6 border-b-2 border-gray-200">
+      <div className="flex justify-center mb-6 border-b-2 border-gray-200 dark:border-[#3E4042]">
         <Button
           onClick={showInscription}
           variant="toggle"
@@ -31,6 +31,7 @@ const Togglable = (props) => {
         </Button>
       </div>
 
+      {/* Contenu Inscription */}
       <div
         className={`transition-all duration-500 ${
           isConnexionVisible
@@ -41,6 +42,7 @@ const Togglable = (props) => {
         {props.firstTabContent}
       </div>
 
+      {/* Contenu Connexion */}
       <div
         className={`transition-all duration-500 ${
           isConnexionVisible

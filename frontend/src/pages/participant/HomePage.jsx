@@ -1,15 +1,15 @@
 import ListCategorie from "../../components/categories/CategoryList";
 import MainLayout from "../../components/layouts/MainLayout";
 import { useEffect, useState } from "react";
+import { ThemeProvider } from "../../context/ThemeContext";
 
 function IconChange() {
   const [showCheck, setShowCheck] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setShowCheck((prev) => !prev); // alterne entre true/false
-    }, 3000); // toutes les 3 secondes
-
+      setShowCheck((prev) => !prev);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -40,24 +40,47 @@ function IconChange() {
 
 const HomePage = () => {
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center">
-        <div className="text-center mt-8 px-4">
-          <IconChange />
+    <ThemeProvider>
+      <MainLayout>
+        <div
+          className="
+            min-h-screen 
+            transition-colors duration-500 
+            bg-[#F0F2F5] dark:bg-[#18191A] 
+            text-[#050505] dark:text-[#E4E6EB]
+            flex flex-col items-center
+          "
+        >
+          {/* Section d’accueil */}
+          <div className="text-center mt-8 px-4">
+            <IconChange />
+            <h1 className="text-2xl font-bold mb-1">Bonjour 👋</h1>
+            <p className="text-[#65676B] dark:text-[#B0B3B8]">
+              Nous sommes ravis de vous revoir. Que souhaitez-vous faire ?
+            </p>
+          </div>
 
-          <h1 className="text-2xl font-bold mb-1">Bonjour !</h1>
-          <p className="text-gray-600">
-            Nous sommes contents de vous revoir. Que souhaitez-vous faire ?
-          </p>
+          {/* Section catégories */}
+          <div className="w-full max-w-3xl mt-10">
+            <h2 className="text-lg font-semibold px-6 mb-4">
+              Découvrez nos événements par catégorie
+            </h2>
+
+            <div
+              className="
+                bg-white dark:bg-[#242526] 
+                shadow-sm dark:shadow-none 
+                rounded-xl 
+                p-4 
+                transition-colors duration-500
+              "
+            >
+              <ListCategorie />
+            </div>
+          </div>
         </div>
-        <div className="w-full max-w-3xl mt-10">
-          <h2 className="text-lg font-semibold px-6 mb-4">
-            Découvrez nos événements par catégorie
-          </h2>
-          <ListCategorie />
-        </div>
-      </div>
-    </MainLayout>
+      </MainLayout>
+    </ThemeProvider>
   );
 };
 
