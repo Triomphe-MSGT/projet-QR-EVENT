@@ -1,6 +1,11 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const initialState = []
+const initialState = {
+  events: [], // liste des événements
+  currentEvent: null, // événement sélectionné pour édition
+
+  participantCount: 0,
+}
 
 const generateId = () => Number((Math.random() * 1000000).toFixed(0))
 
@@ -27,8 +32,24 @@ const eventsSlice = createSlice({
       const id = action.payload
       return state.filter((event) => event.id !== id)
     },
+    setCurrentEvent(state, action) {
+      state.currentEvent = action.payload
+    },
+    setEvents(state, action) {
+      state.events = action.payload
+    },
+    incrementParticipant: (state) => {
+      state.participantCount += 1
+    },
   },
 })
 
-export const { addEvent, updateEvent, deleteEvent } = eventsSlice.actions
+export const {
+  addEvent,
+  updateEvent,
+  deleteEvent,
+  setEvents,
+  setCurrentEvent,
+  incrementParticipant,
+} = eventsSlice.actions
 export default eventsSlice.reducer

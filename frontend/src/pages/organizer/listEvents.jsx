@@ -23,8 +23,10 @@ const ItemList = () => {
 
   // 2️⃣ Mutation pour modifier un événement
   const updateItemMutation = useMutation({
-    mutationFn: updateEvent,
-    onSuccess: () => queryClient.invalidateQueries(['events']),
+    mutationFn: ({ id, data }) => updateEvent(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['events']), navigate('/dashboard') // Redirection après succès
+    },
   })
 
   // 3️⃣ Mutation pour supprimer un événement

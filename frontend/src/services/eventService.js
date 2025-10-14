@@ -42,13 +42,13 @@ export const createEvent = async (eventData) => {
 
 export const updateEvent = async (id, eventData) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}`, eventData)
+    const response = await axios.put(
+      `http://localhost:3000/events/${id}`,
+      eventData
+    )
     return response.data
   } catch (error) {
-    console.error(
-      `Échec de la mise à jour de l'événement avec l'ID ${id}:`,
-      error
-    )
+    console.error(`Échec de la mise à jour de l'événement avec l'ID :`, error)
     throw error
   }
 }
@@ -58,10 +58,7 @@ export const deleteEvent = async (id) => {
     await axios.delete(`${API_URL}/${id}`)
     return true
   } catch (error) {
-    console.error(
-      `Échec de la suppression de l'événement avec l'ID ${id}:`,
-      error
-    )
+    console.error(`Échec de la suppression de l'événement avec l'ID :`, error)
     throw error
   }
 }

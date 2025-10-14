@@ -7,6 +7,8 @@ import OpenPage from './pages/participant/OpenPage'
 import AuthFormRegister from './components/ui/AuthFormRegister'
 import AuthFormRegisterConnection from './components/ui/AuthFormConnection'
 import DashboardPage from './pages/organizer/DashboardPage'
+import EditEvent from './pages/organizer/EditEvent'
+import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
         <Route path='register' element={<AuthFormRegister />} />
         <Route path='login' element={<AuthFormRegisterConnection />} />
         <Route path='/dashboard' element={<DashboardPage />} />
+        <Route path='/editevent/id' element={<EditEvent />} />
+        <Route path='/dashboardadmin' element={<AdminDashboardPage />} />
       </Routes>
     </Router>
   )

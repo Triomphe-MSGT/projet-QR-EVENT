@@ -32,7 +32,7 @@ const EventForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!formData.name || !formData.type || !formData.date) {
+    if (!formData.name || !formData.type || !formData.debut || !formData.fin) {
       alert('Veuillez remplir les champs obligatoires !')
       return
     }

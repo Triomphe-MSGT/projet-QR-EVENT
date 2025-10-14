@@ -1,6 +1,4 @@
 import React from 'react'
-import { useSelector } from 'react-redux'
-import ProfileHeader from '../../components/ui/ProfileHeader'
 
 import OrganizerEventList from './OrganizerEventList' // Composant à créer pour la liste d'événements de l'organisateur
 

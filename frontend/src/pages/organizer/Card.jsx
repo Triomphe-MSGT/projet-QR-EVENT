@@ -1,12 +1,17 @@
-// EventCards.jsx
 import React from 'react'
 import { useEvents } from '../../hooks/useEvents'
+import { useSelector } from 'react-redux'
 
 const EventCards = () => {
-  //  Récupère les événements via ton hook
-  const { events = [], isLoading, isError } = useEvents()
+  // ✅ Récupération des événements via React Query
+  const { data: events = [], isLoading, isError } = useEvents()
 
-  // Gestion d’état
+  // ✅ Récupération du nombre de participants via Redux
+  const participantCount = useSelector((state) => state.events.participantCount)
+
+  const totalEvents = events ? events.length : 0
+
+  // ✅ Gestion des états de chargement/erreur
   if (isLoading) {
     return (
       <div className='p-4 text-center text-gray-500 animate-pulse'>
@@ -23,19 +28,13 @@ const EventCards = () => {
     )
   }
 
-  // Calcul des statistiques
-  const totalEvents = events.length
-  const totalParticipants = events.reduce(
-    (sum, event) => sum + (event.participants || 0),
-    0
-  )
-
-  //  Style simple pour les cartes
+  // ✅ Style des cartes
   const cardStyle =
     'p-4 bg-white rounded-xl shadow border border-gray-100 text-center flex-1'
 
   return (
-    <div className='flex gap-4 mb-6'>
+    <div className='flex flex-col sm:flex-row gap-4 mb-6'>
+      {/* Carte Total Événements */}
       <div className={cardStyle}>
         <h3 className='text-gray-500 font-semibold uppercase text-xs'>
           Total Événements
@@ -43,12 +42,13 @@ const EventCards = () => {
         <p className='text-2xl font-bold text-gray-900 mt-2'>{totalEvents}</p>
       </div>
 
+      {/* Carte Total Participants */}
       <div className={cardStyle}>
         <h3 className='text-gray-500 font-semibold uppercase text-xs'>
           Total Participants
         </h3>
         <p className='text-2xl font-bold text-gray-900 mt-2'>
-          {totalParticipants}
+          {participantCount}
         </p>
       </div>
     </div>
