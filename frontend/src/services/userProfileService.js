@@ -1,28 +1,40 @@
+// src/services/userProfileService.js
 import api from "../slices/axiosInstance";
 
 const userProfileService = {
   getProfile: async () => {
-    const response = await api.get("/profile");
-    return response.data;
+    const { data } = await api.get("/profile");
+    return data;
   },
 
   updateProfile: async (updatedData) => {
-    const response = await api.put("/profile", updatedData);
-    return response.data;
+    const { data } = await api.put("/profile", updatedData);
+    return data;
   },
 
-  getOrganizerEvents: async () => {
-    const response = await api.get("/organizer/events");
-    return response.data;
-  },
-  getParticipantEvents: async () => {
-    const response = await api.get("/participant/events");
-    return response.data;
+  uploadAvatar: async (file) => {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    const { data } = await api.post("/profile/avatar", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
   },
 
-  getAllUsers: async () => {
-    const response = await api.get("/admin/users");
-    return response.data;
+  getUserEvents: async () => {
+    const { data: profile } = await api.get("/profile");
+    const { data: allEvents } = await api.get("/events");
+
+    const organizedEvents = allEvents.filter(
+      (ev) => ev.organizerId === profile.id
+    );
+    const participantEvents = allEvents.filter((ev) =>
+      ev.participantsIds?.includes(profile.id)
+    );
+    return {
+      organized: organizedEvents,
+      participated: participantEvents,
+    };
   },
 };
 

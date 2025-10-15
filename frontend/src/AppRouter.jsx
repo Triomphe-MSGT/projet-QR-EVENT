@@ -26,7 +26,7 @@ import RoleRouter from "./routes/RoleRouter";
 import OrganizerProfile from "./pages/organizer/ProfilOrganisateur";
 import PrivateRoute from "./routes/PrivateRoute";
 import Unauthorized from "./pages/Unauthorized";
-import { ThemeProvider } from "./context/ThemeContext";
+import ProfilePage from "./pages/ProfilePage";
 
 const AppRouter = () => {
   return (
@@ -36,6 +36,7 @@ const AppRouter = () => {
         <Route path="/" element={<OpenPage />} />
         <Route path="/register" element={<AuthFormRegister />} />
         <Route path="/login" element={<AuthFormRegisterConnection />} />
+        <Route path="/user-profile" element={<ProfilePage />} />
 
         {/* Routes protégées */}
         <Route

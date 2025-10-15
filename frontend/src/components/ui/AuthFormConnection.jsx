@@ -6,6 +6,8 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/authService";
 import { login } from "../../slices/authSlice";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 const AuthFormRegisterConnection = () => {
   const [email, setEmail] = useState("");
@@ -46,9 +48,42 @@ const AuthFormRegisterConnection = () => {
           navigate("/", { replace: true });
       }
     } catch (err) {
-      setError(err.message || "Erreur lors de l'inscription");
+      setError(err.message || "Erreur lors de la connexion");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      // Décodé : { name, email, picture, ... }
+
+      const data = await authService.googleLogin({
+        token: {
+          email: decoded.email,
+          name: decoded.name,
+          picture: decoded.picture,
+        },
+      });
+
+      dispatch(login(data));
+      localStorage.setItem("token", data.token);
+
+      const user = data.user;
+      switch (user.role) {
+        case "organizer":
+          navigate("/createevent", { replace: true });
+          break;
+        case "user":
+          navigate("/dashboard", { replace: true });
+          break;
+        default:
+          navigate("/", { replace: true });
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Erreur lors de la connexion avec Google");
     }
   };
 
@@ -72,6 +107,7 @@ const AuthFormRegisterConnection = () => {
             <p className="text-red-500 text-center text-sm mb-2">{error}</p>
           )}
 
+          {/* Email */}
           <div>
             <label className="sr-only" htmlFor="email">
               Adresse e-mail
@@ -83,10 +119,11 @@ const AuthFormRegisterConnection = () => {
               placeholder="Adresse e-mail"
               onChange={({ target }) => setEmail(target.value)}
               required
-              className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB] transition-colors duration-300"
+              className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
             />
           </div>
 
+          {/* Mot de passe */}
           <div>
             <label className="sr-only" htmlFor="password">
               Mot de passe
@@ -98,10 +135,11 @@ const AuthFormRegisterConnection = () => {
               value={password}
               onChange={({ target }) => setPassword(target.value)}
               required
-              className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB] transition-colors duration-300"
+              className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
             />
           </div>
 
+          {/* Bouton connexion */}
           <Button type="submit" variant="connecter" disabled={loading}>
             {loading ? "Connexion..." : "Se connecter"}
           </Button>
@@ -116,18 +154,14 @@ const AuthFormRegisterConnection = () => {
             - OU -
           </div>
 
-          <Button
-            type="button"
-            onClick={() => console.log("Google login clicked")}
-            variant="google"
-          >
-            <img
-              src="https://developers.google.com/identity/images/g-logo.png"
-              alt="Google logo"
-              className="w-5 h-5 mr-2"
+          {/* --- Connexion Google --- */}
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => setError("Échec de la connexion Google")}
+              useOneTap
             />
-            Continuer avec Google
-          </Button>
+          </div>
         </form>
       </Togglable>
     </div>

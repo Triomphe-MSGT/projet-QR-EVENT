@@ -1,11 +1,29 @@
 {
+  "profile": {
+    "username": "dupont",
+    "email": "jane@example.com"
+  },
+  "organizerEvents": [
+    {
+      "id": "1",
+      "title": "Conférence IA",
+      "date": "2024-10-15"
+    }
+  ],
+  "participantEvents": [
+    {
+      "id": "2",
+      "title": "Atelier UX",
+      "date": "2024-10-30"
+    }
+  ],
   "users": [
     {
       "id": "1",
       "email": "alice@user.com",
       "password": "1234",
       "role": "user",
-      "name": "Alice",
+      "username": "Alice",
       "avatarUrl": "/avatars/user1.png"
     },
     {
@@ -13,7 +31,7 @@
       "email": "bob@orga.com",
       "password": "1234",
       "role": "organizer",
-      "name": "Bob",
+      "username": "Bob",
       "avatarUrl": "/avatars/org1.png"
     },
     {
@@ -21,7 +39,7 @@
       "email": "admin@admin.com",
       "password": "admin",
       "role": "admin",
-      "name": "Super Admin",
+      "username": "Super Admin",
       "avatarUrl": "/avatars/admin.png"
     },
     {
@@ -38,6 +56,33 @@
       "username": "meloerica",
       "password": "2006",
       "role": "user",
+      "avatarUrl": "/avatars/default.png"
+    },
+    {
+      "id": "dde6",
+      "email": "greremandeng@gmail.com",
+      "username": "dupon",
+      "password": "1234",
+      "role": "user",
+      "avatarUrl": "/avatars/default.png"
+    },
+    {
+      "id": "8a29",
+      "email": "remandeng@gmail.com",
+      "username": "admin",
+      "password": "1234",
+      "role": "user",
+      "avatarUrl": "/avatars/default.png"
+    },
+    {
+      "id": "f2e4",
+      "email": "fghg@ghfjh.com",
+      "username": "dupon",
+      "password": "1234",
+      "role": "Organisateur",
+      "sexe": "Homme",
+      "phone": "22335536",
+      "metier": "informaticien",
       "avatarUrl": "/avatars/default.png"
     }
   ],
@@ -66,6 +111,36 @@
       "id": "5",
       "emoji": "🎓",
       "name": "Soutenances"
+    },
+    {
+      "id": "6",
+      "emoji": "🏃‍♂️",
+      "name": "Sport"
+    },
+    {
+      "id": "7",
+      "emoji": "💡",
+      "name": "Formations"
+    },
+    {
+      "id": "8",
+      "emoji": "👩🏾‍💼",
+      "name": "Célébrations"
+    },
+    {
+      "id": "9",
+      "emoji": "🍲",
+      "name": "Foires"
+    },
+    {
+      "id": "10",
+      "emoji": "💼",
+      "name": "Recrutement"
+    },
+    {
+      "id": "11",
+      "emoji": "🎨",
+      "name": "Art"
     }
   ],
   "events": [
@@ -88,7 +163,8 @@
       "url": "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg",
       "description": "Découvrez les opportunités offertes par la blockchain...",
       "date": "15/10/2025",
-      "localisation": "Yaoundé",
+      "localisation": "Dschang Marche B",
+      "ville": "Dschang",
       "price": "5000 XAF",
       "qrReason": "",
       "uniqueQr": false,
@@ -102,6 +178,7 @@
       "description": "Rencontrez les acteurs majeurs de la technologie africaine.",
       "date": "20/10/2025",
       "localisation": "Douala",
+      "ville": "Douala",
       "price": "10 000 XAF",
       "qrReason": "",
       "uniqueQr": false,
@@ -109,290 +186,43 @@
       "categoryId": 2
     },
     {
-      "id": "4",
-      "name": "Mariage de Jean & Marie",
-      "url": "https://images.pexels.com/photos/546819/pexels-photo-546819.jpeg",
-      "description": "Un mariage inoubliable...",
-      "date": "25/10/2025",
-      "localisation": "Garoua",
-      "price": "",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Cérémonie",
-      "categoryId": 4
+      "id": "a036",
+      "name": "Soirée de l'informatique",
+      "type": "Conférence",
+      "date": "2025-10-15",
+      "time": "12:45",
+      "location": "Dschang Marché B",
+      "description": "Très intuitif",
+      "price": "2500",
+      "qrReason": "billet",
+      "uniqueQr": true,
+      "image": "WhatsApp Image 2025-09-26 at 14.13.11.jpeg"
     },
     {
-      "id": "5",
-      "name": "Soirée Startup Connect",
-      "url": "https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg",
-      "description": "Réseautage entre fondateurs et investisseurs.",
-      "date": "28/10/2025",
-      "localisation": "Yaoundé",
-      "price": "3000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Networking",
-      "categoryId": 1
-    },
-    {
-      "id": "6",
-      "name": "Festival de la Musique Africaine",
-      "url": "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg",
-      "description": "3 jours de musique, danse et culture africaine.",
-      "date": "30/10/2025",
-      "localisation": "Bafoussam",
-      "price": "15 000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Festival",
-      "categoryId": 3
-    },
-    {
-      "id": "7",
-      "name": "Hackathon Jeunesse Digitale",
-      "url": "",
-      "description": "Créez des solutions numériques pour le futur du Cameroun.",
-      "date": "01/11/2025",
-      "localisation": "Douala",
-      "price": "Gratuit",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Hackathon",
-      "categoryId": 2
-    },
-    {
-      "id": "8",
-      "name": "Tournoi eSport FIFA 25",
-      "url": "https://images.pexels.com/photos/907233/pexels-photo-907233.jpeg",
-      "description": "Compétition nationale de FIFA 25.",
-      "date": "02/11/2025",
-      "localisation": "Yaoundé",
-      "price": "5000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Compétition",
-      "categoryId": 5
-    },
-    {
-      "id": "9",
-      "name": "Salon du Livre Camerounais",
-      "url": "",
-      "description": "Rencontrez les auteurs et éditeurs locaux.",
-      "date": "05/11/2025",
-      "localisation": "Douala",
-      "price": "2000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Salon",
-      "categoryId": 2
-    },
-    {
-      "id": "10",
-      "name": "Marathon de Douala",
-      "url": "https://images.pexels.com/photos/2402777/pexels-photo-2402777.jpeg",
-      "description": "Courez pour une cause sociale.",
-      "date": "08/11/2025",
-      "localisation": "Douala",
-      "price": "10 000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Sport",
-      "categoryId": 6
-    },
-    {
-      "id": "11",
-      "name": "Formation en Développement Web",
-      "url": "",
-      "description": "Apprenez React, Node et MongoDB en 2 semaines.",
-      "date": "10/11/2025",
-      "localisation": "Yaoundé",
-      "price": "50 000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Formation",
-      "categoryId": 7
-    },
-    {
-      "id": "12",
-      "name": "Soirée Gospel Live",
-      "url": "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg",
-      "description": "Un concert spirituel unique.",
-      "date": "12/11/2025",
-      "localisation": "Douala",
-      "price": "3000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Concert",
-      "categoryId": 3
-    },
-    {
-      "id": "13",
-      "name": "Journée de la Femme Africaine",
-      "url": "",
-      "description": "Célébration des femmes entrepreneures africaines.",
-      "date": "15/11/2025",
-      "localisation": "Garoua",
-      "price": "Gratuit",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Célébration",
-      "categoryId": 8
-    },
-    {
-      "id": "14",
-      "name": "Atelier IA & Santé",
-      "url": "",
-      "description": "Comment l’IA transforme le domaine médical.",
-      "date": "17/11/2025",
-      "localisation": "Yaoundé",
-      "price": "7000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
+      "id": "4667",
+      "name": "Informatique Atelier",
       "type": "Atelier",
-      "categoryId": 1
+      "date": "2025-10-16",
+      "time": "13:49",
+      "location": "Yaoundé",
+      "description": "Cool",
+      "price": "",
+      "qrReason": "acces",
+      "uniqueQr": true,
+      "image": null
     },
     {
-      "id": "15",
-      "name": "Foire Agroalimentaire",
-      "url": "https://images.pexels.com/photos/1300972/pexels-photo-1300972.jpeg",
-      "description": "Découvrez les produits locaux du Cameroun.",
-      "date": "20/11/2025",
-      "localisation": "Bamenda",
-      "price": "1000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Foire",
-      "categoryId": 9
-    },
-    {
-      "id": "16",
-      "name": "Festival du Film Africain",
-      "url": "https://images.pexels.com/photos/799137/pexels-photo-799137.jpeg",
-      "description": "Projection de films africains primés.",
-      "date": "22/11/2025",
-      "localisation": "Yaoundé",
-      "price": "5000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Festival",
-      "categoryId": 3
-    },
-    {
-      "id": "17",
-      "name": "Marché de Noël de Douala",
-      "url": "",
-      "description": "Artisanat, gastronomie et cadeaux locaux.",
-      "date": "01/12/2025",
-      "localisation": "Douala",
-      "price": "Entrée libre",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Marché",
-      "categoryId": 9
-    },
-    {
-      "id": "18",
-      "name": "Soirée DJ Afrobeat",
-      "url": "https://images.pexels.com/photos/1053683/pexels-photo-1053683.jpeg",
-      "description": "Venez danser au rythme des meilleurs sons africains.",
-      "date": "05/12/2025",
-      "localisation": "Yaoundé",
-      "price": "5000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Soirée",
-      "categoryId": 3
-    },
-    {
-      "id": "19",
-      "name": "Salon du Recrutement",
-      "url": "",
-      "description": "Trouvez votre prochain emploi ou stagiaire.",
-      "date": "07/12/2025",
-      "localisation": "Douala",
-      "price": "Gratuit",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Salon",
-      "categoryId": 10
-    },
-    {
-      "id": "20",
-      "name": "Formation Leadership Jeune",
-      "url": "",
-      "description": "Développez vos compétences en leadership.",
-      "date": "09/12/2025",
-      "localisation": "Garoua",
-      "price": "20 000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Formation",
-      "categoryId": 7
-    },
-    {
-      "id": "21",
-      "name": "Exposition d'Art Contemporain",
-      "url": "https://images.pexels.com/photos/154147/pexels-photo-154147.jpeg",
-      "description": "Découvrez les artistes émergents du Cameroun.",
-      "date": "12/12/2025",
-      "localisation": "Douala",
-      "price": "2000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Exposition",
-      "categoryId": 11
-    },
-    {
-      "id": "22",
-      "name": "Hackathon Femmes & Tech",
-      "url": "",
-      "description": "Encourager l'innovation féminine dans la tech.",
-      "date": "14/12/2025",
-      "localisation": "Yaoundé",
-      "price": "Gratuit",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Hackathon",
-      "categoryId": 2
-    },
-    {
-      "id": "23",
-      "name": "Concert Afro Jazz Night",
-      "url": "https://images.pexels.com/photos/995301/pexels-photo-995301.jpeg",
-      "description": "Une soirée inoubliable de jazz africain.",
-      "date": "17/12/2025",
-      "localisation": "Douala",
-      "price": "10 000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Concert",
-      "categoryId": 3
-    },
-    {
-      "id": "24",
-      "name": "Tournoi National de Basketball",
-      "url": "https://images.pexels.com/photos/358042/pexels-photo-358042.jpeg",
-      "description": "Les meilleures équipes du Cameroun s’affrontent.",
-      "date": "20/12/2025",
-      "localisation": "Yaoundé",
-      "price": "3000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Sport",
-      "categoryId": 6
-    },
-    {
-      "id": "25",
-      "name": "Réveillon 2026",
-      "url": "https://images.pexels.com/photos/3171837/pexels-photo-3171837.jpeg",
-      "description": "Célébrons la nouvelle année ensemble !",
-      "date": "31/12/2025",
-      "localisation": "Douala",
-      "price": "15 000 XAF",
-      "qrReason": "",
-      "uniqueQr": false,
-      "type": "Soirée",
-      "categoryId": 3
+      "id": "8075",
+      "name": "informatiques",
+      "type": "conference",
+      "date": "2025-10-15",
+      "time": "16:54",
+      "location": "yaounde mokolo",
+      "description": "tres cool",
+      "price": "23400",
+      "qrReason": "acces",
+      "uniqueQr": true,
+      "image": "photo_2025-10-14_06-45-46.jpg"
     }
   ]
 }

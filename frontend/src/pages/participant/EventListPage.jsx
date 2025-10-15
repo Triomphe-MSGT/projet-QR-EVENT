@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import MainLayout from "../../components/layouts/MainLayout";
-import { getEvents } from "../../services/eventService";
 import EventListWithPagination from "../../components/events/EventList";
 import SearchAndFilter from "../../components/events/SearchFilter";
-import { useQuery } from "@tanstack/react-query";
 import { useEvents } from "../../hooks/useEvents";
 
 const EventListPage = () => {

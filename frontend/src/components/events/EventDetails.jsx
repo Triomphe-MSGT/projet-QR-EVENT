@@ -1,11 +1,84 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import LocalisationCart from "./Localisationcart";
 import Button from "../ui/Button";
+import axios from "axios";
 
 const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
+  const [coords, setCoords] = useState(null);
+  const [loadingMap, setLoadingMap] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchCoords = async () => {
+      setLoadingMap(true);
+      setError("");
+
+      try {
+        // 1️⃣ Essayer Nominatim via le proxy
+        const nominatimRes = await axios.get("http://localhost:4000/geocode", {
+          params: { q: localisation },
+        });
+
+        if (
+          nominatimRes.data &&
+          nominatimRes.data.length > 0 &&
+          nominatimRes.data[0].lat &&
+          nominatimRes.data[0].lon
+        ) {
+          const { lat, lon } = nominatimRes.data[0];
+          setCoords({ lat: parseFloat(lat), lng: parseFloat(lon) });
+          console.log("✅ Coordonnées via Nominatim :", lat, lon);
+          return;
+        }
+
+        console.warn("⚠️ Nominatim n'a pas renvoyé de coordonnées valides");
+        throw new Error("Coordonnées Nominatim invalides");
+      } catch (err1) {
+        console.warn("⚠️ Nominatim indisponible ou invalide :", err1.message);
+
+        try {
+          // 2️⃣ Fallback Geoapify
+          const geoapifyKey = "9c75ef48a4494d958fbbb9e241db7bfc"; // 🔑 Remplace par ta clé Geoapify
+          const geoRes = await axios.get(
+            "https://api.geoapify.com/v1/geocode/search",
+            {
+              params: {
+                text: localisation,
+                apiKey: geoapifyKey,
+                lang: "fr",
+              },
+            }
+          );
+
+          if (
+            geoRes.data.features &&
+            geoRes.data.features.length > 0 &&
+            geoRes.data.features[0].geometry
+          ) {
+            const [lng, lat] = geoRes.data.features[0].geometry.coordinates;
+            setCoords({ lat, lng });
+            console.log("✅ Coordonnées via Geoapify :", lat, lng);
+          } else {
+            throw new Error("Aucune donnée Geoapify");
+          }
+        } catch (err2) {
+          console.error(
+            "❌ Impossible d’obtenir les coordonnées :",
+            err2.message
+          );
+          setError("Erreur de géolocalisation pour cette ville.");
+        }
+      } finally {
+        setLoadingMap(false);
+      }
+    };
+
+    if (localisation) fetchCoords();
+  }, [localisation]);
+
   return (
     <div className="max-w-3xl mx-auto bg-white dark:bg-[#242526] rounded-2xl shadow-lg dark:shadow-none overflow-hidden transition-colors duration-500">
-      {/* Image avec overlay adaptatif */}
+      {/* Image */}
       <div className="relative w-full h-72">
         {imageUrl ? (
           <img
@@ -19,19 +92,15 @@ const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
           </div>
         )}
 
-        {/* Overlay adaptatif selon le thème */}
         <div
-          className={`
-            absolute inset-0 transition-colors duration-500
+          className={`absolute inset-0 transition-colors duration-500
             bg-gradient-to-t
             ${imageUrl ? "from-black/50 to-transparent" : ""}
-            dark:from-black/60 dark:to-black/30
-          `}
+            dark:from-black/60 dark:to-black/30`}
         ></div>
 
-        {/* Titre centré */}
         <div className="absolute inset-0 flex items-center justify-center p-4">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white text-center drop-shadow-md">
+          <h1 className="text-4xl font-extrabold text-white text-center drop-shadow-md">
             {name}
           </h1>
         </div>
@@ -48,7 +117,7 @@ const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
         <div className="flex items-center text-sm text-gray-500 dark:text-[#B0B3B8] mb-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2 text-gray-500 dark:text-[#B0B3B8]"
+            className="h-5 w-5 mr-2"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -65,7 +134,7 @@ const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
         <div className="flex items-center text-sm text-gray-500 dark:text-[#B0B3B8] mb-6">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2 text-gray-500 dark:text-[#B0B3B8]"
+            className="h-5 w-5 mr-2"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -95,16 +164,29 @@ const EventDetails = ({ imageUrl, name, description, date, localisation }) => {
           </Button>
         </div>
 
-        {/* Carte */}
+        {/* 🗺️ Carte dynamique */}
         <div className="mt-6">
-          <LocalisationCart
-            location={{
-              address: "Centre de Conférences",
-              city: "Douala",
-              country: "Cameroun",
-              mapUrl: "#",
-            }}
-          />
+          {loadingMap ? (
+            <p className="text-center text-gray-500">
+              Chargement de la carte...
+            </p>
+          ) : error ? (
+            <p className="text-center text-red-500">{error}</p>
+          ) : coords && !isNaN(coords.lat) && !isNaN(coords.lng) ? (
+            <LocalisationCart
+              location={{
+                address: localisation,
+                city: "Ville inconnue",
+                country: "cameroun",
+                coords: coords,
+                mapUrl: `https://www.openstreetmap.org/?mlat=${coords.lat}&mlon=${coords.lng}#map=15/${coords.lat}/${coords.lng}`,
+              }}
+            />
+          ) : (
+            <p className="text-center text-gray-500">
+              Localisation introuvable pour cette adresse.
+            </p>
+          )}
         </div>
       </div>
     </div>

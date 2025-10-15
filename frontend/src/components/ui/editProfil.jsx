@@ -1,5 +1,3 @@
-// EditProfileForm.js (Corrigé pour le dimensionnement du formulaire)
-
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateName, updateEmail } from "../services/userProfile";

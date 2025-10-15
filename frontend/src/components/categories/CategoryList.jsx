@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import axios from "axios";
 
 const fetchCategories = async () => {
-  const res = await axios.get("http://localhost:3000/categories");
+  const res = await axios.get("http://localhost:3001/categories");
   return res.data;
 };
 

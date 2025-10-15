@@ -13,7 +13,7 @@ const ItemList = () => {
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
 
-  console.log("✅ Événements récupérés :", items);
+  console.log(" Événements récupérés :", items);
   if (isLoading) return <div>Chargement...</div>;
   if (isError) return <div>Erreur : impossible de récupérer les données</div>;
 

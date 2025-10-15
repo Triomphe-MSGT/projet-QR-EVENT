@@ -18,38 +18,25 @@ import {
   Edit,
   Megaphone,
   Users,
-  Info,
   Home,
   UserCircle,
 } from "lucide-react";
-
-// --- Auth placeholder (à remplacer par ton vrai AuthContext plus tard) ---
-const useAuth = () => {
-  const [isOrganizer, setIsOrganizer] = useState(false);
-  const [user] = useState({ name: "John Doe", role: "Participant" });
-
-  const toggleRole = () => {
-    setIsOrganizer((prev) => !prev);
-    console.log(
-      `Switched to ${isOrganizer ? "Participant" : "Organisateur"} mode.`
-    );
-  };
-
-  const logout = () => {
-    console.log("User logged out.");
-  };
-
-  return { user, isOrganizer, toggleRole, logout };
-};
-// -------------------------------------------------------------------------
+import { useUserProfile } from "../../hooks/useUserProfile"; // <-- ton hook React Query
 
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
-  const { user, isOrganizer, toggleRole, logout } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  // 🔹 Récupération du profil réel via React Query
+  const { data: user, isLoading, error } = useUserProfile();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [isOrganizer, setIsOrganizer] = useState(
+    user?.role === "organizer" || false
+  );
+
+  // --- Actions ---
   const handleThemeToggle = () => setTheme(theme === "dark" ? "light" : "dark");
   const closeMenus = () => {
     setMenuOpen(false);
@@ -57,49 +44,36 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    logout();
-    closeMenus();
+    localStorage.removeItem("token"); // Exemple : nettoyage session
     navigate("/login");
   };
 
   const handleRoleToggle = () => {
-    toggleRole();
+    setIsOrganizer((prev) => !prev);
     closeMenus();
   };
 
-  // 🧭 Tableau des liens dynamiques du menu latéral
+  // --- Menu latéral ---
   const menuItems = [
-    {
-      label: "Retour à la page précédente",
-      icon: ArrowLeft,
-      onClick: () => navigate(-1),
-    },
-    {
-      label: "Paramètres du compte",
-      icon: Settings,
-      path: "/account-settings",
-    },
+    { label: "Retour", icon: ArrowLeft, onClick: () => navigate(-1) },
+    { label: "Paramètres", icon: Settings, path: "/account-settings" },
     { label: "Catégories", icon: Grid, path: "/categories" },
-    { label: "Événements confondus", icon: Home, path: "/events" },
+    { label: "Tous les événements", icon: Home, path: "/events" },
     { label: "Actualité", icon: Megaphone, path: "/news" },
-    { label: "Autre langue", icon: Globe, path: "/language" },
+    { label: "Changer de langue", icon: Globe, path: "/language" },
     { label: "Modifier mon profil", icon: Edit, path: "/edit-profile" },
     { label: "Commentaires", icon: MessageSquare, path: "/comments" },
+    { label: "Contact admin", icon: Users, path: "/contact-admin" },
     {
-      label: "Contacter un administrateur",
-      icon: Users,
-      path: "/contact-admin",
-    },
-    {
-      label: `${user.name} : ${user.role}`,
+      label: `${user?.username || "Utilisateur"} : ${user?.role || "Invité"}`,
       icon: UserCircle,
-      path: "/profile",
+      path: "/user-profile",
     },
   ];
 
   return (
     <nav className="relative flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 shadow-md transition-colors duration-300">
-      {/* ---- Bouton Hamburger ---- */}
+      {/* ---- Hamburger ---- */}
       <button
         onClick={() => {
           setMenuOpen(!menuOpen);
@@ -136,10 +110,19 @@ const Navbar = () => {
             setProfileMenuOpen(!profileMenuOpen);
             setMenuOpen(false);
           }}
-          className="text-gray-700 dark:text-gray-200 hover:text-blue-500 transition"
+          className="flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:text-blue-500 transition"
           title="Profil utilisateur"
         >
-          <User className="w-6 h-6" />
+          {/* Afficher avatar si dispo */}
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt="avatar"
+              className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+            />
+          ) : (
+            <User className="w-6 h-6" />
+          )}
         </button>
 
         {/* ---- Menu Profil ---- */}
@@ -149,15 +132,33 @@ const Navbar = () => {
               onClick={closeMenus}
               className="fixed inset-0 bg-transparent z-40"
             ></div>
+
             <div
               className="absolute top-10 right-0 w-64 z-50 p-3 flex flex-col gap-2 rounded-xl
-                            bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg transition-all duration-300"
+              bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg transition-all duration-300"
             >
-              {/* Voir profil */}
+              {/* En-tête utilisateur */}
+              {isLoading ? (
+                <p className="text-center text-gray-500">Chargement...</p>
+              ) : error ? (
+                <p className="text-center text-red-500">Erreur profil</p>
+              ) : (
+                <div className="flex flex-col items-center border-b pb-2 mb-2">
+                  <img
+                    src={user?.avatarUrl || "/assets/default-avatar.png"}
+                    alt="avatar"
+                    className="w-16 h-16 rounded-full object-cover mb-2"
+                  />
+                  <p className="font-semibold">{user?.username}</p>
+                  <span className="text-sm text-gray-500">{user?.role}</span>
+                </div>
+              )}
+
+              {/* Lien voir profil */}
               <Link
-                to="/profile"
-                className="flex items-center gap-3 p-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white transition-colors"
+                to="/user-profile"
                 onClick={closeMenus}
+                className="flex items-center gap-3 p-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white transition-colors"
               >
                 <UserCheck className="w-5 h-5" />
                 Voir mon profil
@@ -200,18 +201,18 @@ const Navbar = () => {
 
           <div
             className="absolute top-16 left-4 w-72 z-50 p-4 flex flex-col gap-4 rounded-xl
-                          bg-white/70 dark:bg-gray-800/70 backdrop-blur-md
-                          border border-gray-200 dark:border-gray-700 shadow-lg transition-all duration-300"
+              bg-white/70 dark:bg-gray-800/70 backdrop-blur-md
+              border border-gray-200 dark:border-gray-700 shadow-lg transition-all duration-300"
           >
-            {menuItems.map((item, index) => {
+            {menuItems.map((item, i) => {
               const Icon = item.icon;
               if (item.path) {
                 return (
                   <Link
-                    key={index}
+                    key={i}
                     to={item.path}
-                    className="flex items-center gap-3 text-gray-700 dark:text-gray-200 hover:text-blue-500 transition-colors"
                     onClick={closeMenus}
+                    className="flex items-center gap-3 text-gray-700 dark:text-gray-200 hover:text-blue-500 transition-colors"
                   >
                     <Icon className="w-5 h-5" />
                     {item.label}
@@ -220,7 +221,7 @@ const Navbar = () => {
               }
               return (
                 <button
-                  key={index}
+                  key={i}
                   onClick={() => {
                     item.onClick?.();
                     closeMenus();
