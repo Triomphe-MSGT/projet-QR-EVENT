@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import authService from "../../services/authService";
 import { login } from "../../slices/authSlice";
 import { GoogleLogin } from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
 
 const AuthFormRegisterConnection = () => {
   const [email, setEmail] = useState("");
@@ -56,26 +55,20 @@ const AuthFormRegisterConnection = () => {
 
   const handleGoogleLogin = async (credentialResponse) => {
     try {
-      const decoded = jwtDecode(credentialResponse.credential);
-      // Décodé : { name, email, picture, ... }
+      const googleToken = credentialResponse.credential; // <-- le JWT string Google
 
-      const data = await authService.googleLogin({
-        token: {
-          email: decoded.email,
-          name: decoded.name,
-          picture: decoded.picture,
-        },
-      });
+      // Envoie directement au backend
+      const data = await authService.googleLogin(googleToken);
 
       dispatch(login(data));
       localStorage.setItem("token", data.token);
 
       const user = data.user;
       switch (user.role) {
-        case "organizer":
+        case "organisateur":
           navigate("/createevent", { replace: true });
           break;
-        case "user":
+        case "Participant":
           navigate("/dashboard", { replace: true });
           break;
         default:

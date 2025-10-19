@@ -5,7 +5,6 @@ import Button from "./Button/";
 import authService from "../../services/authService";
 import { login } from "../../slices/authSlice";
 import { GoogleLogin } from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
 
 const AuthFormRegister = () => {
   const [email, setEmail] = useState("");
@@ -37,12 +36,12 @@ const AuthFormRegister = () => {
     try {
       const data = await authService.register({
         email,
-        username,
+        nom: username,
         password,
         role,
         sexe,
         phone: role === "Organisateur" ? phone : undefined,
-        metier: role === "Organisateur" ? metier : undefined,
+        profession: role === "Organisateur" ? metier : undefined,
       });
 
       dispatch(login(data));
@@ -55,14 +54,11 @@ const AuthFormRegister = () => {
       }
 
       switch (user.role) {
-        case "organizer":
+        case "organisateur":
           navigate("/createevent", { replace: true });
           break;
-        case "user":
+        case "Participant":
           navigate("/dashboard", { replace: true });
-          break;
-        case "admin":
-          navigate("/admin", { replace: true });
           break;
         default:
           navigate("/", { replace: true });
@@ -74,29 +70,31 @@ const AuthFormRegister = () => {
     }
   };
 
-  // 🔹 Gestion du login Google
-  const handleGoogleLogin = async (credentialResponse) => {
+  // 🔹 Gestion de l'inscription via Google
+  const handleGoogleRegister = async (credentialResponse) => {
     try {
-      const decoded = jwtDecode(credentialResponse.credential);
+      if (!credentialResponse || !credentialResponse.credential) {
+        setError("Impossible de récupérer le token Google");
+        return;
+      }
 
-      // Envoi au service d’auth
-      const data = await authService.googleLogin({
-        token: {
-          email: decoded.email,
-          name: decoded.name,
-          picture: decoded.picture,
-        },
-      });
+      // Récupère le JWT string Google
+      const googleToken = credentialResponse.credential;
 
+      // Appel au backend pour vérifier/créer l'utilisateur
+      const data = await authService.googleRegister(googleToken);
+
+      // Stocke les infos dans Redux / localStorage
       dispatch(login(data));
       localStorage.setItem("token", data.token);
 
+      // Redirection selon le rôle
       const user = data.user;
       switch (user.role) {
-        case "organizer":
+        case "organisateur":
           navigate("/createevent", { replace: true });
           break;
-        case "user":
+        case "Participant":
           navigate("/dashboard", { replace: true });
           break;
         default:
@@ -104,7 +102,7 @@ const AuthFormRegister = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Erreur lors de la connexion avec Google");
+      setError("Erreur lors de l'inscription avec Google");
     }
   };
 
@@ -236,10 +234,10 @@ const AuthFormRegister = () => {
         - OU -
       </div>
 
-      {/* ✅ Connexion via Google */}
+      {/* Connexion via Google */}
       <div className="flex justify-center">
         <GoogleLogin
-          onSuccess={handleGoogleLogin}
+          onSuccess={handleGoogleRegister}
           onError={() => setError("Échec de la connexion Google")}
           useOneTap
         />

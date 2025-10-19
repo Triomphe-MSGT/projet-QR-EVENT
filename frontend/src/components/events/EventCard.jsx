@@ -1,7 +1,7 @@
 import React from "react";
 import Button from "../ui/Button";
 
-const EventCard = ({ event, handleSelect, handleDetails }) => {
+const EventCard = ({ event, handleDetails }) => {
   return (
     <div
       className="
@@ -63,7 +63,7 @@ const EventCard = ({ event, handleSelect, handleDetails }) => {
           variant="primary"
           size="sm"
           className="bg-[#0866FF] hover:bg-[#0556D0] text-white"
-          onClick={handleSelect}
+          onClick={handleDetails}
         >
           Participer
         </Button>

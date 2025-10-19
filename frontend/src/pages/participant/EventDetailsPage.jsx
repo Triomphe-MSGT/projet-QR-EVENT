@@ -14,7 +14,7 @@ const EventDetailsPage = () => {
   } = useQuery({
     queryKey: ["event", id],
     queryFn: () => getEventById(id),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // 5 minutes de cache, c'est parfait
   });
 
   if (isLoading)
@@ -44,15 +44,11 @@ const EventDetailsPage = () => {
       </MainLayout>
     );
 
+  // ✅ On passe l'objet 'event' entier directement.
+  // C'est plus propre et plus robuste.
   return (
     <MainLayout>
-      <EventDetails
-        imageUrl={event.url}
-        name={event.name}
-        description={event.description}
-        date={event.date}
-        localisation={event.localisation}
-      />
+      <EventDetails event={event} />
     </MainLayout>
   );
 };

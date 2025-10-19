@@ -9,8 +9,7 @@ import {
 
 // Pages publiques
 
-import AuthFormRegister from "./components/ui/AuthFormRegister";
-import AuthFormRegisterConnection from "./components/ui/AuthFormConnection";
+import AuthFormRegisterConnection from "./components/ui/AuthFormRegisterConnection ";
 import OpenPage from "./pages/participant/OpenPage";
 // Pages participant
 import HomePage from "./pages/participant/HomePage";
@@ -34,7 +33,6 @@ const AppRouter = () => {
       <Routes>
         {/* Routes publiques */}
         <Route path="/" element={<OpenPage />} />
-        <Route path="/register" element={<AuthFormRegister />} />
         <Route path="/login" element={<AuthFormRegisterConnection />} />
         <Route path="/user-profile" element={<ProfilePage />} />
 
