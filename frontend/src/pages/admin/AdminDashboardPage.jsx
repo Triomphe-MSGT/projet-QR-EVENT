@@ -1,28 +1,87 @@
+import React from 'react'
+import { useQuery } from '@tanstack/react-query'
+
+import { Calendar, Users, QrCode, BarChart3 } from 'lucide-react'
 import MainLayout from '../../components/layouts/MainLayout'
 
-import UserCards from './GlobalStatsPage'
-import EventTabsadmin from './ManageEventsPage'
-import UserTabs from './ManageUsersPage'
+import CategoryChart from '../../components/charts/CategoryChart'
+import TopCitiesChart from '../../components/charts/TopCitiesChart'
+import PopularEvents from '../../components/Tables/PopularEvent'
+import {
+  getDashboardStats,
+  getEventsByCategory,
+  getPopularEvents,
+  getRecentEvents,
+  getTopCities,
+} from '../../services/dashboardService'
 
-// DashboardPage
-const AdminDashboardPage = () => {
+import { StatCard } from '../../components/cards/StatCard'
+import RecentEvents from '../../components/Tables/RecentEvents'
+
+const AdminDashboard = () => {
+  const { data: stats } = useQuery({
+    queryKey: ['stats'],
+    queryFn: getDashboardStats,
+  })
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getEventsByCategory,
+  })
+  const { data: cities } = useQuery({
+    queryKey: ['cities'],
+    queryFn: getTopCities,
+  })
+  const { data: popular } = useQuery({
+    queryKey: ['popular'],
+    queryFn: getPopularEvents,
+  })
+  const { data: recent } = useQuery({
+    queryKey: ['recent'],
+    queryFn: getRecentEvents,
+  })
+
   return (
     <MainLayout>
-      <div className='min-h-screen bg-gray-50 font-sans'>
-        {/* Contenu principal du tableau de bord */}
-        <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-          <h1 className='text-3xl font-bold text-gray-900 mb-8'>
-            Tableau de bord - Liste des événements
-          </h1>
+      <div className='p-6 bg-gray-50 min-h-screen'>
+        <div className='grid grid-cols-4 gap-4 mb-6'>
+          <StatCard
+            title='Total Événements'
+            value={stats?.totalEvents}
+            color='bg-blue-600'
+            icon={Calendar}
+          />
+          <StatCard
+            title='Inscriptions'
+            value={stats?.totalRegistrations}
+            color='bg-purple-600'
+            icon={Users}
+          />
+          <StatCard
+            title='QR Validés'
+            value={stats?.qrValidated}
+            color='bg-green-600'
+            icon={QrCode}
+          />
+          <StatCard
+            title='Moyenne / Événement'
+            value={stats?.avgPerEvent}
+            color='bg-orange-500'
+            icon={BarChart3}
+          />
+        </div>
 
-          {/* Le tableau des événements est le seul composant actif ici */}
+        <div className='grid grid-cols-2 gap-4 mb-6'>
+          <CategoryChart data={categories || []} />
+          <TopCitiesChart data={cities || []} />
+        </div>
 
-          <UserCards />
-          <UserTabs />
-          <EventTabsadmin />
-        </main>
+        <div className='grid grid-cols-2 gap-4'>
+          <PopularEvents events={popular || []} />
+          <RecentEvents events={recent || []} />
+        </div>
       </div>
     </MainLayout>
   )
 }
-export default AdminDashboardPage
+
+export default AdminDashboard

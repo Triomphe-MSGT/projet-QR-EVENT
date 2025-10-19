@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { updateName, updateEmail } from '../services/userProfile'
+import { updateName, updateEmail, } from '../services/userProfile'
 
 const EditProfileForm = () => {
   const dispatch = useDispatch()
@@ -74,6 +74,18 @@ const EditProfileForm = () => {
         />
       </div>
 
+       <div className='flex flex-col space-y-1'>
+        <label className='text-sm font-medium text-gray-700'>role</label>
+        <input
+          type='text'
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          // AJOUT: w-full pour que l'input remplisse le conteneur du formulaire
+          className='w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500'
+        />
+      </div>
+
+
       {/* Boutons d'action (flex-1 pour répartition égale) */}
       <div className='flex gap-2 pt-2'>
         <button
@@ -94,4 +106,4 @@ const EditProfileForm = () => {
   )
 }
 
-export default EditProfileForm
+export default EditProfileForm  

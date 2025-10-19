@@ -6,8 +6,7 @@ import authReducer from '../slices/authSlice.js'
 export const store = configureStore({
   reducer: {
     events: eventReducer,
-    users: authReducer,
-
     UserProfile: userProfileSlice,
+    auth: authReducer,
   },
 })

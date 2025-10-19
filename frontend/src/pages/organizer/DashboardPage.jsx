@@ -1,5 +1,6 @@
 import MainLayout from '../../components/layouts/MainLayout'
 import EventCards from './Card'
+
 import EventTabs from './EventTabs'
 
 // DashboardPage
@@ -16,6 +17,7 @@ const DashboardPage = () => {
           {/* Le tableau des événements est le seul composant actif ici */}
 
           <EventCards />
+          
           <EventTabs />
         </main>
       </div>

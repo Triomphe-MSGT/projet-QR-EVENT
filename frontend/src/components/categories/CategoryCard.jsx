@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 
 // const CarteCategorie = ({ categorie, onClick }) => {
 //   const { id, nom, emoji } = categorie;

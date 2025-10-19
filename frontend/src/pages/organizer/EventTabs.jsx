@@ -4,16 +4,12 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { setCurrentEvent } from '../../slices/eventSlice'
 import { deleteEvent } from '../../services/eventService'
-import { useQueryClient } from '@tanstack/react-query'
-import toast, { Toaster } from 'react-hot-toast'
+import EditEvent from './EditEvent'
 
 const EventTabs = () => {
   const { data: events, isLoading } = useEvents()
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const queryClient = useQueryClient()
-
-  // Parseur de date robuste
   const parseDate = (dateString) => {
     if (!dateString || typeof dateString !== 'string') return new Date()
     if (dateString.includes('/')) {
@@ -23,7 +19,6 @@ const EventTabs = () => {
     return new Date(dateString)
   }
 
-  // Calcul du statut d’un événement
   const getEventStatus = (start, end) => {
     const today = new Date()
     const startDate = parseDate(start)
@@ -34,33 +29,27 @@ const EventTabs = () => {
     return 'En cours'
   }
 
-  // Navigation vers la création
   const handleCreateClick = () => navigate('/createevent')
 
-  // Édition
   const handleEdit = (event) => {
+    // Stocker l'événement dans Redux pour y accéder facilement
     dispatch(setCurrentEvent(event))
     navigate(`/editevent/${event.id}`)
   }
 
-  // Suppression
   const handleDelete = async (id) => {
     if (!window.confirm('Voulez-vous vraiment supprimer cet événement ?'))
       return
-
     try {
-      await deleteEvent(id)
-      queryClient.invalidateQueries(['events']) // Rafraîchir la liste
-      toast.success('Événement supprimé avec succès !') // ✅ toast
+      await deleteEvent(id) // Assure-toi que deleteEvent retourne une Promise
+      alert('Événement supprimé !')
     } catch (error) {
-      console.error('Erreur suppression :', error)
-      toast.error('Impossible de supprimer l’événement.')
+      alert('Impossible de supprimer l’événement')
     }
   }
 
   return (
     <div className='bg-white p-6 rounded-xl shadow-lg border border-gray-100 mt-8'>
-      <Toaster position='top-right' />
       <div className='flex justify-between items-center mb-6'>
         <h2 className='text-xl font-bold text-gray-800'>
           Gestion des événements
@@ -77,36 +66,35 @@ const EventTabs = () => {
       {isLoading ? (
         <div className='flex justify-center items-center py-10 text-indigo-500'>
           <Loader2 size={24} className='animate-spin mr-2' />
-          <span>Chargement des événements...</span>
         </div>
-      ) : events && events.length > 0 ? (
+      ) : (
         <div className='overflow-x-auto rounded-lg border border-gray-100 shadow-sm'>
           <table className='min-w-full divide-y divide-gray-200'>
             <thead className='bg-gray-50'>
               <tr>
                 <th className='px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500'>
-                  Événement
+                  ÉVÉNEMENT
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500'>
-                  Début
+                  DÉBUT
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500'>
-                  Fin
+                  FIN
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500'>
-                  Lieu
+                  LIEU
                 </th>
                 <th className='px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500'>
-                  Statut
+                  STATUT
                 </th>
                 <th className='px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500'>
-                  Actions
+                  ACTIONS
                 </th>
               </tr>
             </thead>
 
             <tbody className='bg-white divide-y divide-gray-100'>
-              {events.map((event) => {
+              {(events || []).map((event) => {
                 const status = getEventStatus(event.debut, event.fin)
                 const statusColor =
                   status === 'À venir'
@@ -140,17 +128,12 @@ const EventTabs = () => {
                       </span>
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-2 justify-end'>
+                      <EditEvent />
+
                       <button
-                        onClick={() => handleEdit(event)}
-                        title='Modifier'
-                        className='text-gray-600 hover:text-indigo-600'
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(event.id)} // ✅ Correction ici
+                        onClick={() => handleDelete(event)}
                         title='Supprimer'
-                        className='text-red-600 hover:text-red-800'
+                        className='text-red-600'
                       >
                         <Trash2 size={16} />
                       </button>
@@ -160,10 +143,6 @@ const EventTabs = () => {
               })}
             </tbody>
           </table>
-        </div>
-      ) : (
-        <div className='text-center text-gray-500 py-10'>
-          Aucun événement disponible pour le moment.
         </div>
       )}
     </div>
