@@ -32,7 +32,7 @@ const googleLogin = async (req, res, next) => {
 
     if (!user) {
       // Crée un utilisateur avec des valeurs par défaut pour les champs requis
-      const defaultPassword = "GOOGLE_LOGIN_TEMP"; // temporaire, non utilisé
+      const defaultPassword = "GOOGLE_LOGIN_TEMP";
       const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
       user = new User({

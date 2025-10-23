@@ -24,8 +24,8 @@ const googleRegister = async (req, res, next) => {
       user = await User.create({
         nom: name,
         email,
-        passwordHash: "", // pas nécessaire pour OAuth
-        role: "Participant", // ou autre par défaut
+        passwordHash: "",
+        role: "Participant",
         sexe: "",
         profession: "",
         avatarUrl: picture || "/avatars/default.png",

@@ -15,7 +15,7 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZjIyNmEzNDI3NDg4YzQxMmUwYTVlZSIsInJvbGUiOiJhZG1pbmlzdHJhdGV1ciIsImlhdCI6MTc2MDg3Nzg0OSwiZXhwIjoxNzYxNDgyNjQ5fQ.blsNHEg7BOsFVa1C04TXjC52ZnDYMc8rHW9EZWs9nuQ
 
 {
-  "name": "Hackathon 2025",
+  "name": "conference ia 2025",
   "type": "Compétition",
   "startDate": "2025-11-01",
   "endDate": "2025-11-03",

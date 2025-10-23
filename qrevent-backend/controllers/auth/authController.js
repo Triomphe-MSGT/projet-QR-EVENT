@@ -1,6 +1,9 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../../models/user");
+const { OAuth2Client } = require("google-auth-library");
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const register = async (req, res, next) => {
   try {
@@ -27,7 +30,7 @@ const register = async (req, res, next) => {
       image,
     });
 
-    const savedUser = await user.save(); // <--- correction ici
+    const savedUser = await user.save();
 
     const token = jwt.sign(
       { id: savedUser._id, role: savedUser.role },
@@ -60,11 +63,59 @@ const login = async (req, res, next) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-
     res.status(200).json({ message: "Connexion réussie", token, user });
   } catch (err) {
     next(err);
   }
 };
 
-module.exports = { register, login };
+const googleLogin = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: rocess.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const randomPassword = Math.random().toString(36).slice(-8);
+      const passwordHash = await bcrypt.hash(randomPassword, 10);
+
+      user = new User({
+        nom: name,
+        email: email,
+        passwordHash,
+        image: picture,
+        role: "Participant",
+        sexe: "Autre",
+        profession: "Non défini",
+        phone: "Non défini",
+      });
+      await user.save();
+    }
+
+    const tokenJWT = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(200).json({ token: tokenJWT, user });
+  } catch (err) {
+    if (err.message.includes("Invalid token")) {
+      return res.status(401).json({ message: "Token Google invalide" });
+    }
+    next(err);
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  googleLogin,
+};

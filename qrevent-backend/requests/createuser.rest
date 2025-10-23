@@ -1,13 +1,13 @@
 
-POST http://localhost:3001/api/users/register
+POST http://localhost:3001/api/auth/register
 Content-Type: application/json
 
 {
-  "nom": "eri",
-  "email": "eri@gmail.com",
-  "password": "password123",
+  "nom": "admin",
+  "email": "admin@gmail.com",
+  "password": "admin123",
   "sexe": "Homme",
-  "role": "Participant"
+  "role": "administrateur"
 }
 
 ###

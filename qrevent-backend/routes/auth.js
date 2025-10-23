@@ -1,9 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { googleLogin } = require("../controllers/auth/google");
-const { googleRegister } = require("../controllers/auth/googleRegister");
+const {
+  register,
+  login,
+  googleLogin,
+} = require("../controllers/auth/authController");
+const createUpload = require("../utils/multerConfig");
+
+const upload = createUpload("users");
+
+router.post("/register", upload.single("image"), register);
+
+router.post("/login", login);
 
 router.post("/google", googleLogin);
-router.post("/google/register", googleRegister);
 
 module.exports = router;

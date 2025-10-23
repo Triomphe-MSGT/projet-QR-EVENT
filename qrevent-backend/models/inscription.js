@@ -12,7 +12,7 @@ const inscriptionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    // Le jeton secret encodé dans le QR code
+
     qrCodeToken: {
       type: String,
       required: true,
@@ -25,6 +25,6 @@ const inscriptionSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-); // Ajoute createdAt et updatedAt automatiquement
+);
 
 module.exports = mongoose.model("Inscription", inscriptionSchema);
