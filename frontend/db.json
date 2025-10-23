@@ -1,55 +1,30 @@
 {
   "categories": [
-    { "id": "1", "emoji": "🎤", "name": "Conférences" },
-    { "id": "2", "emoji": "🎶", "name": "Concerts" },
-    { "id": "3", "emoji": "🎂", "name": "Anniversaires" },
-    { "id": "4", "emoji": "💍", "name": "Mariages" },
-    { "id": "5", "emoji": "🎓", "name": "Soutenances" }
-  ],
-  "events": [
+    {
+      "id": "1",
+      "emoji": "🎤",
+      "name": "Conférences"
+    },
+    {
+      "id": "2",
+      "emoji": "🎶",
+      "name": "Concerts"
+    },
+    {
+      "id": "3",
+      "emoji": "🎂",
+      "name": "Anniversaires"
+    },
     {
       "id": "4",
-      "name": "Mariage de Jean & Marie",
-      "url": "https://images.pexels.com/photos/546819/pexels-photo-546819.jpeg",
-      "description": "Un mariage inoubliable...",
-      "debut": "10-10-2025",
-      "fin": "25-10-2025",
-      "localisation": "Garoua",
-      "price": "",
-      "qrReason": "",
-      "uniqueQr": "",
-      "type": "Mariages",
-      "categoryId": 4,
-      "participantsCount": 120
+      "emoji": "💍",
+      "name": "Mariages"
     },
     {
-      "id": "7d3d",
-      "name": "Conférence sur l'IA",
-      "type": "Conférences",
-      "debut": "11-10-2025",
-      "fin": "11-10-2025",
-      "time": "00:16",
-      "localisation": "Dschang",
-      "description": "Découverte des innovations IA",
-      "price": "5000",
-      "qrReason": "acces",
-      "uniqueQr": false,
-      "image": null,
-      "participantsCount": 85
-    },
-    {
-      "id": "6d27",
-      "name": "Projet Moock",
-      "type": "Conférences",
-      "debut": "25-10-2025",
-      "fin": "27-10-2025",
-      "localisation": "Yaoundé",
-      "description": "",
-      "price": "6476",
-      "qrReason": "",
-      "uniqueQr": false,
-      "image": null,
-      "participantsCount": 40
+      "id": "5",
+      "emoji": "🎓",
+      "name": "Soutenances"
     }
-  ]
+  ],
+  "events": []
 }

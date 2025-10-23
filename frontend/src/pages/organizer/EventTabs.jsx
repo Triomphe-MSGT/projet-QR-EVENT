@@ -2,14 +2,16 @@ import { useEvents } from '../../hooks/useEvents'
 import { PlusCircle, Loader2, Edit, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
-import { setCurrentEvent } from '../../slices/eventSlice'
+
 import { deleteEvent } from '../../services/eventService'
-import EditEvent from './EditEvent'
+import toast from 'react-hot-toast'
+import { setCurrentEvent } from '../../slices/eventSlice'
 
 const EventTabs = () => {
-  const { data: events, isLoading } = useEvents()
-  const navigate = useNavigate()
+  const { data: events, isLoading, refetch } = useEvents()
+
   const dispatch = useDispatch()
+
   const parseDate = (dateString) => {
     if (!dateString || typeof dateString !== 'string') return new Date()
     if (dateString.includes('/')) {
@@ -32,19 +34,18 @@ const EventTabs = () => {
   const handleCreateClick = () => navigate('/createevent')
 
   const handleEdit = (event) => {
-    // Stocker l'événement dans Redux pour y accéder facilement
     dispatch(setCurrentEvent(event))
-    navigate(`/editevent/${event.id}`)
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (event) => {
     if (!window.confirm('Voulez-vous vraiment supprimer cet événement ?'))
       return
     try {
-      await deleteEvent(id) // Assure-toi que deleteEvent retourne une Promise
-      alert('Événement supprimé !')
+      await deleteEvent(event.id)
+      toast.success('Événement supprimé !')
+      refetch()
     } catch (error) {
-      alert('Impossible de supprimer l’événement')
+      toast.error('Impossible de supprimer l’événement')
     }
   }
 
@@ -92,7 +93,6 @@ const EventTabs = () => {
                 </th>
               </tr>
             </thead>
-
             <tbody className='bg-white divide-y divide-gray-100'>
               {(events || []).map((event) => {
                 const status = getEventStatus(event.debut, event.fin)
@@ -128,8 +128,13 @@ const EventTabs = () => {
                       </span>
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-2 justify-end'>
-                      <EditEvent />
-
+                      <button
+                        onClick={() => handleEdit(event)}
+                        title='Modifier'
+                        className='text-blue-600'
+                      >
+                        <Edit size={16} />
+                      </button>
                       <button
                         onClick={() => handleDelete(event)}
                         title='Supprimer'
