@@ -1,86 +1,59 @@
-import axios from "axios";
+// src/services/eventService.js
+import api from "../slices/axiosInstance"; // ✅ Vérifiez ce chemin
 
-const API_URL = "http://localhost:3001/events";
-
+// Récupère tous les événements
 export const getEvents = async () => {
-  try {
-    const response = await axios.get(API_URL);
-    return response.data;
-  } catch (error) {
-    console.error("Échec de la récupération des événements:", error);
-    throw error;
-  }
+  const { data } = await api.get("/events");
+  return data;
 };
 
-// export const getEventsByCategory = async (category) => {
-//   const { data } = await axios.get(`${API_URL}?type=${category}`);
-//   return data;
-// };
-
+// Récupère un événement par ID
 export const getEventById = async (id) => {
-  try {
-    const response = await axios.get(`${API_URL}/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(
-      `Échec de la récupération de l'événement avec l'ID ${id}:`,
-      error
-    );
-    throw error;
-  }
-};
-export const createEvent = async (eventData) => {
-  try {
-    const response = await axios.post(API_URL, eventData);
-
-    return response.data;
-  } catch (error) {
-    console.error("Échec de la création de l'événement:", error);
-    throw error;
-  }
+  if (!id) throw new Error("ID d'événement manquant");
+  const { data } = await api.get(`/events/${id}`);
+  return data;
 };
 
-export const updateEvent = async (id, eventData) => {
-  try {
-    const response = await axios.put(`${API_URL}/${id}`, eventData);
-    return response.data;
-  } catch (error) {
-    console.error(
-      `Échec de la mise à jour de l'événement avec l'ID ${id}:`,
-      error
-    );
-    throw error;
-  }
+// S'inscrire à un événement
+export const registerToEvent = async ({ eventId, formData }) => {
+  if (!eventId) throw new Error("ID d'événement manquant");
+  const { data } = await api.post(`/events/${eventId}/register`, formData);
+  return data;
 };
 
+// Crée un événement
+export const createEvent = async (formData) => {
+  // formData doit être un objet FormData
+  const { data } = await api.post("/events", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
+
+// Met à jour un événement
+export const updateEvent = async ({ id, formData }) => {
+  // formData doit être un objet FormData
+  if (!id) throw new Error("ID d'événement manquant");
+  const { data } = await api.put(`/events/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
+
+// Supprime un événement
 export const deleteEvent = async (id) => {
-  try {
-    await axios.delete(`${API_URL}/${id}`);
-    return true;
-  } catch (error) {
-    console.error(
-      `Échec de la suppression de l'événement avec l'ID ${id}:`,
-      error
-    );
-    throw error;
-  }
+  if (!id) throw new Error("ID d'événement manquant");
+  await api.delete(`/events/${id}`);
+  return id;
 };
 
-export const deleteAllEvents = async () => {
-  try {
-    await axios.delete(API_URL);
-    return true;
-  } catch (error) {
-    console.error("Échec de la suppression de tous les événements:", error);
-    throw error;
-  }
-};
-
-export default {
+// Exporte les fonctions individuellement ou en tant qu'objet
+const eventService = {
   getEvents,
+  getEventById,
+  registerToEvent,
   createEvent,
   updateEvent,
   deleteEvent,
-  getEventById,
-  deleteAllEvents,
 };
+export default eventService;

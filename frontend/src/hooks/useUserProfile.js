@@ -1,10 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import userProfileService from "../services/userProfileService";
+
 // 🔹 Récupérer le profil utilisateur
 export const useUserProfile = () => {
   return useQuery({
     queryKey: ["userProfile"],
     queryFn: userProfileService.getProfile,
+    // Les données sont considérées comme "fraîches" pendant 5 minutes pour éviter des rechargements inutiles.
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -14,9 +17,15 @@ export const useUpdateProfile = () => {
 
   return useMutation({
     mutationFn: userProfileService.updateProfile,
+    // En cas de succès, invalider le cache du profil pour forcer un rechargement.
     onSuccess: () => {
-      // Rafraîchir le cache du profil après mise à jour
-      queryClient.invalidateQueries(["userProfile"]);
+      console.log("Profil mis à jour avec succès, invalidation du cache...");
+      // Utilisation de la syntaxe d'objet, plus moderne et explicite.
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    },
+    // Gérer les erreurs pour faciliter le débogage.
+    onError: (error) => {
+      console.error("Échec de la mise à jour du profil :", error);
     },
   });
 };
@@ -28,13 +37,17 @@ export const useUploadAvatar = () => {
   return useMutation({
     mutationFn: userProfileService.uploadAvatar,
     onSuccess: () => {
-      // Rafraîchir aussi le profil après changement d’avatar
-      queryClient.invalidateQueries(["userProfile"]);
+      console.log("Avatar uploadé avec succès, invalidation du cache...");
+      // Invalider aussi le profil après un changement d'avatar.
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    },
+    onError: (error) => {
+      console.error("Échec de l'upload de l'avatar :", error);
     },
   });
 };
 
-// 🔹 (optionnel) Récupérer les événements de l'utilisateur
+// 🔹 Récupérer les événements de l'utilisateur
 export const useUserEvents = () => {
   return useQuery({
     queryKey: ["userEvents"],

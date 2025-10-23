@@ -1,56 +1,38 @@
-// src/services/userProfileService.js
-import api from "../slices/axiosInstance";
+import api from "../slices/axiosInstance"; // Ton instance 'api' préfixe déjà avec /api
 
 const userProfileService = {
   // Récupérer le profil de l'utilisateur connecté
   getProfile: async () => {
-    const { data } = await api.get("/profile");
+    // CORRIGÉ : Appelle la route /users/me que nous avons créée
+    const { data } = await api.get("/users/me");
     return data;
   },
 
-  // Mettre à jour le profil
+  // Mettre à jour le profil (nom, profession, etc.)
   updateProfile: async (updatedData) => {
-    const { data } = await api.put("/profile", updatedData);
+    // CORRIGÉ : Appelle la route /users/me
+    const { data } = await api.put("/users/me", updatedData);
     return data;
   },
 
   // Upload de l'avatar
   uploadAvatar: async (file) => {
     const formData = new FormData();
-    formData.append("avatar", file);
-    const { data } = await api.post("/profile/avatar", formData, {
+    formData.append("avatar", file); // 'avatar' doit correspondre au nom du 'upload.single'
+
+    // CORRIGÉ : On crée une route /users/avatar pour ça
+    const { data } = await api.post("/users/avatar", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
   },
 
-  // Récupérer les événements liés à l'utilisateur selon son rôle
+  // Récupérer les événements liés à l'utilisateur
   getUserEvents: async () => {
-    const { data: profile } = await api.get("/profile");
-    const { data: allEvents } = await api.get("/events");
-
-    let organizedEvents = [];
-    let participatedEvents = [];
-
-    if (profile.role === "organizer" || profile.role === "admin") {
-      // Pour les organisateurs et admin : récupérer par IDs
-      organizedEvents = allEvents.filter((ev) =>
-        profile.organizerEvents?.includes(ev.id)
-      );
-      participatedEvents = allEvents.filter((ev) =>
-        profile.participantEvents?.includes(ev.id)
-      );
-    } else {
-      // Pour les participants : uniquement events auxquels ils participent
-      participatedEvents = allEvents.filter((ev) =>
-        profile.participantEvents?.includes(ev.id)
-      );
-    }
-
-    return {
-      organized: organizedEvents,
-      participated: participatedEvents,
-    };
+    // CORRIGÉ : La logique est déplacée vers le backend.
+    // On appelle simplement un nouvel endpoint.
+    const { data } = await api.get("/users/me/events");
+    return data; // Le backend renverra { organized: [...], participated: [...] }
   },
 };
 

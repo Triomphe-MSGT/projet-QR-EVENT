@@ -1,16 +1,24 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:3000/api";
+const API_BASE = "http://localhost:3001/api";
 
 const authService = {
   login: async (email, password) => {
     try {
-      const res = await axios.post(`${API_BASE}/login`, { email, password });
-      const { token, nom, email: userEmail, role } = res.data;
-      return { user: { nom, email: userEmail, role }, token };
+      const res = await axios.post(`${API_BASE}/auth/login`, {
+        email,
+        password,
+      });
+      const { token, user } = res.data;
+      return {
+        user: { nom: user.nom, email: user.email, role: user.role },
+        token,
+      };
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        throw new Error("Email ou mot de passe incorrect");
+        throw new Error(
+          err.response.data.message || "Email ou mot de passe incorrect"
+        );
       }
       throw new Error("Erreur serveur");
     }
@@ -19,22 +27,21 @@ const authService = {
   register: async (userData) => {
     try {
       const payload = {
-        nom: userData.nom || userData.username || "SansNom",
+        nom: userData.nom,
         email: userData.email,
         password: userData.password,
-        role: userData.role || "visiteur",
-        sexe: "",
-        profession: "",
-        phone: userData.phone || "",
+        role: userData.role,
+        sexe: userData.sexe,
+        phone: userData.phone,
+        profession: userData.profession,
       };
 
-      // Obligatoire pour organisateur / administrateur
-      if (["organisateur"].includes(payload.role)) {
+      if (["Organisateur"].includes(payload.role)) {
         payload.phone = userData.phone || "Non renseigné";
         payload.profession = userData.profession || "Non renseigné";
       }
 
-      await axios.post(`${API_BASE}/users`, payload);
+      await axios.post(`${API_BASE}/auth/register`, payload);
 
       return authService.login(payload.email, payload.password);
     } catch (err) {
@@ -43,7 +50,7 @@ const authService = {
         err.response?.data || err.message
       );
       throw new Error(
-        err.response?.data?.error ||
+        err.response?.data?.message ||
           err.message ||
           "Erreur lors de l'inscription"
       );

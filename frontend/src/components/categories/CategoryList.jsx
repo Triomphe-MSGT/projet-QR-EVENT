@@ -1,16 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router";
-import axios from "axios";
-
-const fetchCategories = async () => {
-  const res = await axios.get("http://localhost:3001/categories");
-  return res.data;
-};
+import { Link } from "react-router-dom";
+import { getCategories } from "../../services/categoryService";
 
 export default function ListCategorie() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["categories"],
-    queryFn: fetchCategories,
+    queryFn: getCategories,
   });
 
   if (isLoading) return <p>Chargement...</p>;
@@ -27,6 +22,7 @@ export default function ListCategorie() {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-6">
+      {/* Ton JSX ici est correct */}
       {data.map((cat, idx) => (
         <Link
           key={cat.id}

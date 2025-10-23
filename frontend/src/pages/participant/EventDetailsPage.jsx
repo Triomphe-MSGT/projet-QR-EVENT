@@ -1,54 +1,41 @@
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import EventDetails from "../../components/events/EventDetails";
+// src/pages/participant/EventDetailsPage.jsx
+import React from "react";
+import { useParams } from "react-router-dom"; // Pour lire l'ID depuis l'URL
 import MainLayout from "../../components/layouts/MainLayout";
-import { getEventById } from "../../services/eventService";
+import EventDetails from "../../components/events/EventDetails"; // Le composant d'affichage
+import { useEventDetails } from "../../hooks/useEvents"; // Le bon hook pour un seul événement
 
+/**
+ * Page "Conteneur" : son seul rôle est de charger les données
+ * pour UN SEUL événement et de les passer au composant d'affichage.
+ */
 const EventDetailsPage = () => {
+  // 1. Récupère l'ID depuis l'URL (ex: /events/123)
   const { id } = useParams();
 
-  const {
-    data: event,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["event", id],
-    queryFn: () => getEventById(id),
-    staleTime: 1000 * 60 * 5, // 5 minutes de cache, c'est parfait
-  });
+  // 2. Utilise le hook `useEventDetails` avec cet ID pour charger les données
+  const { data: event, isLoading, isError, error } = useEventDetails(id);
 
-  if (isLoading)
-    return (
-      <MainLayout>
-        <p className="text-center py-10 text-gray-500">
-          Chargement de l'événement...
-        </p>
-      </MainLayout>
-    );
-
-  if (isError)
-    return (
-      <MainLayout>
-        <p className="text-center py-10 text-red-500">
-          Erreur lors du chargement de l'événement.
-        </p>
-      </MainLayout>
-    );
-
-  if (!event)
-    return (
-      <MainLayout>
-        <div className="text-center py-10 text-gray-500">
-          Aucun événement trouvé.
-        </div>
-      </MainLayout>
-    );
-
-  // ✅ On passe l'objet 'event' entier directement.
-  // C'est plus propre et plus robuste.
   return (
     <MainLayout>
-      <EventDetails event={event} />
+      <div className="p-4 md:p-6 max-w-4xl mx-auto">
+        {/* Affiche un message de chargement */}
+        {isLoading && (
+          <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+            Chargement de l'événement...
+          </div>
+        )}
+
+        {/* Affiche un message d'erreur */}
+        {isError && (
+          <div className="text-center py-10 text-red-500">
+            Erreur : {error?.message || "Impossible de charger cet événement."}
+          </div>
+        )}
+
+        {/* 3. Si les données sont chargées, les passe au composant d'affichage */}
+        {event && <EventDetails event={event} />}
+      </div>
     </MainLayout>
   );
 };

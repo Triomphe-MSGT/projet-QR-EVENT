@@ -1,5 +1,5 @@
 // src/components/ProfileEditModal.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Importer useEffect
 
 const ProfileEditModal = ({
   user,
@@ -10,10 +10,25 @@ const ProfileEditModal = ({
   updateError,
   isUpdateSuccess,
 }) => {
+  // CORRECTION : Utiliser 'nom' et les champs du backend
   const [form, setForm] = useState({
-    username: user.username || "",
+    nom: user.nom || "",
     email: user.email || "",
+    profession: user.profession || "",
+    phone: user.phone || "",
+    sexe: user.sexe || "",
   });
+
+  // S'assurer que le formulaire se met à jour si 'user' change (après le 1er chargement)
+  useEffect(() => {
+    setForm({
+      nom: user.nom || "",
+      email: user.email || "",
+      profession: user.profession || "",
+      phone: user.phone || "",
+      sexe: user.sexe || "Autre",
+    });
+  }, [user]); // Dépendance à 'user'
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -21,12 +36,12 @@ const ProfileEditModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onUpdate(form);
+    onUpdate(form); // Enverra { nom, email, profession, phone, sexe }
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) onUploadPhoto(file);
+    if (file) onUploadPhoto(file); // Appelle la fonction d'upload d'avatar
   };
 
   return (
@@ -40,19 +55,19 @@ const ProfileEditModal = ({
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Nom d'utilisateur */}
+          {/* CORRECTION : 'username' -> 'nom' */}
           <div>
             <label className="block mb-1 text-gray-700 dark:text-gray-300">
-              Nom d’utilisateur
+              Nom complet
             </label>
             <input
-              name="username"
-              value={form.username}
+              name="nom"
+              value={form.nom}
               onChange={handleChange}
               className="w-full border border-gray-300 dark:border-gray-600
                          bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
                          rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Nom d'utilisateur"
+              placeholder="Nom complet"
             />
           </div>
 
@@ -66,17 +81,43 @@ const ProfileEditModal = ({
               type="email"
               value={form.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 dark:border-gray-600
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                         rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border p-2 rounded-lg"
               placeholder="Adresse email"
+            />
+          </div>
+
+          {/* Champs additionnels du backend */}
+          <div>
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Téléphone
+            </label>
+            <input
+              name="phone"
+              type="tel"
+              value={form.phone}
+              onChange={handleChange}
+              className="w-full border p-2 rounded-lg"
+              placeholder="Numéro de téléphone"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Profession
+            </label>
+            <input
+              name="profession"
+              type="text"
+              value={form.profession}
+              onChange={handleChange}
+              className="w-full border p-2 rounded-lg"
+              placeholder="Votre profession"
             />
           </div>
 
           {/* Photo de profil */}
           <div>
             <label className="block mb-1 text-gray-700 dark:text-gray-300">
-              Photo de profil
+              Changer la photo de profil
             </label>
             <input
               type="file"

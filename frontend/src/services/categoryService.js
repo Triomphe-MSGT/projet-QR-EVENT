@@ -13,7 +13,7 @@ export const getCategories = async () => {
 
 export const getCategorieById = async (name) => {
   try {
-    const response = await api.get(`${"/categories"}/${name}`);
+    const response = await api.get(`/categories/name/${name}`);
     return response.data;
   } catch (error) {
     console.error(

@@ -1,6 +1,7 @@
+// src/pages/participant/EventListPage.jsx
 import React, { useState } from "react";
 import MainLayout from "../../components/layouts/MainLayout";
-import EventListWithPagination from "../../components/events/EventList";
+import EventList from "../../components/events/EventList";
 import SearchAndFilter from "../../components/events/SearchFilter";
 import { useEvents } from "../../hooks/useEvents";
 
@@ -10,52 +11,48 @@ const EventListPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCity, setSelectedCity] = useState("Toutes");
 
-  // ⚡ Récupération des événements via React Query
-  const { data: items, isLoading, isError } = useEvents();
-  const events = items;
-  if (isLoading) return <p>Chargement des événements...</p>;
-  if (isError) return <p>Erreur lors du chargement des événements.</p>;
+  const { data: events, isLoading, isError, error } = useEvents();
 
-  // Filtrage local
+  if (isLoading)
+    return (
+      <MainLayout>
+        <div className="p-6 text-center">Chargement...</div>
+      </MainLayout>
+    );
+  if (isError)
+    return (
+      <MainLayout>
+        <div className="p-6 text-center text-red-500">
+          Erreur: {error.message}
+        </div>
+      </MainLayout>
+    );
+
   const filteredEvents = (events || [])
     .filter((e) => e.name.toLowerCase().includes(query.toLowerCase()))
     .filter((e) =>
-      selectedCity === "Toutes" ? true : e.localisation === selectedCity
+      selectedCity === "Toutes" ? true : e.city === selectedCity
     );
 
-  // Pagination
-  const getEventsPerPage = (page) => (page === 1 ? 5 : 10);
-  const eventsPerPage = getEventsPerPage(currentPage);
-
-  const startIndex = currentPage === 1 ? 0 : 5 + (currentPage - 2) * 10;
+  const eventsPerPage = 10;
+  const startIndex = (currentPage - 1) * eventsPerPage;
   const endIndex = startIndex + eventsPerPage;
-
   const currentEvents = filteredEvents.slice(startIndex, endIndex);
-
-  const totalPages = Math.ceil(
-    filteredEvents.length > 5
-      ? 1 + (filteredEvents.length - 5) / 10
-      : filteredEvents.length > 0
-      ? 1
-      : 0
-  );
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
 
   return (
     <MainLayout>
-      {/* Barre de recherche + filtre */}
-      <SearchAndFilter
-        query={query}
-        setQuery={setQuery}
-        isFilterOpen={isFilterOpen}
-        setIsFilterOpen={setIsFilterOpen}
-        selectedCity={selectedCity}
-        setSelectedCity={setSelectedCity}
-        setCurrentPage={setCurrentPage}
-      />
-
-      {/* Liste + pagination */}
-      <div className="mt-6">
-        <EventListWithPagination
+      <div className="p-4 md:p-6 space-y-6">
+        <SearchAndFilter
+          query={query}
+          setQuery={setQuery}
+          isFilterOpen={isFilterOpen}
+          setIsFilterOpen={setIsFilterOpen}
+          selectedCity={selectedCity}
+          setSelectedCity={setSelectedCity}
+          setCurrentPage={setCurrentPage}
+        />
+        <EventList
           currentEvents={currentEvents}
           currentPage={currentPage}
           totalPages={totalPages}

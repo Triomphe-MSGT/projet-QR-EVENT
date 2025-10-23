@@ -46,8 +46,11 @@ const AuthFormRegisterConnection = () => {
       localStorage.setItem("token", data.token);
 
       const role = data.user.role;
-      if (role === "organisateur") navigate("/createevent");
-      else if (role === "Participant") navigate("/dashboard");
+      if (role === "Organisateur") navigate("/createevent");
+      else if (role === "Participant")
+        navigate(
+          "/dashboard"
+        ); // '/dashboard' est correct car RoleRouter va rediriger
       else navigate("/");
     } catch (err) {
       setError(err.message || "Erreur lors de la connexion");
@@ -84,7 +87,7 @@ const AuthFormRegisterConnection = () => {
       localStorage.setItem("token", data.token);
 
       const roleUser = data.user.role;
-      if (roleUser === "organisateur") navigate("/createevent");
+      if (roleUser === "Organisateur") navigate("/createevent");
       else if (roleUser === "Participant") navigate("/dashboard");
       else navigate("/");
     } catch (err) {
@@ -109,7 +112,7 @@ const AuthFormRegisterConnection = () => {
       localStorage.setItem("token", data.token);
 
       const roleUser = data.user.role;
-      if (roleUser === "organisateur") navigate("/createevent");
+      if (roleUser === "Organisateur") navigate("/createevent");
       else if (roleUser === "Participant") navigate("/dashboard");
       else navigate("/");
     } catch (err) {
