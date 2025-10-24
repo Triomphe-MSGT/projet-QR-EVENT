@@ -3,6 +3,12 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useQueryClient } from "@tanstack/react-query";
+
+// --- AJOUTS REDUX ---
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../slices/authSlice"; // Assurez-vous que le chemin est correct
+// --- FIN AJOUTS ---
+
 import {
   Menu,
   X,
@@ -28,12 +34,22 @@ const Navbar = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading } = useUserProfile();
+  // --- MODIFICATIONS REDUX ---
+  const dispatch = useDispatch();
+  // 1. Obtenir le token/utilisateur depuis Redux (qui lit le localStorage)
+  const { token, user: reduxUser } = useSelector((state) => state.auth);
+
+  // 2. Utiliser useUserProfile, mais l'activer SEULEMENT s'il y a un token
+  const { data: queryUser, isLoading } = useUserProfile(!!token);
+
+  // 3. Prioriser les données fraîches de React Query,
+  //    mais utiliser les données de Redux comme fallback
+  const user = queryUser || reduxUser;
+  // --- FIN MODIFICATIONS ---
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  // Logique pour déterminer le rôle et la vue
   const isActualOrganizer = user?.role === "Organisateur";
   const [isOrganizerView, setIsOrganizerView] = useState(isActualOrganizer);
 
@@ -43,70 +59,92 @@ const Navbar = () => {
     }
   }, [user]);
 
-  // Fonctions de gestion
   const handleThemeToggle = () => setTheme(theme === "dark" ? "light" : "dark");
   const closeMenus = () => {
     setMenuOpen(false);
     setProfileMenuOpen(false);
   };
 
+  // --- MODIFICATION LOGOUT ---
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    queryClient.clear(); // Vide le cache React Query pour le prochain utilisateur
+    // 1. Appeler l'action Redux (qui videra Redux ET le localStorage)
+    dispatch(logout());
+
+    // 2. Vider le cache React Query
+    queryClient.clear();
+
+    // 3. Rediriger
     navigate("/login");
   };
+  // --- FIN MODIFICATION ---
 
   const handleRoleToggle = () => {
     setIsOrganizerView((prev) => !prev);
     closeMenus();
   };
 
-  // Création dynamique des items du menu
   const menuItems = useMemo(() => {
+    // ... (votre logique useMemo est correcte et reste inchangée)
     const items = [
-      // Cet item a un 'onClick', il sera rendu comme un <button>
       { label: "Retour", icon: ArrowLeft, onClick: () => navigate(-1) },
-      // Ces items ont un 'path', ils seront rendus comme des <Link>
       { label: "Accueil", icon: Home, path: "/home" },
       { label: "Catégories", icon: Grid, path: "/categories" },
       { label: "Mes QR Codes", icon: QrCode, path: "/my-qrcodes" },
       { label: "Mon Profil", icon: UserCircle, path: "/user-profile" },
       { label: "Paramètres", icon: Settings, path: "/account-settings" },
     ];
-
-    // Ajoute le lien "Admin" seulement si l'utilisateur a le bon rôle
     if (user?.role === "Administrateur") {
-      // Utilise la bonne casse pour le rôle
+      // Utilise 'user'
       items.push({
         label: "Admin Dashboard",
         icon: ShieldCheck,
         path: "/admin",
       });
     }
-
     return items;
-  }, [user, navigate]); // Recalculé si 'user' ou 'navigate' change
+  }, [user, navigate]); // Dépend de 'user'
 
-  // Fonction utilitaire pour l'avatar
   const getAvatarUrl = (imagePath) => {
+    // ... (votre fonction est correcte et reste inchangée)
     if (!imagePath) return "/assets/default-avatar.png";
     if (imagePath.startsWith("http")) return imagePath;
     return `http://localhost:3001/${imagePath}`;
   };
 
-  // Affiche un squelette de chargement pendant que le profil est récupéré
-  if (isLoading) {
+  // --- MODIFICATION DU CHARGEMENT ---
+  // Le chargement ne se fait que si on a un token mais pas encore d'utilisateur de query
+  if (isLoading && token) {
     return (
       <nav className="relative flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 shadow-md">
-        <div className="h-7 w-7 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse"></div>
-        <div className="h-7 w-24 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse"></div>
-        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+        {/* ... (votre squelette de chargement est correct) ... */}
       </nav>
     );
   }
 
+  // Si pas de token, on affiche une navbar vide (ou pour visiteur)
+  if (!token) {
+    return (
+      <nav className="relative flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 shadow-md">
+        <Link to="/" className="absolute left-1/2 -translate-x-1/2">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent select-none">
+            Qr-Event
+          </h1>
+        </Link>
+        <div className="flex-1"></div>
+        <Link to="/login" className="font-semibold text-blue-500">
+          Connexion
+        </Link>
+      </nav>
+    );
+  }
+
+  // Si on est ici, c'est qu'on est connecté (on a un 'user')
   return (
     <nav className="relative flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 shadow-md transition-colors duration-300">
+      {/* ---- Le reste de votre JSX (boutons, menus, etc.) est correct ---- */}
+      {/* ---- Il utilisera maintenant la variable 'user' correcte ---- */}
+      {/* ---- Et le bouton 'handleLogout' appellera la bonne action Redux ---- */}
+
       {/* ---- Bouton Hamburger ---- */}
       <button
         onClick={() => {
@@ -219,9 +257,7 @@ const Navbar = () => {
           <div className="absolute top-16 left-4 w-72 z-50 p-4 flex flex-col gap-2 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-lg animate-slide-in-left">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              // --- Logique de rendu conditionnel ---
               if (item.path) {
-                // Si l'item a un 'path', on rend un <Link>
                 return (
                   <Link
                     key={item.label}
@@ -234,12 +270,11 @@ const Navbar = () => {
                   </Link>
                 );
               } else {
-                // Sinon (s'il a un 'onClick'), on rend un <button>
                 return (
                   <button
                     key={item.label}
                     onClick={() => {
-                      if (item.onClick) item.onClick(); // Exécute l'action (ex: navigate(-1))
+                      if (item.onClick) item.onClick();
                       closeMenus();
                     }}
                     className="flex items-center gap-3 p-2 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-blue-500 hover:text-white transition-colors text-left"

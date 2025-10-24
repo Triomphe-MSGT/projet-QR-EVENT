@@ -36,28 +36,20 @@ const AppRouter = () => {
         <Route path="/" element={<OpenPage />} />
         <Route path="/login" element={<AuthFormRegisterConnection />} />
         <Route path="/user-profile" element={<ProfilePage />} />
+        <Route path="/events" element={<EventListPage />} />
 
         {/* Routes protégées */}
         <Route
           path="/my-qrcodes"
           element={
             <PrivateRoute
-              allowedRoles={["Participant", "Organisateur", "Administrateur"]}
+              allowedRoles={["Participant", "Organisateur", "administrateur"]}
             >
               <UserQrCodesPage />
             </PrivateRoute>
           }
         />
-        <Route
-          path="/home"
-          element={
-            <PrivateRoute
-              allowedRoles={["Participant", "Organisateur", "administrateur"]}
-            >
-              <HomePage />
-            </PrivateRoute>
-          }
-        />
+        <Route path="/home" element={<HomePage />} />
         <Route
           path="/categories/:name"
           element={
@@ -83,7 +75,7 @@ const AppRouter = () => {
         <Route
           path="/createevent"
           element={
-            <PrivateRoute allowedRoles={["Organisateur"]}>
+            <PrivateRoute allowedRoles={["Organisateur", "administrateur"]}>
               <EventForm />
             </PrivateRoute>
           }

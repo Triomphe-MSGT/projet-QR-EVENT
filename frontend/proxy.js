@@ -24,7 +24,7 @@ app.get("/geocode", async (req, res) => {
     );
 
     console.log("✅ Geocode OK:", q);
-    res.json(response.data.features); // même structure que Nominatim
+    res.json(response.data.features);
   } catch (error) {
     console.error("❌ Erreur proxy /geocode :", {
       message: error.message,

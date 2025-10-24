@@ -34,8 +34,8 @@ const register = async (req, res, next) => {
 
     const token = jwt.sign(
       { id: savedUser._id, role: savedUser.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      process.env.JWT_SECRET
+      // { expiresIn: "7d" }
     );
 
     res

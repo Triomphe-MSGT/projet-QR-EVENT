@@ -12,6 +12,10 @@ const inscriptionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    qrCodeImage: {
+      type: String,
+      required: true,
+    },
 
     qrCodeToken: {
       type: String,

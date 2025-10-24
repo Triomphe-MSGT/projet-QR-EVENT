@@ -286,13 +286,13 @@ const registerToEvent = async (req, res, next) => {
           event,
           participantUser
         );
-
-      // Sauvegarde du ticket d'inscription
       const inscription = new Inscription({
         event: event._id,
         participant: participantUser._id,
         qrCodeToken: token,
+        qrCodeImage: qrCodeImage,
       });
+
       await inscription.save();
 
       return res.status(201).json({

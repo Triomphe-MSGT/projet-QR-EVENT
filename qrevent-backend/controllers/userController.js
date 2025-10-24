@@ -1,3 +1,5 @@
+// Fichier: qrevent-backend/controllers/userController.js
+
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -99,8 +101,10 @@ const updateUser = async (req, res, next) => {
     next(error);
   }
 };
+
 const deleteUser = async (req, res, next) => {
   try {
+    // Note: Assurez-vous que le rôle est bien "administrateur" en minuscules
     if (req.user.role !== "administrateur") {
       return res.status(403).json({
         error: "Seul l'administrateur peut supprimer un utilisateur.",
@@ -120,6 +124,7 @@ const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
 const getMe = async (req, res, next) => {
   try {
     if (!req.user || !req.user.id) {
@@ -196,31 +201,44 @@ const getMyEvents = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
+    // Récupère les événements que l'utilisateur organise
     const organizedEvents = await Event.find({ organizer: userId })
       .populate("category", "name emoji")
       .sort({ startDate: -1 });
 
+    // Récupère les inscriptions (billets) de l'utilisateur
     const inscriptions = await Inscription.find({
       participant: userId,
-    }).populate({
-      path: "event",
-      populate: {
-        path: "category",
-        select: "name emoji",
-      },
-    });
+    })
+      .select("event qrCodeToken qrCodeImage") // On prend l'ID de l'événement, le token et l'image
+      .populate({
+        path: "event", // On charge les détails de l'événement lié
+        populate: {
+          path: "category", // On charge la catégorie de cet événement
+          select: "name emoji",
+        },
+      });
 
+    // On transforme les inscriptions en une liste d'événements
     const participatedEvents = inscriptions
       .map((inscription) => {
         if (!inscription.event) return null;
 
-        const eventObject = inscription.event.toObject();
+        const event = inscription.event;
 
-        eventObject.qrCodeToken = inscription.qrCodeToken;
+        return {
+          id: event._id.toString(),
+          name: event.name,
+          startDate: event.startDate,
+          city: event.city,
+          imageUrl: event.imageUrl,
+          category: event.category,
 
-        return eventObject;
+          qrCodeToken: inscription.qrCodeToken,
+          qrCodeImage: inscription.qrCodeImage,
+        };
       })
-      .filter((event) => event !== null);
+      .filter((event) => event !== null); // On retire les inscriptions invalides
 
     res.json({
       organized: organizedEvents,

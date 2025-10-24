@@ -1,14 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "../../components/layouts/MainLayout";
 import QrCodeDisplay from "../../components/ui/QrCodeDisplay";
-import { useUserEvents } from "../../hooks/useUserProfile";
+import { useUserEvents } from "../../hooks/useUserProfile"; // Assurez-vous que ce hook appelle la bonne route (ex: /api/users/me/events)
 
 const UserQrCodesPage = () => {
   const { data: eventsData, isLoading, isError, error } = useUserEvents();
 
+  // État pour gérer l'ouverture/fermeture de la modale et le QR code sélectionné
+  const [selectedQr, setSelectedQr] = useState(null); // Stockera l'image Base64
+
+  // Filtre les événements auxquels l'utilisateur participe ET qui ont une image QR code
   const eventsWithQrCodes =
-    eventsData?.participated?.filter((event) => event.qrCodeToken) || [];
+    eventsData?.participated?.filter((event) => event.qrCodeImage) || [];
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date inconnue";
@@ -57,8 +61,9 @@ const UserQrCodesPage = () => {
                 key={event.id}
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center text-center"
               >
+                {/* Affiche la petite image du QR code sur la carte */}
                 <div className="mb-4">
-                  <QrCodeDisplay value={event.qrCodeToken} size={160} />
+                  <QrCodeDisplay value={event.qrCodeImage} size={160} />
                 </div>
 
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
@@ -67,11 +72,20 @@ const UserQrCodesPage = () => {
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {formatDate(event.startDate)}
                 </p>
+
+                {/* Bouton pour ouvrir la modale d'affichage en grand */}
+                <button
+                  onClick={() => setSelectedQr(event.qrCodeImage)}
+                  className="mt-4 w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors"
+                >
+                  Afficher pour Scan
+                </button>
+
                 <Link
                   to={`/events/${event.id}`}
-                  className="mt-4 text-sm text-blue-600 hover:underline dark:text-blue-400"
+                  className="mt-2 text-sm text-blue-600 hover:underline dark:text-blue-400"
                 >
-                  Voir les détails de l'événement
+                  Voir les détails
                 </Link>
               </div>
             ))}
@@ -88,6 +102,27 @@ const UserQrCodesPage = () => {
           </div>
         )}
       </div>
+
+      {/* --- MODALE D'AFFICHAGE EN GRAND FORMAT --- */}
+      {/* S'affiche uniquement si 'selectedQr' n'est pas nul */}
+      {selectedQr && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setSelectedQr(null)} // Clique n'importe où sur le fond noir pour fermer
+        >
+          {/* Conteneur blanc pour le QR code */}
+          <div
+            className="bg-white p-6 md:p-10 rounded-xl"
+            onClick={(e) => e.stopPropagation()} // Empêche la fermeture si on clique sur le QR
+          >
+            {/* Affiche le QR code en grand (300px) */}
+            <QrCodeDisplay value={selectedQr} size={300} />
+            <p className="text-center text-gray-700 mt-4 font-medium">
+              Présentez ce code à l'organisateur.
+            </p>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 };

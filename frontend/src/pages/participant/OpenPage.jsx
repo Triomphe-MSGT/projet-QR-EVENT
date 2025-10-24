@@ -164,12 +164,16 @@ const MainContent = () => {
       navigate("/createevent");
     }
   };
-  const handleGoHome = () => {
-    if (!token || !user) {
-      navigate("/login");
-    } else {
-      navigate("/home");
-    }
+  // const handleGoHome = () => {
+  //   if (!token || !user) {
+  //     navigate("/login");
+  //   } else {
+  //     navigate("/home");
+  //   }
+  // };
+  const handleExploreEvents = () => {
+    // On retire la condition if/else
+    navigate("/home"); // On envoie tout le monde vers la page /events
   };
 
   return (
@@ -185,7 +189,7 @@ const MainContent = () => {
             ressemblent, avec une gestion d'accès par QR code ultra-rapide.
           </p>
           <button
-            onClick={handleGoHome}
+            onClick={handleExploreEvents}
             className="block w-full py-4 px-6 bg-blue-500 text-white font-extrabold rounded-xl shadow-lg hover:bg-blue-600 transition-transform transform hover:scale-[1.02] mb-4"
           >
             Explorer les événements
