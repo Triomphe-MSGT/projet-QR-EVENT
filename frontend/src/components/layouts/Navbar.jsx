@@ -77,14 +77,6 @@ const Navbar = () => {
 
     // Ajoute les liens spécifiques pour Organisateurs et Admins
     if (userRole === "Organisateur" || userRole === "administrateur") {
-      // Ajoute "Dashboard"
-      const homeIndex = baseItems.findIndex((item) => item.label === "Accueil");
-      baseItems.splice(homeIndex !== -1 ? homeIndex + 1 : 1, 0, {
-        label: "Dashboard",
-        icon: LayoutDashboard,
-        path: "/dashboard",
-      });
-
       // Ajoute "Scanner un Ticket"
       const qrIndex = baseItems.findIndex(
         (item) => item.label === "Mes QR Codes"
@@ -100,6 +92,15 @@ const Navbar = () => {
         baseItems.push(scanItem);
       }
     }
+    if (userRole === "Organisateur") {
+      // Utilise la bonne casse
+      baseItems.push({
+        label: "Dashboard",
+        icon: ShieldCheck,
+        path: "/dashboard",
+      });
+    }
+
     // Ajoute le lien spécifique Admin
     if (userRole === "administrateur") {
       // Utilise la bonne casse

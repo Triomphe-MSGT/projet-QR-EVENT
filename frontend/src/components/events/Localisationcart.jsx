@@ -1,3 +1,4 @@
+// src/components/events/Localisationcart.jsx
 import React from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -15,32 +16,41 @@ const markerIcon = new L.Icon({
 });
 
 const LocalisationCart = ({ location }) => {
-  // Valeur par défaut (Douala, Cameroun)
+  // Valeur par défaut (Douala, Cameroun) si aucune coordonnée n'est fournie
   const defaultCoords = { lat: 4.0511, lng: 9.7679 };
   const coords = location?.coords || defaultCoords;
 
+  // --- CORRECTION : Construire l'adresse complète ---
+  // Combine les différentes parties de l'adresse en une seule chaîne.
+  // filter(Boolean) retire les parties vides (null, undefined, "").
+  const fullAddress = [
+    location?.address, // (Ex: "Bonapriso" ou le nom du lieu)
+    location?.city, // (Ex: "Douala")
+    location?.country, // (Ex: "Cameroun")
+  ]
+    .filter(Boolean)
+    .join(", "); // Résultat : "Bonapriso, Douala, Cameroun"
+
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 transition-colors duration-500">
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 transition-colors duration-500">
       <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
         📍 Localisation
       </h3>
 
-      <div className="text-gray-700 dark:text-gray-300 mb-3">
+      {/* --- MODIFICATION : Affiche l'adresse complète unifiée --- */}
+      <div className="text-gray-700 dark:text-gray-300 mb-4">
         <p>
-          <strong>Adresse :</strong> {location?.address || "Non spécifiée"}
+          <strong className="font-medium">Adresse complète :</strong>
+          <br />
+          {fullAddress || "Non spécifiée"}
         </p>
-        <p>
-          <strong>Ville :</strong> {location?.city || "Inconnue"}
-        </p>
-        <p>
-          <strong>Pays :</strong> {location?.country || "Non précisé"}
-        </p>
+        {/* Les champs séparés (Ville, Pays, Quartier) sont retirés pour éviter la redondance */}
       </div>
 
       {/* Carte interactive */}
       <MapContainer
         center={[coords.lat, coords.lng]}
-        zoom={13}
+        zoom={15} // Zoom un peu plus proche pour mieux voir
         style={{ height: "300px", width: "100%", borderRadius: "12px" }}
       >
         <TileLayer
@@ -48,11 +58,8 @@ const LocalisationCart = ({ location }) => {
           attribution='© <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
         />
         <Marker position={[coords.lat, coords.lng]} icon={markerIcon}>
-          <Popup>
-            {location?.address
-              ? `${location.address}, ${location.city}`
-              : "Emplacement inconnu"}
-          </Popup>
+          {/* --- MODIFICATION : Utilise la même adresse complète dans le Popup --- */}
+          <Popup>{fullAddress || "Emplacement de l'événement"}</Popup>
         </Marker>
       </MapContainer>
     </div>

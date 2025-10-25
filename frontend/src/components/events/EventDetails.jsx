@@ -88,8 +88,8 @@ const EventDetails = ({ event }) => {
       : "?";
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-    if (imagePath.startsWith("http")) return imagePath; // Pour les images de Google/Pexels etc.
-    return `http://localhost:3001/${imagePath}`; // Pour les images uploadées
+    if (imagePath.startsWith("http")) return imagePath;
+    return `http://localhost:3001/${imagePath}`;
   };
   const imageUrl = getImageUrl(event.imageUrl);
 
@@ -269,7 +269,12 @@ const EventDetails = ({ event }) => {
               </div>
             ) : coords ? (
               <LocalisationCart
-                location={{ address: event.city, coords: coords }}
+                location={{
+                  address: event.city,
+                  country: event.country,
+                  neighborhood: event.neighborhood,
+                  coords: coords,
+                }}
               />
             ) : (
               <div className="h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg">

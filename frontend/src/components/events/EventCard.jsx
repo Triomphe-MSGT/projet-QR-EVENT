@@ -89,6 +89,8 @@ const EventCard = ({ event, handleDetails }) => {
                 />
               </svg>
               {event.city}
+              {event.country ? `, ${event.country}` : ""}
+              {event.neiborhood ? ` - ${event.neighborhood}` : ""}
             </span>
             {event.price > 0 && (
               <span className="flex items-center font-medium text-blue-600 dark:text-blue-400">
