@@ -68,7 +68,7 @@ const Footer = () => {
 
           {/* Notifications */}
           <Link
-            to="/events/1"
+            to="/home"
             className={`flex flex-col items-center text-xs ${
               isActive("/events/1")
                 ? "text-[#0866FF]"

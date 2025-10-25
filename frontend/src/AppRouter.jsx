@@ -8,25 +8,29 @@ import {
 } from "react-router-dom";
 
 // Pages publiques
-
 import OpenPage from "./pages/participant/OpenPage";
+
 // Pages participant
 import HomePage from "./pages/participant/HomePage";
 import EventListPage from "./pages/participant/EventListPage";
 import EventDetailsPage from "./pages/participant/EventDetailsPage";
+import UserQrCodesPage from "./pages/participant/UserQrCodesPage";
 
-// Pages organisateur
+// Pages Organisateur
 import EventForm from "./pages/organizer/CreateEventPage";
-// Page admin
-// import AdminDashboard from "../pages/admin/AdminDashboard";
-
-import RoleRouter from "./routes/RoleRouter";
 import OrganizerProfile from "./pages/organizer/ProfilOrganisateur";
+import DashboardPage from "./pages/organizer/DashboardPage";
+
+// Autres imports
+// import AdminDashboard from "../pages/admin/AdminDashboard";
+import RoleRouter from "./routes/RoleRouter";
 import PrivateRoute from "./routes/PrivateRoute";
 import Unauthorized from "./pages/Unauthorized";
 import ProfilePage from "./pages/ProfilePage";
 import AuthFormRegisterConnection from "./components/ui/AuthFormRegisterConnection ";
-import UserQrCodesPage from "./pages/participant/UserQrCodesPage";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import ScanQrPage from "./pages/organizer/ScanQrPage";
+import SettingsPage from "./pages/SettingsPage";
 
 const AppRouter = () => {
   return (
@@ -37,6 +41,7 @@ const AppRouter = () => {
         <Route path="/login" element={<AuthFormRegisterConnection />} />
         <Route path="/user-profile" element={<ProfilePage />} />
         <Route path="/events" element={<EventListPage />} />
+        <Route path="/home" element={<HomePage />} />
 
         {/* Routes protégées */}
         <Route
@@ -49,29 +54,28 @@ const AppRouter = () => {
             </PrivateRoute>
           }
         />
-        <Route path="/home" element={<HomePage />} />
+
         <Route
-          path="/categories/:name"
+          path="/scan-qrcode"
           element={
-            <PrivateRoute
-              allowedRoles={["Participant", "Organisateur", "administrateur"]}
-            >
-              <EventListPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/events/:id"
-          element={
-            <PrivateRoute
-              allowedRoles={["Participant", "Organisateur", "administrateur"]}
-            >
-              <EventDetailsPage />
+            <PrivateRoute allowedRoles={["Organisateur", "administrateur"]}>
+              <ScanQrPage />
             </PrivateRoute>
           }
         />
 
-        {/* Routes organisateur */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute allowedRoles={["Organisateur", "administrateur"]}>
+              <DashboardPage />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/categories/:name" element={<EventListPage />} />
+        <Route path="/events/:id" element={<EventDetailsPage />} />
+
+        {/* Routes Organisateur */}
         <Route
           path="/createevent"
           element={
@@ -89,12 +93,28 @@ const AppRouter = () => {
           }
         />
 
-        {/* Route dynamique par rôle */}
-        <Route path="/dashboard" element={<RoleRouter />} />
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute allowedRoles={["administrateur"]}>
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/account-settings" // Ou simplement /settings
+          element={
+            <PrivateRoute
+              allowedRoles={["administrateur", "Organisateur", "Participant"]}
+            >
+              <SettingsPage />
+            </PrivateRoute>
+          }
+        />
 
-        {/* Route fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Routes de secours */}
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

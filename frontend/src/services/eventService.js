@@ -46,6 +46,11 @@ export const deleteEvent = async (id) => {
   await api.delete(`/events/${id}`);
   return id;
 };
+export const validateQrCode = async (validationData) => {
+  const { data } = await api.post("/events/validate-qr", validationData);
+
+  return data;
+};
 
 // Exporte les fonctions individuellement ou en tant qu'objet
 const eventService = {
@@ -55,5 +60,6 @@ const eventService = {
   createEvent,
   updateEvent,
   deleteEvent,
+  validateQrCode,
 };
 export default eventService;

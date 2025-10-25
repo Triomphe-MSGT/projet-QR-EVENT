@@ -47,10 +47,8 @@ const AuthFormRegisterConnection = () => {
 
       const role = data.user.role;
       if (role === "Organisateur") navigate("/createevent");
-      else if (role === "Participant")
-        navigate(
-          "/dashboard"
-        ); // '/dashboard' est correct car RoleRouter va rediriger
+      else if (role === "Participant") navigate("/dashboard");
+      // '/dashboard' est correct car RoleRouter va rediriger
       else navigate("/");
     } catch (err) {
       setError(err.message || "Erreur lors de la connexion");

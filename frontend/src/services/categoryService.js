@@ -1,81 +1,84 @@
-import axios from "axios";
-import api from "../slices/axiosInstance";
+// src/services/categoryService.js
+import api from "../slices/axiosInstance"; // ✅ Assurez-vous que ce chemin est correct
 
+// Récupère toutes les catégories
 export const getCategories = async () => {
   try {
-    const response = await api.get("/categories");
-    return response.data;
+    const { data } = await api.get("/categories");
+    return data || [];
   } catch (error) {
-    console.error("Échec de la récupération des categories:", error);
-    throw error;
+    console.error("Échec récupération catégories:", error);
+    throw error; // Relance l'erreur pour React Query
   }
 };
 
-export const getCategorieById = async (name) => {
+// Récupère une catégorie par son NOM (correspond au backend)
+export const getCategoryByName = async (name) => {
   try {
     const response = await api.get(`/categories/name/${name}`);
     return response.data;
   } catch (error) {
-    console.error(
-      `Échec de la récupération de la categorie avec de nom ${name}:`,
-      error
-    );
+    console.error(`Échec récupération catégorie nom ${name}:`, error);
     throw error;
   }
 };
-
-export const createCategorie = async (CategorieData) => {
+// Optionnel: Récupère une catégorie par son ID (si nécessaire)
+export const getCategoryById = async (id) => {
   try {
-    const response = await api.post("/categories", CategorieData);
-
+    const response = await api.get(`/categories/id/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Échec de la création de la categorie:", error);
+    console.error(`Échec récupération catégorie ID ${id}:`, error);
     throw error;
   }
 };
 
-export const updateCategorie = async (id, CategorieData) => {
+// Crée une nouvelle catégorie
+export const createCategory = async (categoryData) => {
   try {
-    const response = await api.put(`${"/categories"}/${id}`, CategorieData);
+    // categoryData est un objet JSON simple { name, emoji, description }
+    const response = await api.post("/categories", categoryData);
     return response.data;
   } catch (error) {
-    console.error(
-      `Échec de la mise à jour de la categorie avec l'ID ${id}:`,
-      error
-    );
+    console.error("Échec création catégorie:", error);
     throw error;
   }
 };
 
-export const deleteCategorie = async (id) => {
+// Met à jour une catégorie
+export const updateCategory = async ({ id, categoryData }) => {
+  // Accepte un objet {id, categoryData}
   try {
-    await api.delete(`${"/categories"}/${id}`);
-    return true;
+    // CORRECTION : Utilisation correcte de l'URL
+    const response = await api.put(`/categories/${id}`, categoryData);
+    return response.data;
   } catch (error) {
-    console.error(
-      `Échec de la suppression de la categorie avec l'ID ${id}:`,
-      error
-    );
+    console.error(`Échec màj catégorie ID ${id}:`, error);
     throw error;
   }
 };
 
-export const deleteAllCategories = async () => {
+// Supprime une catégorie
+export const deleteCategory = async (id) => {
   try {
-    await axios.delete("/categories");
-    return true;
+    await api.delete(`/categories/${id}`);
+    return id; // Retourne l'ID pour la mise à jour du cache
   } catch (error) {
-    console.error("Échec de la suppression de tous les categorie:", error);
+    console.error(`Échec suppression catégorie ID ${id}:`, error);
     throw error;
   }
 };
 
-export default {
+// SUPPRIMÉ : deleteAllCategories n'est pas sûr et n'utilise pas 'api'
+// export const deleteAllCategories = async () => { ... };
+
+// Exporte les fonctions utiles
+const categoryService = {
   getCategories,
-  createCategorie,
-  updateCategorie,
-  deleteCategorie,
-  getCategorieById,
-  deleteAllCategories,
+  getCategoryByName,
+  getCategoryById, // Exporté si besoin
+  createCategory,
+  updateCategory,
+  deleteCategory,
 };
+export default categoryService;

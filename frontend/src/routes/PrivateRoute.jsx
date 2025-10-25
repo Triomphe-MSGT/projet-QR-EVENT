@@ -10,7 +10,11 @@ const PrivateRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!allowedRoles.includes(user.role)) {
+  const userRole = user.role?.toLowerCase();
+  const rolesAutorises = allowedRoles.map((r) => r.toLowerCase());
+
+  if (!rolesAutorises.includes(userRole)) {
+    console.error(`[ERROR] Accès refusé à ${user.email}, rôle : ${user.role}`);
     return <Navigate to="/unauthorized" replace />;
   }
 

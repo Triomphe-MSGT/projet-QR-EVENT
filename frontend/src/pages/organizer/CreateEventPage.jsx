@@ -1,26 +1,84 @@
-import { useState } from "react";
-import { useCreateEvent } from "../../hooks/useEvents";
-import MainLayout from "../../components/layouts/MainLayout";
+// src/pages/organizer/CreateEventPage.jsx (ou EventForm.jsx)
+
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getCategories } from "../../services/categoryService"; // Assurez-vous que ce chemin est correct
+import { useCreateEvent } from "../../hooks/useEvents"; // Votre hook existant
+import MainLayout from "../../components/layouts/MainLayout"; // Assurez-vous que ce chemin est correct
 import { useNavigate } from "react-router-dom";
+import { Loader2, AlertTriangle } from "lucide-react"; // Pour un feedback visuel
+
+// --- Liste des villes du Cameroun ---
+const cameroonianCities = [
+  "Yaoundé",
+  "Douala",
+  "Garoua",
+  "Bamenda",
+  "Maroua",
+  "Bafoussam",
+  "Ngaoundéré",
+  "Bertoua",
+  "Ebolowa",
+  "Buea",
+  "Kumba",
+  "Nkongsamba",
+  "Limbe",
+  "Edéa",
+  "Kribi",
+  "Dschang",
+  "Foumban",
+  "Mbouda",
+  "Sangmélima",
+  "Bafang",
+  "Bafia",
+  "Kousséri",
+  "Guider",
+  "Meiganga",
+  "Yagoua",
+  "Tiko",
+  "Mbalmayo",
+  "Kumbo",
+  "Wum",
+  "Akonolinga",
+  "Eséka",
+  "Mamfé",
+  "Obala",
+  // Ajoutez d'autres villes si nécessaire
+].sort(); // Tri alphabétique pour la liste déroulante
 
 const EventForm = () => {
   const navigate = useNavigate();
 
+  // État du formulaire avec les nouveaux champs
   const [formData, setFormData] = useState({
     name: "",
-    type: "",
-    date: "",
+    type: "", // Optionnel
+    startDate: "",
+    endDate: "", // Nouveau
     time: "",
-    location: "",
+    city: "",
+    neighborhood: "", // Nouveau
     description: "",
-    price: "",
-    qrReason: "",
-    uniqueQr: false,
+    price: "0",
+    category: "",
+    qrOption: false,
     image: null,
   });
 
+  // Récupération des catégories
+  const {
+    data: categories,
+    isLoading: isLoadingCategories,
+    isError: isErrorCategories,
+  } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  });
+
+  // Mutation pour créer l'événement
   const createEventMutation = useCreateEvent();
 
+  // Gestion des changements du formulaire
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     setFormData((prev) => ({
@@ -30,231 +88,360 @@ const EventForm = () => {
     }));
   };
 
+  // Gestion de la soumission du formulaire
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.type || !formData.date) {
-      alert("Veuillez remplir les champs obligatoires !");
+    // Vérifications frontend
+    if (
+      !formData.name ||
+      !formData.startDate ||
+      !formData.city ||
+      !formData.category ||
+      !formData.description
+    ) {
+      alert("Veuillez remplir tous les champs obligatoires (*)");
       return;
     }
 
-    const eventToSend = {
-      ...formData,
-      image: formData.image ? formData.image.name : null,
-    };
+    if (
+      formData.endDate &&
+      formData.startDate &&
+      new Date(formData.endDate) < new Date(formData.startDate)
+    ) {
+      alert("La date de fin ne peut pas être antérieure à la date de début.");
+      return;
+    }
 
-    createEventMutation.mutate(eventToSend, {
-      onSuccess: () => {
+    // Création de FormData pour l'envoi
+    const dataToSend = new FormData();
+    dataToSend.append("name", formData.name);
+    dataToSend.append("startDate", formData.startDate);
+    dataToSend.append("city", formData.city);
+    dataToSend.append("description", formData.description);
+    dataToSend.append("category", formData.category);
+    dataToSend.append("qrOption", formData.qrOption);
+    dataToSend.append("price", formData.price || "0");
+
+    // Ajout des champs optionnels
+    if (formData.type) dataToSend.append("type", formData.type);
+    if (formData.endDate) dataToSend.append("endDate", formData.endDate);
+    if (formData.time) dataToSend.append("time", formData.time);
+    if (formData.neighborhood)
+      dataToSend.append("neighborhood", formData.neighborhood);
+    if (formData.image) dataToSend.append("image", formData.image);
+
+    // Appel de la mutation
+    createEventMutation.mutate(dataToSend, {
+      onSuccess: (createdEvent) => {
         alert("Événement créé avec succès !");
-        setFormData({
-          name: "",
-          type: "",
-          date: "",
-          time: "",
-          location: "",
-          description: "",
-          price: "",
-          qrReason: "",
-          uniqueQr: false,
-          image: null,
-        });
-        navigate("/my-events");
+        // Réinitialisation (optionnelle, selon votre UX)
+        // setFormData({ name: "", type: "", startDate: "", endDate: "", time: "", city: "", neighborhood: "", description: "", price: "0", category: "", qrOption: false, image: null });
+        navigate(`/events/${createdEvent.id}`); // Redirection vers la page de l'événement créé
+      },
+      onError: (error) => {
+        alert(
+          `Erreur lors de la création: ${
+            error.response?.data?.error || error.message
+          }`
+        );
       },
     });
   };
 
   return (
     <MainLayout>
-      <div className="max-w-3xl mx-auto mt-8 bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-gray-100 text-center">
-          Créer un nouvel événement
+      <div className="max-w-3xl mx-auto my-8 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100 text-center">
+          Créer un Nouvel Événement 🚀
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Nom */}
+          {/* Nom de l'événement */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+            >
               Nom de l'événement <span className="text-red-500">*</span>
             </label>
             <input
+              id="name"
               type="text"
               name="name"
-              placeholder="Conférence sur l'IA"
+              placeholder="Ex: Conférence Tech Innovante"
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-                         focus:ring-2 focus:ring-blue-500 outline-none transition"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition"
             />
           </div>
 
-          {/* Type */}
+          {/* Catégorie */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Type d'événement <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-                         focus:ring-2 focus:ring-blue-500 outline-none transition"
+            <label
+              htmlFor="category"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
             >
-              <option value="">Sélectionner un type</option>
-              <option value="conference">Conférence</option>
-              <option value="atelier">Atelier</option>
-              <option value="concert">Concert</option>
-            </select>
-          </div>
-
-          {/* Date & Heure */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-                Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
+              Catégorie <span className="text-red-500">*</span>
+            </label>
+            {isLoadingCategories ? (
+              <div className="flex items-center text-gray-500 dark:text-gray-400">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Chargement des
+                catégories...
+              </div>
+            ) : isErrorCategories ? (
+              <div className="flex items-center text-red-500">
+                <AlertTriangle className="w-4 h-4 mr-2" /> Erreur de chargement
+                des catégories.
+              </div>
+            ) : (
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 
-                           bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-                           focus:ring-2 focus:ring-blue-500 outline-none transition"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition appearance-none"
+              >
+                <option value="" disabled>
+                  -- Sélectionner une catégorie --
+                </option>
+                {categories?.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.emoji} {cat.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Type (Optionnel) */}
+          {/* <div>
+            <label
+              htmlFor="type"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+            >
+              Type spécifique (Optionnel)
+            </label>
+            <input
+              id="type"
+              type="text"
+              name="type"
+              placeholder="Ex: Conférence Tech, Atelier Créatif..."
+              value={formData.type}
+              onChange={handleChange}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition"
+            />
+          </div> */}
+
+          {/* Dates Début et Fin */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="startDate"
+                className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+              >
+                Date de début <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="startDate"
+                type="date"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-                Heure
+              <label
+                htmlFor="endDate"
+                className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+              >
+                Date de fin (Optionnel)
               </label>
               <input
-                type="time"
-                name="time"
-                value={formData.time}
+                id="endDate"
+                type="date"
+                name="endDate" // Nouveau champ
+                value={formData.endDate}
                 onChange={handleChange}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 
-                           bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-                           focus:ring-2 focus:ring-blue-500 outline-none transition"
+                min={formData.startDate} // Date de fin >= Date de début
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition disabled:opacity-50"
+                disabled={!formData.startDate} // Désactivé si pas de date de début
               />
             </div>
           </div>
 
-          {/* Lieu */}
+          {/* Heure */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Lieu
+            <label
+              htmlFor="time"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+            >
+              Heure de début (Optionnel)
             </label>
             <input
-              type="text"
-              name="location"
-              placeholder="Centre de congrès XYZ"
-              value={formData.location}
+              id="time"
+              type="time"
+              name="time"
+              value={formData.time}
               onChange={handleChange}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-                         focus:ring-2 focus:ring-blue-500 outline-none transition"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition"
             />
+          </div>
+
+          {/* Ville (Dropdown) et Quartier */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="city"
+                className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+              >
+                Ville <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="city"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition appearance-none"
+              >
+                <option value="" disabled>
+                  -- Sélectionner une ville --
+                </option>
+                {cameroonianCities.map((ville) => (
+                  <option key={ville} value={ville}>
+                    {ville}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="neighborhood"
+                className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+              >
+                Quartier / Lieu précis (Optionnel)
+              </label>
+              <input
+                id="neighborhood"
+                type="text"
+                name="neighborhood" // Nouveau champ
+                placeholder="Ex: Bonapriso, Palais des Congrès..."
+                value={formData.neighborhood}
+                onChange={handleChange}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition"
+              />
+            </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Description
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+            >
+              Description <span className="text-red-500">*</span>
             </label>
             <textarea
+              id="description"
               name="description"
-              placeholder="Décrivez votre événement..."
+              placeholder="Décrivez en détail votre événement..."
               value={formData.description}
               onChange={handleChange}
-              rows="4"
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-                         focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
+              rows="5"
+              required
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
             />
           </div>
 
           {/* Prix */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Prix du billet (en FCFA)
+            <label
+              htmlFor="price"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+            >
+              Prix du billet (en FCFA, laissez 0 si gratuit)
             </label>
             <input
+              id="price"
               type="number"
               name="price"
-              placeholder="Optionnel"
+              placeholder="0"
               value={formData.price}
               onChange={handleChange}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-                         focus:ring-2 focus:ring-blue-500 outline-none transition"
+              min="0"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none transition"
             />
           </div>
 
-          {/* QR Code */}
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Raison du QR Code
-            </label>
-            <select
-              name="qrReason"
-              value={formData.qrReason}
-              onChange={handleChange}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-                         focus:ring-2 focus:ring-blue-500 outline-none transition"
-            >
-              <option value="">Sélectionner une raison</option>
-              <option value="acces">Accès</option>
-              <option value="billet">Billet</option>
-            </select>
-          </div>
-
-          {/* Checkbox */}
-          <div className="flex items-center space-x-2">
+          {/* Option QR Code */}
+          <div className="flex items-center space-x-3 pt-2">
             <input
+              id="qrOption"
               type="checkbox"
-              name="uniqueQr"
-              checked={formData.uniqueQr}
+              name="qrOption"
+              checked={formData.qrOption}
               onChange={handleChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600"
+              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded cursor-pointer"
             />
-            <label className="text-sm text-gray-700 dark:text-gray-300">
-              Générer un QR code unique
+            <label
+              htmlFor="qrOption"
+              className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+            >
+              Activer les QR codes pour l'accès des participants (recommandé)
             </label>
           </div>
 
           {/* Image */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Image de l'événement
+            <label
+              htmlFor="image"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+            >
+              Image de couverture (Optionnel)
             </label>
             <input
+              id="image"
               type="file"
               name="image"
+              accept="image/png, image/jpeg, image/webp"
               onChange={handleChange}
-              className="w-full text-sm text-gray-700 dark:text-gray-300 
-                         file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 
-                         file:text-sm file:font-semibold 
-                         file:bg-blue-50 dark:file:bg-gray-700 file:text-blue-600 dark:file:text-gray-200 
-                         hover:file:bg-blue-100 dark:hover:file:bg-gray-600 transition"
+              className="w-full text-sm text-gray-700 dark:text-gray-300
+                         file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+                         file:text-sm file:font-semibold
+                         file:bg-blue-50 dark:file:bg-gray-600 file:text-blue-600 dark:file:text-gray-200
+                         hover:file:bg-blue-100 dark:hover:file:bg-gray-500 transition cursor-pointer"
             />
+            {formData.image && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Fichier sélectionné : {formData.image.name}
+              </p>
+            )}
           </div>
 
-          {/* Submit */}
+          {/* Bouton de soumission */}
           <button
             type="submit"
-            disabled={createEventMutation.isLoading}
-            className="w-full py-2 rounded-lg font-medium 
-                       bg-blue-600 hover:bg-blue-700 text-white
-                       disabled:opacity-70 transition-all duration-200"
+            disabled={createEventMutation.isPending || isLoadingCategories}
+            className={`w-full py-3 mt-4 rounded-lg font-semibold text-lg transition-all duration-300 ease-in-out flex items-center justify-center
+                       ${
+                         createEventMutation.isPending || isLoadingCategories
+                           ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                           : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                       }`}
           >
-            {createEventMutation.isLoading
-              ? "Création en cours..."
-              : "Créer l'événement"}
+            {createEventMutation.isPending ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Création en
+                cours...
+              </>
+            ) : (
+              "Créer l'événement ✨"
+            )}
           </button>
         </form>
       </div>

@@ -5,7 +5,7 @@ import ProfileHeader from "../../components/ui/ProfileHeader";
 
 const SwitchModeButton = () => (
   <button className="text-blue-500 font-semibold py-2 px-6 rounded-full transition duration-150 flex items-center justify-center mb-6">
-    <span className="mr-1">✏️</span> Passer en mode Participant
+    <span className="mr-1"></span> Passer en mode Participant
   </button>
 );
 
