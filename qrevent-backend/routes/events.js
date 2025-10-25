@@ -20,7 +20,7 @@ router.post("/:id/register", userExtractor, eventsController.registerToEvent);
 router.post(
   "/",
   userExtractor,
-  authorize(["administrateur", "organisateur"]),
+  authorize(["administrateur", "Organisateur"]),
   upload.single("image"), // Le champ du formulaire doit s'appeler 'image'
   eventsController.createEvent
 );
@@ -29,7 +29,7 @@ router.post(
 router.put(
   "/:id",
   userExtractor,
-  authorize(["administrateur", "organisateur"]),
+  authorize(["administrateur", "Organisateur"]),
   upload.single("image"),
   eventsController.updateEvent
 );
@@ -38,7 +38,7 @@ router.put(
 router.delete(
   "/:id",
   userExtractor,
-  authorize(["administrateur", "organisateur"]),
+  authorize(["administrateur", "Organisateur"]),
   eventsController.deleteEvent
 );
 
@@ -46,7 +46,7 @@ router.delete(
 router.post(
   "/:id/participants",
   userExtractor,
-  authorize(["administrateur", "organisateur"]),
+  authorize(["administrateur", "Organisateur"]),
   eventsController.addParticipant
 );
 
@@ -54,7 +54,7 @@ router.post(
 router.delete(
   "/:id/participants/:participantId",
   userExtractor,
-  authorize(["administrateur", "organisateur"]),
+  authorize(["administrateur", "Organisateur"]),
   eventsController.removeParticipant
 );
 
@@ -62,7 +62,7 @@ router.delete(
 router.post(
   "/validate-qr", // Route plus générale, l'événement est dans le body
   userExtractor,
-  authorize(["organisateur", "administrateur"]),
+  authorize(["Organisateur", "administrateur"]),
   eventsController.validateQRCodeWithEventName
 );
 
@@ -70,7 +70,7 @@ router.post(
 router.get(
   "/organizer/me",
   userExtractor,
-  authorize(["organisateur"]), // Seul un organisateur peut voir ses propres événements
+  authorize(["Organisateur"]), // Seul un organisateur peut voir ses propres événements
   eventsController.getEventsByOrganizer
 );
 

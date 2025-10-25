@@ -449,14 +449,37 @@ const removeParticipant = async (req, res, next) => {
 
 const getEventsByOrganizer = async (req, res, next) => {
   try {
+    // 1. Vérifier si req.user et req.user.id existent (sécurité)
+    if (!req.user || !req.user.id) {
+      console.error(
+        "❌ Erreur dans getEventsByOrganizer: req.user.id manquant."
+      );
+      return res
+        .status(401)
+        .json({ error: "Authentification requise ou invalide." });
+    }
     const organizerId = req.user.id;
+    console.log(
+      `[INFO] Recherche des événements pour l'organisateur ID: ${organizerId}`
+    );
 
+    // 2. Exécuter la requête
     const events = await Event.find({ organizer: organizerId })
-      .populate("category", "name emoji")
-      .populate("participants", "nom email");
+      .populate("category", "name emoji") // Peuple la catégorie
+      .populate("participants", "nom email") // Peuple les participants (limite les champs)
+      .sort({ startDate: -1 }); // Trie du plus récent au plus ancien
 
-    res.json(events);
+    console.log(
+      `[INFO] ${events.length} événements trouvés pour l'organisateur ${organizerId}`
+    );
+    res.json(events); // Renvoie la liste des événements trouvés
   } catch (error) {
+    // --- ✅ JOURNALISATION DÉTAILLÉE DE L'ERREUR ---
+    console.error("❌ Erreur détaillée dans getEventsByOrganizer:", error); // Affiche l'erreur complète dans la console backend
+    // On pourrait ajouter plus de détails ici si nécessaire, comme l'ID de l'organisateur
+    // console.error(`   Pour l'organisateur ID: ${req.user?.id}`);
+
+    // Passe l'erreur au gestionnaire global qui renverra une réponse 500
     next(error);
   }
 };

@@ -104,7 +104,6 @@ const updateUser = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   try {
-    // Note: Assurez-vous que le rôle est bien "administrateur" en minuscules
     if (req.user.role !== "administrateur") {
       return res.status(403).json({
         error: "Seul l'administrateur peut supprimer un utilisateur.",

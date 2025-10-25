@@ -11,6 +11,7 @@ const middleware = require("./utils/middleware");
 const usersRouter = require("./routes/users");
 const eventsRouter = require("./routes/events");
 const categoriesRouter = require("./routes/categories");
+const dashboardRouter = require("./routes/dashboard");
 
 logger.info("connecting to", config.MONGODB_URI);
 mongoose.set("strictQuery", false);
@@ -27,6 +28,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/events", eventsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/dashboard", dashboardRouter);
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);

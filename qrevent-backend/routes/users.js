@@ -42,7 +42,7 @@ router.post(
 router.get(
   "/",
   userExtractor,
-  authorize(["administrateur", "organisateur"]),
+  authorize(["administrateur", "Organisateur"]),
   getAllUsers
 );
 
@@ -50,7 +50,7 @@ router.get(
 router.get(
   "/:id",
   userExtractor,
-  authorize(["administrateur", "organisateur"]),
+  authorize(["administrateur", "Organisateur"]),
   getUserById
 );
 
@@ -58,7 +58,7 @@ router.get(
 router.post(
   "/",
   userExtractor,
-  authorize(["administrateur", "organisateur"]),
+  authorize(["administrateur", "Organisateur"]),
   upload.single("image"),
   createUser
 );
@@ -67,38 +67,12 @@ router.post(
 router.put(
   "/:id",
   userExtractor,
-  authorize(["administrateur", "organisateur"]),
+  authorize(["administrateur", "Organisateur"]),
   upload.single("image"),
   updateUser
 );
 
 // DELETE /api/users/:id
 router.delete("/:id", userExtractor, authorize(["administrateur"]), deleteUser);
-
-// router.get(
-//   "/",
-//   userExtractor,
-//   authorize(["administrateur", "organisateur"]),
-//   getAllUsers
-// );
-
-// router.get(
-//   "/:id",
-//   userExtractor,
-//   authorize(["administrateur", "organisateur"]),
-//   getUserById
-// );
-
-// router.post(
-//   "/",
-//   userExtractor,
-//   authorize(["administrateur", "organisateur"]),
-//   upload.single("image"),
-//   createUser
-// );
-
-// router.put("/:id", userExtractor, upload.single("image"), updateUser);
-
-// router.delete("/:id", userExtractor, authorize(["administrateur"]), deleteUser);
 
 module.exports = router;
