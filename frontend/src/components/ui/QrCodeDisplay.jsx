@@ -1,4 +1,3 @@
-// src/components/ui/QrCodeDisplay.jsx
 import React from "react";
 
 /**
@@ -21,8 +20,6 @@ const QrCodeDisplay = ({ value, size = 150 }) => {
     );
   }
 
-  // --- CORRECTION PRINCIPALE ---
-  // Au lieu d'utiliser <QRCodeSVG> pour ré-encoder,
   // on utilise une balise <img> pour afficher directement l'image Base64 reçue.
   return (
     <div className="p-2 bg-white rounded-md flex items-center justify-center">

@@ -6,7 +6,7 @@ const Event = require("../models/event");
 const User = require("../models/user");
 const Category = require("../models/category");
 const Inscription = require("../models/inscription");
-const qrCodeService = require("../services/qrCodeService");
+const qrCodeService = require("../services/qrCodeService"); // ✅ Vérifiez le chemin
 
 // --- Obtenir tous les événements ---
 const getAllEvents = async (req, res, next) => {
@@ -17,27 +17,22 @@ const getAllEvents = async (req, res, next) => {
       .sort({ startDate: 1 });
     res.json(events);
   } catch (error) {
-    next(error); // Passe l'erreur au gestionnaire global
+    next(error);
   }
 };
 
 // --- Obtenir un événement par ID ---
 const getEventById = async (req, res, next) => {
   try {
-    const eventId = req.params.id;
-    // Vérifie si l'ID est un ObjectId MongoDB valide
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "ID d'événement invalide" });
     }
-
-    const event = await Event.findById(eventId)
+    const event = await Event.findById(req.params.id)
       .populate("organizer", "nom email")
       .populate("category", "name emoji")
-      .populate("participants", "nom"); // Ajoute les participants
+      .populate("participants", "nom email role sexe profession"); // Peuple avec sexe/profession
 
-    if (!event) {
-      return res.status(404).json({ error: "Événement non trouvé" });
-    }
+    if (!event) return res.status(404).json({ error: "Événement non trouvé" });
     res.json(event);
   } catch (error) {
     next(error);
@@ -47,36 +42,29 @@ const getEventById = async (req, res, next) => {
 // --- Créer un nouvel événement ---
 const createEvent = async (req, res, next) => {
   try {
-    const { body, user } = req; // user contient { id: "...", role: "..." } du middleware
+    const { body, user } = req; // user vient de userExtractor { id, role }
 
-    // Vérifie si la catégorie existe
     const category = await Category.findById(body.category);
-    if (!category) {
-      return res.status(400).json({ error: "Catégorie invalide" });
-    }
+    if (!category) return res.status(400).json({ error: "Catégorie invalide" });
 
     const newEvent = new Event({
       ...body,
-      organizer: user.id, // Utilise l'ID de l'utilisateur extrait du token
-      // Sauvegarde un chemin relatif pour l'URL web
+      organizer: user.id,
       imageUrl: req.file
         ? path.join("uploads", "events", req.file.filename).replace(/\\/g, "/")
         : null,
     });
 
     const savedEvent = await newEvent.save();
-
-    // Ajoute la référence de l'événement à la catégorie
     category.events.push(savedEvent._id);
     await category.save();
 
     res.status(201).json(savedEvent);
   } catch (error) {
-    // Gère spécifiquement les erreurs de validation Mongoose
     if (error.name === "ValidationError") {
       return res.status(400).json({ error: error.message });
     }
-    next(error); // Passe les autres erreurs
+    next(error);
   }
 };
 
@@ -91,11 +79,9 @@ const updateEvent = async (req, res, next) => {
     }
 
     const eventToUpdate = await Event.findById(eventId);
-    if (!eventToUpdate) {
+    if (!eventToUpdate)
       return res.status(404).json({ error: "Événement non trouvé" });
-    }
 
-    // --- CORRECTION: Autorisation (Admin OU Organisateur propriétaire) ---
     const isOwner = eventToUpdate.organizer.toString() === user.id;
     const isAdmin = user.role === "administrateur";
 
@@ -103,24 +89,18 @@ const updateEvent = async (req, res, next) => {
       return res.status(403).json({ error: "Action non autorisée." });
     }
 
-    // Si une nouvelle catégorie est fournie, on met à jour les références
+    // Gestion de la catégorie
     if (body.category && body.category !== eventToUpdate.category.toString()) {
-      const oldCategoryId = eventToUpdate.category;
-      const newCategoryId = body.category;
-
-      // Retire l'event de l'ancienne catégorie
-      await Category.findByIdAndUpdate(oldCategoryId, {
+      await Category.findByIdAndUpdate(eventToUpdate.category, {
         $pull: { events: eventId },
       });
-      // Ajoute l'event à la nouvelle catégorie
-      await Category.findByIdAndUpdate(newCategoryId, {
+      await Category.findByIdAndUpdate(body.category, {
         $push: { events: eventId },
       });
     }
 
-    // Gère la mise à jour de l'image
+    // Gestion de l'image
     if (req.file) {
-      // Supprime l'ancienne image si elle existe et n'est pas une URL externe
       if (
         eventToUpdate.imageUrl &&
         !eventToUpdate.imageUrl.startsWith("http") &&
@@ -128,48 +108,28 @@ const updateEvent = async (req, res, next) => {
       ) {
         try {
           fs.unlinkSync(path.resolve(__dirname, "..", eventToUpdate.imageUrl));
-          console.log(`Ancienne image supprimée: ${eventToUpdate.imageUrl}`);
-        } catch (unlinkErr) {
-          console.error(
-            "Erreur lors de la suppression de l'ancienne image:",
-            unlinkErr
-          );
+        } catch (e) {
+          console.error("Erreur suppression ancienne image:", e);
         }
-      } else if (eventToUpdate.imageUrl) {
-        console.log(
-          `Ancienne image non supprimée (URL externe ou fichier non trouvé): ${eventToUpdate.imageUrl}`
-        );
       }
       body.imageUrl = path
         .join("uploads", "events", req.file.filename)
         .replace(/\\/g, "/");
-      console.log(`Nouvelle image ajoutée: ${body.imageUrl}`);
-    } else {
-      // Si aucune nouvelle image n'est fournie, s'assurer de ne pas effacer l'ancienne par erreur
-      // Si body.imageUrl est explicitement null ou '', alors on supprime l'ancienne.
-      if (body.imageUrl === null || body.imageUrl === "") {
-        if (
-          eventToUpdate.imageUrl &&
-          !eventToUpdate.imageUrl.startsWith("http") &&
-          fs.existsSync(path.resolve(__dirname, "..", eventToUpdate.imageUrl))
-        ) {
-          try {
-            fs.unlinkSync(
-              path.resolve(__dirname, "..", eventToUpdate.imageUrl)
-            );
-            console.log(
-              `Ancienne image supprimée (remplacée par null/vide): ${eventToUpdate.imageUrl}`
-            );
-          } catch (unlinkErr) {
-            console.error(
-              "Erreur lors de la suppression de l'ancienne image:",
-              unlinkErr
-            );
-          }
+    } else if (body.image === null || body.image === "") {
+      if (
+        eventToUpdate.imageUrl &&
+        !eventToUpdate.imageUrl.startsWith("http") &&
+        fs.existsSync(path.resolve(__dirname, "..", eventToUpdate.imageUrl))
+      ) {
+        try {
+          fs.unlinkSync(path.resolve(__dirname, "..", eventToUpdate.imageUrl));
+        } catch (e) {
+          console.error("Erreur suppression image:", e);
         }
-      } else {
-        delete body.imageUrl;
       }
+      body.imageUrl = null;
+    } else {
+      delete body.imageUrl;
     }
 
     const updatedEvent = await Event.findByIdAndUpdate(eventId, body, {
@@ -179,18 +139,16 @@ const updateEvent = async (req, res, next) => {
       .populate("organizer", "nom email")
       .populate("category", "name emoji");
 
-    if (!updatedEvent) {
+    if (!updatedEvent)
       return res
         .status(404)
         .json({ error: "Événement non trouvé après mise à jour." });
-    }
-
     res.json(updatedEvent);
   } catch (error) {
     if (error.name === "ValidationError") {
       return res.status(400).json({ error: error.message });
     }
-    console.error("Erreur lors de la mise à jour de l'événement:", error);
+    console.error("Erreur lors de la mise à jour event:", error);
     next(error);
   }
 };
@@ -204,11 +162,9 @@ const deleteEvent = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({ error: "ID d'événement invalide" });
     }
-
     const eventToDelete = await Event.findById(eventId);
-    if (!eventToDelete) {
+    if (!eventToDelete)
       return res.status(404).json({ error: "Événement non trouvé" });
-    }
 
     const isOwner = eventToDelete.organizer.toString() === user.id;
     const isAdmin = user.role === "administrateur";
@@ -217,6 +173,7 @@ const deleteEvent = async (req, res, next) => {
       return res.status(403).json({ error: "Action non autorisée." });
     }
 
+    // Supprime l'image
     if (
       eventToDelete.imageUrl &&
       !eventToDelete.imageUrl.startsWith("http") &&
@@ -224,14 +181,13 @@ const deleteEvent = async (req, res, next) => {
     ) {
       try {
         fs.unlinkSync(path.resolve(__dirname, "..", eventToDelete.imageUrl));
-        console.log(`Image supprimée: ${eventToDelete.imageUrl}`);
-      } catch (unlinkErr) {
-        console.error("Erreur lors de la suppression de l'image:", unlinkErr);
+      } catch (e) {
+        console.error("Erreur suppression image:", e);
       }
     }
 
+    // Supprime les inscriptions, retire l'événement des participants et de la catégorie
     await Inscription.deleteMany({ event: eventId });
-
     await User.updateMany(
       { _id: { $in: eventToDelete.participants } },
       { $pull: { participatedEvents: eventId } }
@@ -239,8 +195,6 @@ const deleteEvent = async (req, res, next) => {
     await Category.findByIdAndUpdate(eventToDelete.category, {
       $pull: { events: eventId },
     });
-
-    // Supprime l'événement lui-même
     await Event.findByIdAndDelete(eventId);
 
     res.status(204).end();
@@ -249,6 +203,7 @@ const deleteEvent = async (req, res, next) => {
   }
 };
 
+// --- Inscription d'un participant ---
 const registerToEvent = async (req, res, next) => {
   try {
     const eventId = req.params.id;
@@ -264,25 +219,26 @@ const registerToEvent = async (req, res, next) => {
     if (!event) return res.status(404).json({ error: "Événement non trouvé" });
     if (!participantUser)
       return res.status(404).json({ error: "Utilisateur non trouvé" });
-
-    // Vérifie s'il est déjà inscrit
-    if (event.participants.includes(participantUser._id)) {
+    if (event.participants.includes(participantUser._id))
       return res.status(400).json({ error: "Vous êtes déjà inscrit" });
-    }
 
     const { nom, email, profession } = req.body;
 
     event.participants.push(participantUser._id);
     participantUser.participatedEvents.push(event._id);
-
     await event.save();
     await participantUser.save();
 
-    // Génère le QR code si l'option est activée
     if (event.qrOption) {
+      const qrFormData = {
+        nom: nom || participantUser.nom,
+        email: email || participantUser.email,
+        profession: profession || participantUser.profession,
+      };
+
       const { qrCodeImage, token } =
         await qrCodeService.generateQRCodeForInscription(
-          { nom, email, profession },
+          qrFormData,
           event,
           participantUser
         );
@@ -292,7 +248,6 @@ const registerToEvent = async (req, res, next) => {
         qrCodeToken: token,
         qrCodeImage: qrCodeImage,
       });
-
       await inscription.save();
 
       return res.status(201).json({
@@ -303,13 +258,33 @@ const registerToEvent = async (req, res, next) => {
 
     res.status(201).json({ message: "Inscription réussie" });
   } catch (error) {
-    if (error.name === "ValidationError") {
-      return res.status(400).json({ error: error.message });
-    }
     next(error);
   }
 };
 
+// --- Désinscription d'un participant ---
+const unregisterFromEvent = async (req, res, next) => {
+  try {
+    const eventId = req.params.id;
+    const userId = req.user.id;
+
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+      return res.status(400).json({ error: "ID d'événement invalide" });
+    }
+
+    await Event.findByIdAndUpdate(eventId, { $pull: { participants: userId } });
+    await User.findByIdAndUpdate(userId, {
+      $pull: { participatedEvents: eventId },
+    });
+    await Inscription.findOneAndDelete({ event: eventId, participant: userId });
+
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// --- Validation QR code ---
 const validateQRCodeWithEventName = async (req, res, next) => {
   try {
     const { qrCodeToken, eventName } = req.body;
@@ -372,7 +347,7 @@ const addParticipant = async (req, res, next) => {
   try {
     const { participantId } = req.body;
     const eventId = req.params.id;
-    const user = req.user; // { id, role }
+    const user = req.user;
 
     if (
       !mongoose.Types.ObjectId.isValid(eventId) ||
@@ -393,17 +368,41 @@ const addParticipant = async (req, res, next) => {
     if (!participant)
       return res.status(404).json({ error: "Utilisateur non trouvé" });
 
-    // Ajoute seulement si pas déjà présent
-    if (!event.participants.includes(participant._id)) {
-      event.participants.push(participant._id);
-      participant.participatedEvents.push(event._id);
-      await event.save();
-      await participant.save();
+    if (event.participants.includes(participant._id)) {
+      return res
+        .status(400)
+        .json({ error: "Cet utilisateur est déjà inscrit." });
+    }
+
+    event.participants.push(participant._id);
+    participant.participatedEvents.push(event._id);
+    await event.save();
+    await participant.save();
+
+    if (event.qrOption) {
+      const { qrCodeImage, token } =
+        await qrCodeService.generateQRCodeForInscription(
+          {
+            nom: participant.nom,
+            email: participant.email,
+            profession: participant.profession,
+          },
+          event,
+          participant
+        );
+      const inscription = new Inscription({
+        event: event._id,
+        participant: participant._id,
+        qrCodeToken: token,
+        qrCodeImage: qrCodeImage,
+      });
+      await inscription.save();
     }
 
     const populatedEvent = await Event.findById(eventId)
-      .populate("participants", "nom email")
-      .populate("organizer", "nom email");
+      .populate("participants", "nom email role sexe profession") // Peuple avec les nouveaux champs
+      .populate("organizer", "nom email")
+      .populate("category", "name emoji"); // Ne pas oublier la catégorie
 
     res.json(populatedEvent);
   } catch (error) {
@@ -411,6 +410,7 @@ const addParticipant = async (req, res, next) => {
   }
 };
 
+// --- Supprimer un participant (par Admin/Organisateur) ---
 const removeParticipant = async (req, res, next) => {
   try {
     const { participantId } = req.params;
@@ -432,54 +432,37 @@ const removeParticipant = async (req, res, next) => {
     if (!isOwner && !isAdmin)
       return res.status(403).json({ error: "Action non autorisée." });
 
-    // Retire le participant de l'événement
     await Event.findByIdAndUpdate(eventId, {
       $pull: { participants: participantId },
     });
-    // Retire l'événement du participant
     await User.findByIdAndUpdate(participantId, {
       $pull: { participatedEvents: eventId },
     });
+    await Inscription.findOneAndDelete({
+      event: eventId,
+      participant: participantId,
+    });
 
-    res.status(204).end(); // Succès, pas de contenu
+    res.status(204).end();
   } catch (error) {
     next(error);
   }
 };
 
+// --- Obtenir les événements créés par l'organisateur connecté ---
 const getEventsByOrganizer = async (req, res, next) => {
   try {
-    // 1. Vérifier si req.user et req.user.id existent (sécurité)
-    if (!req.user || !req.user.id) {
-      console.error(
-        "❌ Erreur dans getEventsByOrganizer: req.user.id manquant."
-      );
-      return res
-        .status(401)
-        .json({ error: "Authentification requise ou invalide." });
-    }
     const organizerId = req.user.id;
-    console.log(
-      `[INFO] Recherche des événements pour l'organisateur ID: ${organizerId}`
-    );
 
-    // 2. Exécuter la requête
     const events = await Event.find({ organizer: organizerId })
-      .populate("category", "name emoji") // Peuple la catégorie
-      .populate("participants", "nom email") // Peuple les participants (limite les champs)
-      .sort({ startDate: -1 }); // Trie du plus récent au plus ancien
+      .populate("category", "name emoji")
+      // ✅ C'EST CETTE LIGNE QUI AJOUTE SEXE ET PROFESSION
+      .populate("participants", "nom email role sexe profession")
+      .sort({ startDate: -1 });
 
-    console.log(
-      `[INFO] ${events.length} événements trouvés pour l'organisateur ${organizerId}`
-    );
-    res.json(events); // Renvoie la liste des événements trouvés
+    res.json(events);
   } catch (error) {
-    // --- ✅ JOURNALISATION DÉTAILLÉE DE L'ERREUR ---
-    console.error("❌ Erreur détaillée dans getEventsByOrganizer:", error); // Affiche l'erreur complète dans la console backend
-    // On pourrait ajouter plus de détails ici si nécessaire, comme l'ID de l'organisateur
-    // console.error(`   Pour l'organisateur ID: ${req.user?.id}`);
-
-    // Passe l'erreur au gestionnaire global qui renverra une réponse 500
+    console.error("❌ Erreur getEventsByOrganizer:", error);
     next(error);
   }
 };
@@ -491,6 +474,7 @@ module.exports = {
   updateEvent,
   deleteEvent,
   registerToEvent,
+  unregisterFromEvent,
   validateQRCodeWithEventName,
   addParticipant,
   removeParticipant,

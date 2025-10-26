@@ -64,3 +64,21 @@ export const deleteUser = async (id) => {
     throw error;
   }
 };
+
+export const searchUsers = async (query) => {
+  // Évite les appels API inutiles si la recherche est trop courte
+  if (!query || query.length < 2) {
+    return []; // Retourne un tableau vide
+  }
+
+  try {
+    // Appelle la route backend GET /api/users/search?q=...
+    const response = await api.get(
+      `/users/search?q=${encodeURIComponent(query)}`
+    );
+    return response.data || [];
+  } catch (error) {
+    console.error("❌ Échec de la recherche d'utilisateur:", error);
+    return []; // Retourne un tableau vide en cas d'erreur
+  }
+};

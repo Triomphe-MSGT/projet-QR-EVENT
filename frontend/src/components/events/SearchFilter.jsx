@@ -11,7 +11,6 @@ const SearchAndFilter = ({
     <div className="container mx-auto px-4 sm:px-0">
       {/* Barre de recherche + filtre */}
       <div className="mb-4 flex items-center relative">
-        {/* Champ de recherche */}
         <div className="relative flex-grow mr-2 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-[#3E4042] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors duration-300">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg

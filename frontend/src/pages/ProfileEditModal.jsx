@@ -60,7 +60,6 @@ const ProfileEditModal = ({
         className="bg-white dark:bg-[#242526] rounded-2xl shadow-xl p-6 md:p-8 w-full max-w-md m-4 transform transition-transform duration-300 scale-100"
         onClick={(e) => e.stopPropagation()} // Empêche la fermeture en cliquant à l'intérieur
       >
-        {/* En-tête */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-[#E4E6EB]">
             Modifier le profil
@@ -73,9 +72,7 @@ const ProfileEditModal = ({
           </button>
         </div>
 
-        {/* Formulaire */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section Avatar */}
           <div className="flex flex-col items-center space-y-3">
             <img
               src={preview}
@@ -99,7 +96,6 @@ const ProfileEditModal = ({
             />
           </div>
 
-          {/* Champ Nom d'utilisateur */}
           <div>
             <label
               htmlFor="username"
@@ -116,14 +112,12 @@ const ProfileEditModal = ({
             />
           </div>
 
-          {/* Affichage des erreurs */}
           {updateError && (
             <p className="text-sm text-red-500 text-center">
               Erreur: {updateError.message}
             </p>
           )}
 
-          {/* Boutons d'action */}
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button type="button" variant="ghost" onClick={onClose}>
               Annuler

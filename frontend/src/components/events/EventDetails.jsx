@@ -1,14 +1,19 @@
-// src/components/events/EventDetails.jsx
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // Gardé pour la géolocalisation via le proxy
-import Button from "../ui/Button"; // ✅ Assurez-vous que le chemin est correct
-import ParticipationFormModal from "../../pages/participant/ParticipationFormModal"; // ✅ Assurez-vous que le chemin est correct
-import QrCodeDisplay from "../ui/QrCodeDisplay"; // ✅ Assurez-vous que le chemin est correct
-import LocalisationCart from "./Localisationcart"; // ✅ Assurez-vous que le chemin est correct
-
-// --- CORRECTION: Les hooks sont importés depuis leurs fichiers respectifs ---
+import axios from "axios"; // For geocoding via proxy
+import Button from "../ui/Button";
+import ParticipationFormModal from "../../pages/participant/ParticipationFormModal";
+import QrCodeDisplay from "../ui/QrCodeDisplay";
+import LocalisationCart from "./Localisationcart";
 import { useRegisterToEvent } from "../../hooks/useEvents";
 import { useUserProfile } from "../../hooks/useUserProfile";
+import {
+  Loader2,
+  AlertTriangle,
+  Calendar,
+  MapPin,
+  Clock,
+  Tag,
+} from "lucide-react";
 
 const EventDetails = ({ event }) => {
   const [coords, setCoords] = useState(null);
@@ -20,63 +25,79 @@ const EventDetails = ({ event }) => {
   const { data: user } = useUserProfile();
   const registerMutation = useRegisterToEvent();
 
-  // Vérifie si l'ID de l'utilisateur est dans la liste des participants
   const isAlreadyRegistered =
     user && event.participants?.some((p) => p === user.id || p._id === user.id);
 
-  // --- CORRECTION: Géolocalisation via votre serveur proxy ---
+  // --- Geocoding Logic (Corrected) ---
   useEffect(() => {
     const fetchCoords = async () => {
       setLoadingMap(true);
       setErrorMap("");
+
+      // 1. Build the full address from event data
+      const addressParts = [
+        event.neighborhood, // e.g., "Foto"
+        event.city, // e.g., "Dschang"
+        event.country, // e.g., "Cameroun"
+      ];
+
+      const fullAddress = addressParts.filter(Boolean).join(", ");
+
+      if (!fullAddress) {
+        setErrorMap("No address specified for this event.");
+        setLoadingMap(false);
+        return;
+      }
+
       try {
-        // On appelle votre serveur proxy qui tourne sur http://localhost:4000
+        // 2. Send the full address to the geocoding proxy
+        console.log(`[Geocoding] Searching for: "${fullAddress}"`);
         const proxyRes = await axios.get("http://localhost:4000/geocode", {
-          params: {
-            q: `${event.city}, Cameroun`, // Le proxy attend le paramètre 'q'
-          },
+          params: { q: fullAddress },
         });
 
-        // La réponse du proxy est un tableau, on prend le premier résultat
+        // 3. Get coordinates from the response
         if (proxyRes.data && proxyRes.data[0]?.geometry) {
           const [lng, lat] = proxyRes.data[0].geometry.coordinates;
           setCoords({ lat, lng });
         } else {
-          throw new Error("Aucune coordonnée trouvée pour cette ville.");
+          throw new Error("No coordinates found for this address.");
         }
       } catch (err) {
-        console.error("❌ Géolocalisation échouée via le proxy:", err.message);
-        setErrorMap("Impossible de localiser cet endroit sur la carte.");
+        console.error("❌ Geocoding failed via proxy:", err.message);
+        setErrorMap("Could not locate this address on the map.");
       } finally {
         setLoadingMap(false);
       }
     };
-    if (event.city) fetchCoords();
-  }, [event.city]); // Se déclenche uniquement si la ville de l'événement change
 
-  // Soumission du formulaire d'inscription
+    if (event.city || event.neighborhood || event.country) {
+      fetchCoords();
+    } else {
+      setLoadingMap(false);
+      setErrorMap("Location not specified.");
+    }
+  }, [event.city, event.neighborhood, event.country]); // Re-run if any location part changes
+
   const handleParticipateSubmit = (formData) => {
-    // Le hook s'occupe de la logique d'appel API
     registerMutation.mutate(
       { eventId: event.id, formData },
       {
         onSuccess: (data) => {
           if (data.qrCode) {
-            setQrCodeData(data.qrCode); // Met à jour l'état avec le QR code reçu
+            setQrCodeData(data.qrCode);
           }
-          setIsModalOpen(false); // Ferme la modale
+          setIsModalOpen(false);
         },
         onError: (err) => {
-          // Affiche une alerte en cas d'échec
           alert(
-            `Erreur d'inscription: ${err.response?.data?.error || err.message}`
+            `Registration Error: ${err.response?.data?.error || err.message}`
           );
         },
       }
     );
   };
 
-  // Fonctions utilitaires
   const formatDate = (dateString) =>
     dateString
       ? new Date(dateString).toLocaleDateString("fr-FR", {
@@ -103,7 +124,7 @@ const EventDetails = ({ event }) => {
         isSubmitting={registerMutation.isPending}
       />
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-        {/* En-tête avec image */}
+        {/* Header with image */}
         <div className="relative w-full h-60 md:h-80">
           {imageUrl ? (
             <img
@@ -135,9 +156,9 @@ const EventDetails = ({ event }) => {
           </div>
         </div>
 
-        {/* Contenu principal */}
+        {/* Main content */}
         <div className="p-6 space-y-8">
-          {/* Description */}
+          {/* About section */}
           <section>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               À propos de l'événement
@@ -147,73 +168,36 @@ const EventDetails = ({ event }) => {
             </p>
           </section>
 
-          {/* Détails (Date, Lieu, Prix) */}
+          {/* Details (Date, Location, Price) */}
           <section className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm border-t border-b border-gray-200 dark:border-gray-700 py-4">
             <div className="flex items-center text-gray-700 dark:text-gray-300">
-              <svg
-                className="w-5 h-5 mr-3 shrink-0 text-blue-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <Calendar className="w-5 h-5 mr-3 shrink-0 text-blue-500" />
               <span className="font-medium">{formatDate(event.startDate)}</span>
             </div>
             <div className="flex items-center text-gray-700 dark:text-gray-300">
-              <svg
-                className="w-5 h-5 mr-3 shrink-0 text-blue-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <MapPin className="w-5 h-5 mr-3 shrink-0 text-blue-500" />
               <span className="font-medium">{event.city}</span>
             </div>
             {event.time && (
               <div className="flex items-center text-gray-700 dark:text-gray-300">
-                ⏰ <span className="ml-3 font-medium">{event.time}</span>
+                <Clock className="w-5 h-5 mr-3 shrink-0 text-blue-500" />
+                <span className="font-medium">{event.time}</span>
               </div>
             )}
-            {event.price > 0 && (
-              <div className="flex items-center text-gray-700 dark:text-gray-300 font-semibold">
-                💰 <span className="ml-3">{event.price} FCFA</span>
-              </div>
-            )}
-            {event.price === 0 && (
-              <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                ✅ <span className="ml-3">Gratuit</span>
-              </div>
-            )}
+            <div className="flex items-center text-gray-700 dark:text-gray-300 font-semibold">
+              <Tag className="w-5 h-5 mr-3 shrink-0 text-blue-500" />
+              <span>{event.price > 0 ? `${event.price} FCFA` : "Gratuit"}</span>
+            </div>
           </section>
 
-          {/* Section Inscription & QR Code */}
+          {/* Registration & QR Code section */}
           <section className="flex flex-col items-center pt-4">
             <div className="w-40 h-40 p-1 bg-white flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg mb-4">
               {qrCodeData ? (
                 <QrCodeDisplay value={qrCodeData} size={150} />
               ) : isAlreadyRegistered ? (
                 <div className="text-center p-4">
-                  <svg
-                    className="w-16 h-16 text-green-500 mx-auto"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
                   <p className="mt-2 font-semibold text-green-600">
                     Déjà Inscrit
                   </p>
@@ -254,33 +238,33 @@ const EventDetails = ({ event }) => {
             )}
           </section>
 
-          {/* Carte */}
+          {/* Map section */}
           <section className="pt-6 border-t border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Localisation
             </h2>
             {loadingMap ? (
               <div className="h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg">
-                <p className="text-gray-500">Chargement de la carte...</p>
+                <Loader2 className="animate-spin h-6 w-6 text-gray-500" />
+                <p className="ml-2 text-gray-500">Chargement de la carte...</p>
               </div>
             ) : errorMap ? (
-              <div className="h-64 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-lg">
+              <div className="h-64 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-lg p-4">
+                <AlertTriangle className="h-6 w-6 text-red-500 mr-2" />
                 <p className="text-red-500">{errorMap}</p>
               </div>
             ) : coords ? (
               <LocalisationCart
                 location={{
-                  address: event.city,
+                  address: event.neighborhood || event.city,
+                  city: event.city,
                   country: event.country,
-                  neighborhood: event.neighborhood,
                   coords: coords,
                 }}
               />
             ) : (
               <div className="h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg">
-                <p className="text-gray-500">
-                  Localisation non disponible pour cet événement.
-                </p>
+                <p className="text-gray-500">Localisation non disponible.</p>
               </div>
             )}
           </section>

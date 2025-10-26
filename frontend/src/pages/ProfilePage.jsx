@@ -41,7 +41,7 @@ const getEventTagAndColor = (title) => {
 };
 
 const ProfilePage = () => {
-  // 1. Récupérer les données
+  // 1. Récupérer les données utilisateur et événements
   const {
     data: user,
     isLoading: isLoadingUser,

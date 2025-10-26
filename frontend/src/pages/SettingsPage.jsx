@@ -98,7 +98,7 @@ const SettingsPage = () => {
             </p>
           </section>
 
-          {/* --- Section Notifications --- */}
+          {/* ---- Section Notifications ---- */}
           <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700">
             <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100 flex items-center">
               <Bell className="w-5 h-5 mr-2 text-red-500" />

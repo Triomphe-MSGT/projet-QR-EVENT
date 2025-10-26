@@ -1,69 +1,56 @@
 // src/components/admin/UserManagement.jsx
 import React, { useState } from "react";
-import { useAllUsers, useDeleteUser } from "../../hooks/useAdmin"; // Hooks pour les données et la suppression
-import Button from "../ui/Button"; // ✅ Vérifiez le chemin
+import {
+  useAllUsers,
+  useDeleteUser,
+  useCreateUser,
+  useUpdateUser,
+} from "../../hooks/useAdmin";
+import Button from "../ui/Button";
 import { PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
 import UserFormModal from "./UserFormModal";
 
-/**
- * Composant pour afficher et gérer la liste des utilisateurs dans le dashboard admin.
- */
 const UserManagement = () => {
-  // 1. Récupère la liste des utilisateurs et les états associés
   const { data: users = [], isLoading, isError, error } = useAllUsers();
-  // 2. Prépare la mutation pour la suppression
   const deleteUserMutation = useDeleteUser();
+  const createUserMutation = useCreateUser();
+  const updateUserMutation = useUpdateUser();
 
-  // 3. États locaux pour gérer l'ouverture de la modale et l'utilisateur à modifier
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState(null);
 
-  // 4. Fonction pour gérer la suppression d'un utilisateur
   const handleDelete = (userId, userName) => {
-    if (
-      window.confirm(
-        `Supprimer l'utilisateur "${userName}" ? Attention, cette action est irréversible.`
-      )
-    ) {
+    if (window.confirm(`Supprimer l'utilisateur "${userName}" ?`)) {
       deleteUserMutation.mutate(userId, {
-        onSuccess: () => console.log(`Utilisateur ${userId} supprimé.`),
-        onError: (err) =>
-          alert(`Erreur lors de la suppression: ${err.message}`),
+        onError: (err) => alert(`Erreur: ${err.message}`),
       });
     }
   };
 
-  // 5. Fonction pour ouvrir la modale en mode édition
   const handleEdit = (user) => {
-    setUserToEdit(user); // Stocke l'utilisateur à modifier
-    setIsModalOpen(true); // Ouvre la modale
+    setUserToEdit(user);
+    setIsModalOpen(true);
   };
-
-  // 6. Fonction pour ouvrir la modale en mode création
   const handleCreate = () => {
-    setUserToEdit(null); // Pas d'utilisateur initial pour la création
-    setIsModalOpen(true); // Ouvre la modale
+    setUserToEdit(null);
+    setIsModalOpen(true);
   };
 
-  // 7. Fonction appelée par la modale lors de la soumission du formulaire
   const handleFormSubmit = (formData) => {
-    // ---- LOGIQUE À ACTIVER QUAND LA MODALE SERA PRÊTE ----
-    // const mutation = userToEdit ? useUpdateUser() : useCreateUser();
-    // const action = userToEdit ? { id: userToEdit.id, userData: formData } : formData;
-    // mutation.mutate(action, {
-    //   onSuccess: () => {
-    //      console.log(userToEdit ? "Utilisateur mis à jour" : "Utilisateur créé");
-    //      setIsModalOpen(false); // Ferme la modale en cas de succès
-    //   },
-    //   onError: (err) => alert(`Erreur: ${err.message}`),
-    // });
-    // ---- FIN LOGIQUE MODALE ----
+    const mutation = userToEdit ? updateUserMutation : createUserMutation;
+    const actionData = userToEdit
+      ? { id: userToEdit.id, userData: formData }
+      : formData;
 
-    console.log("Données reçues pour soumission :", formData);
-    setIsModalOpen(false); // Ferme la modale pour l'instant
+    mutation.mutate(actionData, {
+      onSuccess: () => {
+        setIsModalOpen(false);
+      },
+      onError: (err) =>
+        alert(`Erreur: ${err.response?.data?.error || err.message}`),
+    });
   };
 
-  // 8. Affichage pendant le chargement des données
   if (isLoading) {
     return (
       <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -73,7 +60,6 @@ const UserManagement = () => {
     );
   }
 
-  // 9. Affichage en cas d'erreur de chargement
   if (isError) {
     return (
       <div className="text-center p-6 bg-red-50 dark:bg-red-900/30 rounded-lg shadow text-red-600">
@@ -83,10 +69,8 @@ const UserManagement = () => {
     );
   }
 
-  // 10. Affichage principal du tableau
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      {/* En-tête avec titre et bouton Ajouter */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Gestion des Utilisateurs ({users.length})
@@ -101,9 +85,10 @@ const UserManagement = () => {
         </Button>
       </div>
 
-      {/* Tableau des utilisateurs */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
+          {/* --- ✅ CORRECTION "WHITESPACE" --- */}
+          {/* Mettre <thead> et <tr> sur la même ligne */}
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -115,18 +100,27 @@ const UserManagement = () => {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Rôle
               </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Profession
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Sexe
+              </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
+
+          {/* --- ✅ CORRECTION "WHITESPACE" --- */}
+          {/* Mettre <tbody> et le {map} sur la même ligne */}
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {users.map((user) => (
+              // Mettre <tr> sur la même ligne que le début du map ou {
               <tr
                 key={user.id}
                 className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
-                {/* Données de l'utilisateur */}
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                   {user.nom}
                 </td>
@@ -136,7 +130,12 @@ const UserManagement = () => {
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 capitalize">
                   {user.role}
                 </td>
-                {/* Boutons d'action */}
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                  {user.profession || "-"}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                  {user.sexe || "-"}
+                </td>
                 <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
                   <Button
                     variant="outline_icon"
@@ -151,13 +150,11 @@ const UserManagement = () => {
                     size="xs"
                     onClick={() => handleDelete(user.id, user.nom)}
                     title="Supprimer"
-                    // Désactive le bouton si cette suppression est en cours
                     disabled={
                       deleteUserMutation.isPending &&
                       deleteUserMutation.variables === user.id
                     }
                   >
-                    {/* Affiche une icône de chargement pendant la suppression */}
                     {deleteUserMutation.isPending &&
                     deleteUserMutation.variables === user.id ? (
                       <Loader2 className="animate-spin w-3.5 h-3.5" />
@@ -169,18 +166,20 @@ const UserManagement = () => {
               </tr>
             ))}
           </tbody>
+          {/* --- FIN DE LA CORRECTION --- */}
         </table>
       </div>
 
-      {/* --- Affichage de la modale (à décommenter) --- */}
+      {/* Affichage de la modale */}
       {isModalOpen && (
         <UserFormModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleFormSubmit}
           initialData={userToEdit}
-          // Passez l'état de chargement des mutations ici
-          // isSubmitting={createUserMutation.isPending || updateUserMutation.isPending}
+          isSubmitting={
+            createUserMutation.isPending || updateUserMutation.isPending
+          }
         />
       )}
     </div>

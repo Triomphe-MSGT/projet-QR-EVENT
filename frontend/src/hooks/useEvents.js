@@ -1,16 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+// --- Service pour les opérations CRUD générales ---
 import {
   getEvents,
   getEventById,
   registerToEvent,
+  unregisterFromEvent, // ✅ Importé
   createEvent,
   updateEvent,
   deleteEvent,
   validateQrCode,
-} from "../services/eventService";
-import { getMyOrganizedEvents } from "../services/dashboardService";
+  addParticipant, // ✅ Importé
+  removeParticipant,
+} from "../services/eventService"; // ✅ Vérifiez ce chemin
 
-// Hook pour la liste de tous les événements
+// --- Service pour les données spécifiques au dashboard ---
+import { getMyOrganizedEvents } from "../services/dashboardService"; // ✅ Vérifiez ce chemin
+
+// Hook pour la liste de TOUS les événements (public)
 export const useEvents = () => {
   return useQuery({
     queryKey: ["events"],
@@ -19,7 +26,7 @@ export const useEvents = () => {
   });
 };
 
-// Hook pour les détails d'un seul événement
+// Hook pour les détails d'UN événement
 export const useEventDetails = (eventId) => {
   return useQuery({
     queryKey: ["event", eventId],
@@ -27,6 +34,18 @@ export const useEventDetails = (eventId) => {
     enabled: !!eventId, // Ne s'active que si eventId est fourni
   });
 };
+
+// Hook pour récupérer les événements créés par l'organisateur connecté
+export const useMyOrganizedEvents = (options = {}) => {
+  return useQuery({
+    queryKey: ["myOrganizedEvents"], // Clé de cache distincte
+    queryFn: getMyOrganizedEvents, // Utilise la fonction du dashboardService
+    staleTime: 1000 * 60 * 5,
+    ...options, // Permet de passer 'enabled' depuis le composant
+  });
+};
+
+// --- Hooks pour les Actions (Mutations) ---
 
 // Hook pour s'inscrire à un événement
 export const useRegisterToEvent = () => {
@@ -37,90 +56,20 @@ export const useRegisterToEvent = () => {
       // Invalide les caches concernés pour refléter les changements
       queryClient.invalidateQueries({ queryKey: ["event", variables.eventId] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      queryClient.invalidateQueries({ queryKey: ["userEvents"] }); // Si vous avez un hook spécifique pour les événements de l'utilisateur
+      queryClient.invalidateQueries({ queryKey: ["userEvents"] });
       console.log("Inscription réussie, caches invalidés.");
     },
     onError: (error) => {
       console.error("Échec de l'inscription :", error);
-      // Afficher une notification d'erreur à l'utilisateur ici
     },
   });
 };
 
-export const useCreateEvent = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: createEvent,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-      queryClient.invalidateQueries({ queryKey: ["myOrganizedEvents"] }); // ✅ Invalide la liste du dashboard
-      queryClient.invalidateQueries({ queryKey: ["adminStats"] }); // ✅ Invalide les stats admin
-      queryClient.invalidateQueries({ queryKey: ["organizerStats"] }); // ✅ Invalide les stats orga
-    },
-    onError: (error) => console.error("Échec création:", error),
-  });
-};
-
-export const useUpdateEvent = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: updateEvent,
-    onSuccess: (updatedEvent) => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-      queryClient.invalidateQueries({ queryKey: ["myOrganizedEvents"] }); // ✅ Invalide la liste du dashboard
-      queryClient.invalidateQueries({ queryKey: ["event", updatedEvent.id] });
-      // Les stats ne changent pas lors d'une simple mise à jour (sauf cas très spécifique)
-    },
-    onError: (error) => console.error("Échec màj:", error),
-  });
-};
-
-export const useDeleteEvent = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: deleteEvent,
-    onSuccess: (deletedId) => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-      queryClient.invalidateQueries({ queryKey: ["myOrganizedEvents"] }); // ✅ Invalide la liste du dashboard
-      queryClient.removeQueries({ queryKey: ["event", deletedId] });
-      queryClient.invalidateQueries({ queryKey: ["adminStats"] }); // ✅ Invalide les stats admin
-      queryClient.invalidateQueries({ queryKey: ["organizerStats"] }); // ✅ Invalide les stats orga
-    },
-    onError: (error) => console.error("Échec suppression:", error),
-  });
-};
-
-export const useValidateQrCode = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: validateQrCode, // Fonction du service
-    onSuccess: (data) => {
-      console.log("✅ Validation QR réussie:", data);
-      queryClient.invalidateQueries({ queryKey: ["organizerStats"] });
-      queryClient.invalidateQueries({ queryKey: ["adminStats"] });
-    },
-    onError: (error) => {
-      console.error("❌ Échec validation QR:", error);
-      // L'erreur sera gérée dans le composant scanner
-    },
-  });
-};
-
-// Hook pour récupérer les événements créés par l'organisateur connecté
-export const useMyOrganizedEvents = (options = {}) => {
-  // Accepte des options (comme 'enabled')
-  return useQuery({
-    queryKey: ["myOrganizedEvents"],
-    queryFn: getMyOrganizedEvents,
-    staleTime: 1000 * 60 * 5, // Cache de 5 minutes
-    ...options,
-  });
-};
-
+// Hook pour se désinscrire d'un événement
 export const useUnregisterFromEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: useUnregisterFromEvent, // Appelle la fonction du service
+    mutationFn: unregisterFromEvent, // ✅ CORRIGÉ : Appelait useUnregisterFromEvent
     onSuccess: (unregisteredEventId) => {
       // Invalide tous les caches où l'événement pourrait apparaître
       queryClient.invalidateQueries({ queryKey: ["userEvents"] });
@@ -132,7 +81,109 @@ export const useUnregisterFromEvent = () => {
     },
     onError: (error) => {
       console.error("Échec désinscription:", error);
-      // Idéalement, afficher une notification d'erreur
+    },
+  });
+};
+
+// Hook pour créer un événement
+export const useCreateEvent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["myOrganizedEvents"] });
+      queryClient.invalidateQueries({ queryKey: ["adminStats"] });
+      queryClient.invalidateQueries({ queryKey: ["organizerStats"] });
+    },
+    onError: (error) => console.error("Échec création:", error),
+  });
+};
+
+// Hook pour mettre à jour un événement
+export const useUpdateEvent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateEvent,
+    onSuccess: (updatedEvent) => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["myOrganizedEvents"] });
+      // Met à jour directement le cache des détails pour un retour instantané
+      queryClient.setQueryData(["event", updatedEvent.id], updatedEvent);
+      // Invalide au cas où setQueryData ne suffit pas
+      queryClient.invalidateQueries({ queryKey: ["event", updatedEvent.id] });
+    },
+    onError: (error) => console.error("Échec màj:", error),
+  });
+};
+
+// Hook pour supprimer un événement
+export const useDeleteEvent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteEvent,
+    onSuccess: (deletedId) => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["myOrganizedEvents"] });
+      queryClient.removeQueries({ queryKey: ["event", deletedId] });
+      queryClient.invalidateQueries({ queryKey: ["adminStats"] });
+      queryClient.invalidateQueries({ queryKey: ["organizerStats"] });
+    },
+    onError: (error) => console.error("Échec suppression:", error),
+  });
+};
+
+// Hook pour valider un QR code
+export const useValidateQrCode = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: validateQrCode,
+    onSuccess: (data) => {
+      console.log("✅ Validation QR réussie:", data);
+      // Rafraîchit les stats qui comptent les validations
+      queryClient.invalidateQueries({ queryKey: ["organizerStats"] });
+      queryClient.invalidateQueries({ queryKey: ["adminStats"] });
+    },
+    onError: (error) => {
+      console.error("❌ Échec validation QR:", error);
+    },
+  });
+};
+
+// --- ✅ HOOK MANQUANT AJOUTÉ ---
+// Hook pour AJOUTER un participant (par Orga/Admin)
+export const useAddParticipant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addParticipant, // Utilise la fonction importée
+    onSuccess: (updatedEvent) => {
+      // Rafraîchit toutes les listes/stats pertinentes
+      queryClient.invalidateQueries({ queryKey: ["myOrganizedEvents"] });
+      queryClient.invalidateQueries({ queryKey: ["event", updatedEvent.id] });
+      queryClient.invalidateQueries({ queryKey: ["organizerStats"] });
+      queryClient.invalidateQueries({ queryKey: ["adminStats"] });
+      console.log(`Participant ajouté à ${updatedEvent.id}`);
+    },
+    onError: (error) => console.error("Échec ajout participant:", error),
+  });
+};
+
+// Hook pour SUPPRIMER un participant (par Orga/Admin)
+export const useRemoveParticipant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: removeParticipant,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["myOrganizedEvents"] });
+      queryClient.invalidateQueries({ queryKey: ["event", data.eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerStats"] });
+      queryClient.invalidateQueries({ queryKey: ["adminStats"] });
+      console.log(
+        `Participant ${data.participantId} supprimé de ${data.eventId}`
+      );
+    },
+    onError: (error) => {
+      console.error("Échec suppression participant:", error);
     },
   });
 };

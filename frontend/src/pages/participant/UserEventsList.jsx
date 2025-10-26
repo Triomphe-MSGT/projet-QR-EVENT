@@ -1,18 +1,24 @@
 // src/components/profile/UserEventsList.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-// CORRECTION : Le hook pour les événements de l'utilisateur se trouve dans userProfileHooks.js
-import { useUserEvents } from "../../hooks/userProfileHooks";
+import { useUserEvents } from "../../hooks/userProfileHooks"; // Hook personnalisé pour récupérer les événements utilisateur
 
 /**
- * Affiche la liste des événements auxquels l'utilisateur participe.
- * Ce composant est destiné à être utilisé sur la page de profil.
+ * ────────────────────────────────────────────────────────────────
+ * Composant : UserEventsList
+ * ────────────────────────────────────────────────────────────────
+ * Affiche les événements auxquels l'utilisateur :
+ *   - Participe
+ *   - Ou qu'il organise
+ *
+ * Gère également l'affichage d'une modale pour visualiser un QR code
+ * lié à un ticket d'entrée (pour les événements participés).
  */
 const UserEventsList = () => {
   const { data: eventsData, isLoading, isError, error } = useUserEvents();
 
-  // --- 2. GÉRER L'ÉTAT DE LA MODALE ---
-  // `selectedQr` stockera le token du QR code à afficher en grand, ou `null` si la modale est fermée.
+  // État local pour afficher ou non la modale QR
+  // `selectedQr` contient le token du QR à agrandir, sinon null.
   const [selectedQr, setSelectedQr] = useState(null);
 
   const formatDate = (dateString) => {
@@ -24,6 +30,7 @@ const UserEventsList = () => {
     });
   };
 
+  // Gestion des états de chargement et d’erreur simples
   if (isLoading)
     return (
       <p className="text-center text-gray-500 dark:text-gray-400">
@@ -33,20 +40,23 @@ const UserEventsList = () => {
   if (isError)
     return <p className="text-center text-red-500">Erreur: {error.message}</p>;
 
+  // Détection de la présence d'événements
   const hasOrganizedEvents = eventsData?.organized?.length > 0;
   const hasParticipatedEvents = eventsData?.participated?.length > 0;
 
   return (
     <div className="space-y-6">
-      {/* --- 4. LA MODALE POUR AFFICHER LE QR CODE EN GRAND --- */}
+      {/* ────── Modale QR Code ──────
+          S'affiche lorsqu'un QR code est sélectionné.
+          Permet un aperçu plein écran du ticket. */}
       {selectedQr && (
         <div
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm"
-          onClick={() => setSelectedQr(null)} // Ferme la modale en cliquant sur le fond
+          onClick={() => setSelectedQr(null)} // Ferme la modale en cliquant en dehors
         >
           <div
             className="relative bg-white p-6 rounded-xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()} // Empêche la fermeture en cliquant sur la modale elle-même
+            onClick={(e) => e.stopPropagation()} // Empêche la propagation du clic
           >
             <button
               onClick={() => setSelectedQr(null)}
@@ -62,7 +72,9 @@ const UserEventsList = () => {
         </div>
       )}
 
-      {/* Événements Participés */}
+      {/* ────── Section : Événements Participés ──────
+          Liste des événements auxquels l'utilisateur est inscrit,
+          avec possibilité d'afficher le QR code associé. */}
       {hasParticipatedEvents && (
         <section>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">
@@ -85,10 +97,10 @@ const UserEventsList = () => {
                   </p>
                 </div>
 
-                {/* --- 3. AFFICHER LE QR CODE S'IL EXISTE --- */}
+                {/* Bouton QR Code — uniquement si le ticket contient un token */}
                 {event.qrCodeToken && (
                   <button
-                    onClick={() => setSelectedQr(event.qrCodeToken)} // Ouvre la modale avec le bon token
+                    onClick={() => setSelectedQr(event.qrCodeToken)}
                     className="p-1 bg-white rounded-md shadow-sm hover:scale-110 transition-transform"
                     title="Agrandir le QR Code"
                   >
@@ -101,7 +113,8 @@ const UserEventsList = () => {
         </section>
       )}
 
-      {/* Événements Organisés */}
+      {/* ────── Section : Événements Organisés ──────
+          Affiche les événements créés par l’utilisateur (en tant qu’organisateur). */}
       {hasOrganizedEvents && (
         <section>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">
@@ -126,7 +139,8 @@ const UserEventsList = () => {
         </section>
       )}
 
-      {/* Message si aucun événement */}
+      {/* ────── Message vide ──────
+          Affiché si l'utilisateur n’a ni organisé ni participé à un événement. */}
       {!hasOrganizedEvents && !hasParticipatedEvents && (
         <p className="text-center text-gray-500 dark:text-gray-400 py-4">
           Vous n'êtes associé à aucun événement pour le moment.

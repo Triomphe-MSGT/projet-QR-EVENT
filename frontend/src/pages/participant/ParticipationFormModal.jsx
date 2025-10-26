@@ -8,7 +8,6 @@ const ParticipationFormModal = ({
   eventName,
   isSubmitting,
 }) => {
-  // État local pour gérer les champs du formulaire
   const [formData, setFormData] = useState({
     fullName: "",
     profession: "",
@@ -21,7 +20,6 @@ const ParticipationFormModal = ({
 
   if (!isOpen) return null;
 
-  // Gère les changements dans les champs de saisie
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -34,7 +32,6 @@ const ParticipationFormModal = ({
     }
   };
 
-  // Valide le formulaire avant la soumission
   const validateForm = () => {
     const newErrors = {};
     if (!formData.fullName.trim())
@@ -50,11 +47,10 @@ const ParticipationFormModal = ({
       newErrors.gender = "Veuillez sélectionner votre sexe.";
 
     setErrors(newErrors);
-    // Retourne true si pas d'erreurs
+
     return Object.keys(newErrors).length === 0;
   };
 
-  // Gère la soumission du formulaire
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
@@ -63,11 +59,8 @@ const ParticipationFormModal = ({
   };
 
   return (
-    // Superposition (overlay)
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-      {/* Contenu de la modale */}
       <div className="bg-white dark:bg-[#242526] rounded-2xl shadow-xl w-full max-w-lg mx-auto transform transition-transform duration-300 scale-100">
-        {/* En-tête */}
         <div className="p-5 border-b border-gray-200 dark:border-gray-700 text-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-[#E4E6EB]">
             Inscription à l'événement
@@ -77,10 +70,8 @@ const ParticipationFormModal = ({
           </p>
         </div>
 
-        {/* Formulaire */}
         <form onSubmit={handleSubmit} noValidate>
           <div className="p-6 space-y-4">
-            {/* Nom complet */}
             <div>
               <label
                 htmlFor="fullName"
@@ -102,7 +93,6 @@ const ParticipationFormModal = ({
               )}
             </div>
 
-            {/* Métier */}
             <div>
               <label
                 htmlFor="profession"
@@ -124,7 +114,6 @@ const ParticipationFormModal = ({
               )}
             </div>
 
-            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -146,7 +135,6 @@ const ParticipationFormModal = ({
               )}
             </div>
 
-            {/* Sexe */}
             <div>
               <label
                 htmlFor="gender"
@@ -172,7 +160,6 @@ const ParticipationFormModal = ({
               )}
             </div>
 
-            {/* Notifications */}
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -191,7 +178,6 @@ const ParticipationFormModal = ({
             </div>
           </div>
 
-          {/* Pied de page de la modale (actions) */}
           <div className="flex items-center justify-end p-5 bg-gray-50 dark:bg-[#18191A] border-t border-gray-200 dark:border-gray-700 rounded-b-2xl space-x-3">
             <Button
               type="button"

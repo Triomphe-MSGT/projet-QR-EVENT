@@ -1,13 +1,14 @@
-// src/components/Navbar.jsx
-import React, { useState, useMemo } from "react"; // Ajout de useEffect
+// src/components/layouts/Navbar.jsx
+
+import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useQueryClient } from "@tanstack/react-query";
 
-// --- Logique d'authentification ---
+// --- Authentification & données utilisateur ---
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../../slices/authSlice"; // ✅ Vérifiez le chemin
-import { useUserProfile } from "../../hooks/useUserProfile"; // ✅ Vérifiez le chemin
+import { logout } from "../../slices/authSlice";
+import { useUserProfile } from "../../hooks/useUserProfile";
 
 // --- Icônes ---
 import {
@@ -18,8 +19,6 @@ import {
   ArrowLeft,
   Sun,
   Moon,
-  User,
-  LogOut,
   UserCheck,
   Home,
   UserCircle,
@@ -27,282 +26,321 @@ import {
   QrCode,
   LayoutDashboard,
   ScanLine,
-  Edit, // Edit est utilisé dans le menu latéral
+  Bell,
+  ChevronRight,
+  LogOut,
 } from "lucide-react";
 
+/**
+ * Navbar principale gérant :
+ * - L'affichage adaptatif selon l'état d'authentification
+ * - Le menu latéral (drawer)
+ * - Le menu du profil utilisateur
+ * - Le changement de thème
+ */
 const Navbar = () => {
-  // Hooks de base
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
 
-  // Récupération de l'état d'authentification et des données utilisateur
+  // Récupère le token (auth) et l'utilisateur depuis Redux + React Query
   const { token, user: reduxUser } = useSelector((state) => state.auth);
-  // Utilise React Query pour obtenir les données fraîches SI un token existe
   const { data: queryUser, isLoading } = useUserProfile({ enabled: !!token });
-  // Priorité aux données fraîches de Query, sinon utilise celles de Redux
-  const user = queryUser || reduxUser;
+  const user = queryUser || reduxUser; // Source prioritaire : données les plus récentes
 
-  // États locaux pour les menus
+  // États d'ouverture des menus
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  // Fonctions de gestion
+  // --- Gestion des interactions utilisateur ---
   const handleThemeToggle = () => setTheme(theme === "dark" ? "light" : "dark");
+
   const closeMenus = () => {
     setMenuOpen(false);
     setProfileMenuOpen(false);
   };
+
   const handleLogout = () => {
-    dispatch(logout()); // Vide Redux state + localStorage (si configuré)
-    queryClient.clear(); // Vide le cache React Query
-    navigate("/login"); // Redirige
+    dispatch(logout());
+    queryClient.clear(); // Invalide toutes les données en cache
+    navigate("/login");
   };
 
-  // Création dynamique des items du menu latéral
+  /**
+   * Détermine les liens du menu principal selon le rôle utilisateur.
+   * - Utilise useMemo pour éviter un recalcul inutile à chaque rendu.
+   */
   const menuItems = useMemo(() => {
-    // Items de base pour tout utilisateur connecté
     const baseItems = [
-      { label: "Retour", icon: ArrowLeft, onClick: () => navigate(-1) },
       { label: "Accueil", icon: Home, path: "/home" },
-      { label: "Catégories", icon: Grid, path: "/home" }, // Assurez-vous que '/categories' existe
+      { label: "Catégories", icon: Grid, path: "/categories" },
       { label: "Mes QR Codes", icon: QrCode, path: "/my-qrcodes" },
       { label: "Mon Profil", icon: UserCircle, path: "/user-profile" },
-      // Lien "Modifier mon profil" retiré ici car "Mon Profil" mène déjà à la page où on peut modifier
-      { label: "Paramètres", icon: Settings, path: "/account-settings" }, // Assurez-vous que '/account-settings' existe
+      { label: "Paramètres", icon: Settings, path: "/account-settings" },
+      { label: "Retour", icon: ArrowLeft, onClick: () => navigate(-1) },
     ];
 
-    const userRole = user?.role; // Récupère le rôle
+    const role = user?.role;
 
-    // Ajoute les liens spécifiques pour Organisateurs et Admins
-    if (userRole === "Organisateur" || userRole === "administrateur") {
-      // Ajoute "Scanner un Ticket"
-      const qrIndex = baseItems.findIndex(
-        (item) => item.label === "Mes QR Codes"
+    // Enrichit la navigation pour Organisateurs & Admins
+    if (role === "Organisateur" || role === "administrateur") {
+      baseItems.splice(
+        1,
+        0,
+
+        { label: "Scanner un Ticket", icon: ScanLine, path: "/scan-qrcode" }
       );
-      const scanItem = {
-        label: "Scanner un Ticket",
-        icon: ScanLine,
-        path: "/scan-qrcode",
-      };
-      if (qrIndex !== -1) {
-        baseItems.splice(qrIndex + 1, 0, scanItem);
-      } else {
-        baseItems.push(scanItem);
-      }
-    }
-    if (userRole === "Organisateur") {
-      // Utilise la bonne casse
-      baseItems.push({
-        label: "Dashboard",
-        icon: ShieldCheck,
-        path: "/dashboard",
-      });
     }
 
-    // Ajoute le lien spécifique Admin
-    if (userRole === "administrateur") {
-      // Utilise la bonne casse
-      baseItems.push({
+    // Liens supplémentaires pour les administrateurs
+    if (role === "administrateur") {
+      baseItems.splice(1, 0, {
         label: "Admin Dashboard",
         icon: ShieldCheck,
         path: "/admin",
       });
     }
+    if (role === "Organisateur") {
+      baseItems.splice(1, 0, {
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        path: "/dashboard",
+      });
+    }
 
     return baseItems;
-  }, [user, navigate]); // Recalculé si l'utilisateur ou la fonction navigate change
+  }, [user, navigate]);
 
-  // Fonction utilitaire pour l'URL de l'avatar
+  // Retourne l’URL de l’avatar avec gestion des chemins relatifs
   const getAvatarUrl = (imagePath) => {
-    if (!imagePath) return "/assets/default-avatar.png"; // ✅ Avoir un avatar par défaut
+    if (!imagePath) return "/assets/default-avatar.png";
     if (imagePath.startsWith("http")) return imagePath;
-    return `http://localhost:3001/${imagePath}`; // URL vers le backend
+    return `http://localhost:3001/${imagePath}`;
   };
 
-  // --- AFFICHAGE CONDITIONNEL ---
+  // --- Rendus conditionnels selon l’état d’authentification ---
 
-  // 1. Navbar pour utilisateur déconnecté
+  // Utilisateur non connecté
   if (!token) {
     return (
-      <nav className="relative flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 shadow-md">
-        <Link to="/" className="absolute left-1/2 -translate-x-1/2">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent select-none">
+      <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md">
+        <div className="w-10"></div>
+        <Link to="/" className="flex-shrink-0">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent">
             Qr-Event
           </h1>
         </Link>
-        <div className="flex-1"></div>
-        <Link
-          to="/login"
-          className="px-4 py-1.5 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
-        >
-          Connexion
-        </Link>
+        <div className="w-10 flex justify-end">
+          <Link
+            to="/login"
+            className="px-3 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+          >
+            Connexion
+          </Link>
+        </div>
       </nav>
     );
   }
 
-  // 2. Navbar squelette pendant le chargement (si on a un token mais pas encore l'user de query)
+  // Chargement temporaire de l’utilisateur après connexion
   if (isLoading && token && !queryUser) {
     return (
-      <nav className="relative flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 shadow-md animate-pulse">
-        <div className="h-7 w-7 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
+      <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md animate-pulse">
+        <div className="h-8 w-8 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
         <div className="h-7 w-24 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
-        <div className="flex items-center gap-4">
-          <div className="h-6 w-6 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
+        <div className="flex items-center gap-3">
+          <div className="h-7 w-7 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
           <div className="h-8 w-8 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
         </div>
       </nav>
     );
   }
 
-  // 3. Cas où l'utilisateur n'est pas encore défini (très bref ou si API échoue)
-  if (!user) {
-    console.warn("Navbar rendue sans objet 'user' défini."); // Log pour débogage
-    return null; // Ou retourner le squelette
-  }
+  if (!user) return null;
 
-  // 4. Navbar complète pour utilisateur connecté
+  // --- Navbar principale pour utilisateur connecté ---
   return (
-    <nav className="relative flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 shadow-md transition-colors duration-300">
-      {/* --- Bouton Hamburger --- */}
-      <button
-        onClick={() => {
-          setMenuOpen(!menuOpen);
-          setProfileMenuOpen(false);
-        }}
-        className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition"
-        aria-label="Ouvrir le menu"
-      >
-        {menuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
-      </button>
-
-      {/* --- Logo --- */}
-      <Link to="/home" className="absolute left-1/2 -translate-x-1/2">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent select-none">
-          Qr-Event
-        </h1>
-      </Link>
-
-      {/* --- Section Profil + Thème --- */}
-      <div className="flex items-center gap-4 relative">
-        {/* Bouton Thème */}
+    <>
+      <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md">
+        {/* Bouton hamburger */}
         <button
-          onClick={handleThemeToggle}
-          className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition"
-          title={theme === "dark" ? "Mode clair" : "Mode sombre"}
-          aria-label="Changer de thème"
+          onClick={() => setMenuOpen(true)}
+          className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+          aria-label="Ouvrir le menu"
         >
-          {theme === "dark" ? (
-            <Sun className="w-6 h-6" />
-          ) : (
-            <Moon className="w-6 h-6" />
-          )}
+          <Menu className="w-6 h-6" />
         </button>
 
-        {/* Bouton Profil */}
-        <button
-          onClick={() => {
-            setProfileMenuOpen(!profileMenuOpen);
-            setMenuOpen(false);
-          }}
-          className="flex items-center gap-2 text-gray-700 dark:text-gray-200"
-          title="Profil utilisateur"
-          aria-label="Ouvrir le menu du profil"
-        >
-          {user.image ? (
+        {/* Logo central */}
+        <Link to="/home" className="flex-shrink-0">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent">
+            Qr-Event
+          </h1>
+        </Link>
+
+        {/* Notifications et profil */}
+        <div className="flex items-center gap-2 relative">
+          <button
+            className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+            aria-label="Notifications"
+          >
+            <Bell className="w-6 h-6" />
+          </button>
+
+          {/* Avatar utilisateur */}
+          <button
+            onClick={() => setProfileMenuOpen(true)}
+            className="flex items-center"
+            title="Profil utilisateur"
+            aria-label="Ouvrir le menu du profil"
+          >
             <img
               src={getAvatarUrl(user.image)}
               alt="avatar"
-              className="w-8 h-8 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+              className="w-9 h-9 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
             />
-          ) : (
-            <UserCircle className="w-8 h-8 text-gray-400" />
-          )}
-        </button>
+          </button>
 
-        {/* --- Menu Déroulant du Profil --- */}
-        {profileMenuOpen && (
-          <>
-            <div onClick={closeMenus} className="fixed inset-0 z-40"></div>{" "}
-            {/* Backdrop */}
-            <div className="absolute top-12 right-0 w-64 z-50 p-3 flex flex-col gap-1 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg animate-fade-in-down">
-              <div className="flex flex-col items-center border-b dark:border-gray-600 pb-3 mb-2">
-                <img
-                  src={getAvatarUrl(user.image)}
-                  alt="avatar"
-                  className="w-16 h-16 rounded-full object-cover mb-2"
-                />
-                <p className="font-semibold text-gray-800 dark:text-gray-100">
-                  {user.nom || "Utilisateur"}
-                </p>
-                <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                  {user.role || "Invité"}
-                </span>
+          {/* Menu du profil */}
+          {profileMenuOpen && (
+            <>
+              <div onClick={closeMenus} className="fixed inset-0 z-40"></div>
+              <div className="absolute top-14 right-0 w-64 z-50 p-3 flex flex-col gap-1 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-lg animate-fade-in-down">
+                <div className="flex flex-col items-center border-b dark:border-gray-600 pb-3 mb-2">
+                  <img
+                    src={getAvatarUrl(user.image)}
+                    alt="avatar"
+                    className="w-16 h-16 rounded-full object-cover mb-2"
+                  />
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">
+                    {user.nom}
+                  </p>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                    {user.role}
+                  </span>
+                </div>
+                <Link
+                  to="/user-profile"
+                  onClick={closeMenus}
+                  className="flex items-center gap-3 p-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <UserCheck className="w-5 h-5" /> Voir mon profil
+                </Link>
+                <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors text-left"
+                >
+                  <LogOut className="w-5 h-5" /> Déconnexion
+                </button>
               </div>
-              <Link
-                to="/user-profile"
-                onClick={closeMenus}
-                className="flex items-center gap-3 p-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <UserCheck className="w-5 h-5" /> Voir mon profil
-              </Link>
-              {/* Le bouton pour changer de rôle a été retiré */}
-              <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors text-left"
-              >
-                <LogOut className="w-5 h-5" /> Déconnexion
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      </nav>
 
-      {/* --- Menu Hamburger Gauche (utilise menuItems dynamiques) --- */}
+      {/* --- Menu latéral (drawer) --- */}
       {menuOpen && (
         <>
           <div
             onClick={closeMenus}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in"
           ></div>
-          <div className="absolute top-16 left-4 w-72 z-50 p-4 flex flex-col gap-2 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-lg animate-slide-in-left">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              if (item.path) {
-                return (
-                  // C'est un lien
+
+          <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-white dark:bg-gray-800 shadow-2xl animate-slide-in-left flex flex-col">
+            {/* En-tête du tiroir avec infos utilisateur */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
+              <img
+                src={getAvatarUrl(user.image)}
+                alt="avatar"
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <div>
+                <p className="font-semibold text-gray-800 dark:text-gray-100">
+                  {user.nom}
+                </p>
+                <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                  {user.role}
+                </span>
+              </div>
+              <button
+                onClick={closeMenus}
+                className="p-2 ml-auto text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Liste dynamique des liens */}
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const shared =
+                  "flex items-center gap-4 p-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-full font-medium";
+                return item.path ? (
                   <Link
                     key={item.label}
                     to={item.path}
                     onClick={closeMenus}
-                    className="flex items-center gap-3 p-2 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-blue-500 hover:text-white transition-colors"
+                    className={shared}
                   >
-                    <Icon className="w-5 h-5" /> {item.label}
+                    <Icon className="w-6 h-6 text-gray-500" />
+                    <span>{item.label}</span>
+                    <ChevronRight className="w-5 h-5 ml-auto text-gray-400" />
                   </Link>
-                );
-              } else {
-                return (
-                  // C'est un bouton (comme "Retour")
+                ) : (
                   <button
                     key={item.label}
                     onClick={() => {
-                      if (item.onClick) item.onClick();
+                      item.onClick?.();
                       closeMenus();
                     }}
-                    className="flex items-center gap-3 p-2 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-blue-500 hover:text-white transition-colors text-left"
+                    className={shared}
                   >
-                    <Icon className="w-5 h-5" /> {item.label}
+                    <Icon className="w-6 h-6 text-gray-500" />
+                    <span>{item.label}</span>
+                    <ChevronRight className="w-5 h-5 ml-auto text-gray-400" />
                   </button>
                 );
-              }
-            })}
+              })}
+            </nav>
+
+            {/* Pied de menu : thème + déconnexion */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+              <button
+                onClick={handleThemeToggle}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 w-full"
+              >
+                {theme === "dark" ? (
+                  <Sun className="w-5 h-5 text-yellow-500" />
+                ) : (
+                  <Moon className="w-5 h-5 text-indigo-500" />
+                )}
+                <span>{theme === "dark" ? "Mode Clair" : "Mode Sombre"}</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 p-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/50 w-full"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Déconnexion</span>
+              </button>
+            </div>
           </div>
         </>
       )}
-    </nav>
+
+      {/* --- Animations locales --- */}
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-down { animation: fadeInDown 0.2s ease-out; }
+        @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        .animate-slide-in-left { animation: slideInLeft 0.3s ease-out; }
+      `}</style>
+    </>
   );
 };
 

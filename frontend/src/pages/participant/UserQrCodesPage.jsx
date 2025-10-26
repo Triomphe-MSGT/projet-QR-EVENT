@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "../../components/layouts/MainLayout";
 import QrCodeDisplay from "../../components/ui/QrCodeDisplay";
-import { useUserEvents } from "../../hooks/useUserProfile"; // Assurez-vous que ce hook appelle la bonne route (ex: /api/users/me/events)
+import { useUserEvents } from "../../hooks/useUserProfile";
 
 const UserQrCodesPage = () => {
   const { data: eventsData, isLoading, isError, error } = useUserEvents();

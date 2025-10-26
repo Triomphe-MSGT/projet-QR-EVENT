@@ -48,7 +48,6 @@ const AuthFormRegisterConnection = () => {
       const role = data.user.role;
       if (role === "Organisateur") navigate("/createevent");
       else if (role === "Participant") navigate("/dashboard");
-      // '/dashboard' est correct car RoleRouter va rediriger
       else navigate("/");
     } catch (err) {
       setError(err.message || "Erreur lors de la connexion");
@@ -109,7 +108,7 @@ const AuthFormRegisterConnection = () => {
       dispatch(login(data));
       localStorage.setItem("token", data.token);
 
-      const roleUser = data.user.role;
+      const roleUser = data.user.role; // 🧩 Nouveau style "toggle" inspiré de tes boutons Connexion / Inscription
       if (roleUser === "Organisateur") navigate("/createevent");
       else if (roleUser === "Participant") navigate("/dashboard");
       else navigate("/");

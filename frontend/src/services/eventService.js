@@ -1,4 +1,3 @@
-// src/services/eventService.js
 import api from "../slices/axiosInstance"; // ✅ Vérifiez ce chemin
 
 // Récupère tous les événements
@@ -21,9 +20,17 @@ export const registerToEvent = async ({ eventId, formData }) => {
   return data;
 };
 
+// --- NOUVELLE FONCTION AJOUTÉE ---
+// Se désinscrire d'un événement
+export const unregisterFromEvent = async (eventId) => {
+  if (!eventId) throw new Error("ID d'événement manquant");
+  // Appelle la route DELETE /api/events/:id/register
+  await api.delete(`/events/${eventId}/register`);
+  return eventId; // Retourne l'ID pour la mise à jour du cache
+};
+
 // Crée un événement
 export const createEvent = async (formData) => {
-  // formData doit être un objet FormData
   const { data } = await api.post("/events", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
@@ -32,7 +39,6 @@ export const createEvent = async (formData) => {
 
 // Met à jour un événement
 export const updateEvent = async ({ id, formData }) => {
-  // formData doit être un objet FormData
   if (!id) throw new Error("ID d'événement manquant");
   const { data } = await api.put(`/events/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -46,10 +52,29 @@ export const deleteEvent = async (id) => {
   await api.delete(`/events/${id}`);
   return id;
 };
+
+// Valide un QR code
 export const validateQrCode = async (validationData) => {
   const { data } = await api.post("/events/validate-qr", validationData);
-
   return data;
+};
+
+export const addParticipant = async ({ eventId, participantId }) => {
+  if (!eventId || !participantId)
+    throw new Error("ID événement ou participant manquant");
+  const { data } = await api.post(`/events/${eventId}/participants`, {
+    participantId,
+  });
+  return data;
+};
+
+// Supprime un participant (action de l'organisateur/admin)
+export const removeParticipant = async ({ eventId, participantId }) => {
+  if (!eventId || !participantId)
+    throw new Error("ID événement ou participant manquant");
+  // Appelle la route DELETE /api/events/:eventId/participants/:participantId
+  await api.delete(`/events/${eventId}/participants/${participantId}`);
+  return { eventId, participantId }; // Retourne les ID pour la mise à jour du cache
 };
 
 // Exporte les fonctions individuellement ou en tant qu'objet
@@ -57,9 +82,12 @@ const eventService = {
   getEvents,
   getEventById,
   registerToEvent,
+  unregisterFromEvent, // ✅ Ajouté
   createEvent,
   updateEvent,
   deleteEvent,
   validateQrCode,
+  addParticipant, // ✅ Ajouté
+  removeParticipant,
 };
 export default eventService;

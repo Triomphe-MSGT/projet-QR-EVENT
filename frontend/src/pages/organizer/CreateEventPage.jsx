@@ -1,48 +1,20 @@
+// src/pages/organizer/CreateEventPage.jsx (Gère la Création ET la Modification)
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getCategories } from "../../services/categoryService";
+import { getCategories } from "../../services/categoryService"; // ✅ Vérifiez le chemin
+// --- 1. Importer les hooks nécessaires ---
 import {
   useCreateEvent,
   useUpdateEvent,
   useEventDetails,
-} from "../../hooks/useEvents";
+} from "../../hooks/useEvents"; // ✅ Vérifiez le chemin
 import MainLayout from "../../components/layouts/MainLayout";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Loader2, Save, PlusCircle } from "lucide-react";
-import Button from "../../components/ui/Button";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMapEvents,
-} from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useNavigate, useLocation } from "react-router-dom"; // <-- Importer useLocation
+import { Loader2, AlertTriangle, Save, PlusCircle } from "lucide-react";
+import Button from "../../components/ui/Button"; // ✅ Vérifiez le chemin
 
-// Icône du marqueur
-const markerIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
-  shadowSize: [41, 41],
-});
-
-// Sous-composant : clic sur la carte → met à jour lat/lng
-const LocationMarker = ({ onSelect }) => {
-  useMapEvents({
-    click(e) {
-      onSelect(e.latlng);
-    },
-  });
-  return null;
-};
-
-// Liste des villes
+// --- Liste des villes (inchangée) ---
 const cameroonianCities = [
   "Yaoundé",
   "Douala",
@@ -81,15 +53,20 @@ const cameroonianCities = [
 
 const EventForm = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation(); // Pour lire les paramètres de l'URL
 
+  // --- 2. Détecter le Mode Édition ---
   const searchParams = new URLSearchParams(location.search);
-  const eventIdToEdit = searchParams.get("edit");
-  const isEditMode = !!eventIdToEdit;
+  const eventIdToEdit = searchParams.get("edit"); // Récupère l'ID (ex: "60b8d...")
+  const isEditMode = !!eventIdToEdit; // true si un ID est présent
 
-  const { data: existingEventData, isLoading: isLoadingEventDetails } =
-    useEventDetails(eventIdToEdit);
+  // --- 3. Charger les données de l'événement si on est en mode édition ---
+  const {
+    data: existingEventData,
+    isLoading: isLoadingEventDetails, // Chargement des données à éditer
+  } = useEventDetails(eventIdToEdit); // Le hook ne se lancera que si eventIdToEdit existe
 
+  // État du formulaire
   const [formData, setFormData] = useState({
     name: "",
     type: "",
@@ -104,27 +81,27 @@ const EventForm = () => {
     category: "",
     qrOption: false,
     image: null,
-    latitude: 4.0511, // Douala par défaut
-    longitude: 9.7679,
   });
 
+  // Récupération des catégories (inchangé)
   const {
     data: categories,
     isLoading: isLoadingCategories,
     isError: isErrorCategories,
-  } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
-  });
+  } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
 
+  // Mutations pour Créer ou Mettre à jour
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();
 
+  // --- 4. Pré-remplir le formulaire en Mode Édition ---
   useEffect(() => {
+    // Si on est en mode édition ET que les données ont été chargées
     if (isEditMode && existingEventData) {
       setFormData({
         name: existingEventData.name || "",
         type: existingEventData.type || "",
+        // Formate AAAA-MM-JJ pour l'input type="date"
         startDate: existingEventData.startDate
           ? new Date(existingEventData.startDate).toISOString().split("T")[0]
           : "",
@@ -137,16 +114,16 @@ const EventForm = () => {
         country: existingEventData.country || "Cameroun",
         description: existingEventData.description || "",
         price: existingEventData.price?.toString() || "0",
+        // 'category' peut être un objet peuplé ou juste un ID
         category:
-          existingEventData.category?._id || existingEventData.category || "",
+          existingEventData.category?.id || existingEventData.category || "", // ✅ Correction ici
         qrOption: existingEventData.qrOption || false,
-        image: null,
-        latitude: existingEventData.latitude || 4.0511,
-        longitude: existingEventData.longitude || 9.7679,
+        image: null, // L'image doit toujours être re-uploadée si on veut la changer
       });
     }
-  }, [isEditMode, existingEventData]);
+  }, [isEditMode, existingEventData]); // Se déclenche quand les données arrivent
 
+  // Gestion des changements (inchangée)
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     setFormData((prev) => ({
@@ -156,37 +133,56 @@ const EventForm = () => {
     }));
   };
 
-  const handleMapClick = (latlng) => {
-    setFormData((prev) => ({
-      ...prev,
-      latitude: latlng.lat,
-      longitude: latlng.lng,
-    }));
-  };
-
+  // --- 5. Soumission (gère les deux modes) ---
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // --- ✅ CORRECTION : VALIDATION RENFORCÉE ---
+    // Vérifie les champs obligatoires
     if (
       !formData.name ||
       !formData.startDate ||
       !formData.city ||
-      !formData.category
+      !formData.category ||
+      !formData.description
     ) {
       alert("Veuillez remplir tous les champs obligatoires (*)");
       return;
     }
 
+    // Vérifie les longueurs minimales (correspondant au backend)
+    if (formData.name.length < 3) {
+      alert("Le nom de l'événement doit contenir au moins 3 caractères.");
+      return;
+    }
+    if (formData.description.length < 10) {
+      alert("La description doit contenir au moins 10 caractères.");
+      return;
+    }
+    // --- FIN CORRECTION ---
+
+    // Création de FormData
     const dataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
-      if (key === "image" && formData.image) {
+      // Sécurité : Ne jamais envoyer un objet
+      if (
+        key === "category" &&
+        typeof formData.category === "object" &&
+        formData.category !== null
+      ) {
+        dataToSend.append("category", formData.category.id);
+      } else if (key === "image" && formData.image) {
+        // Ne joint l'image que si elle est nouvelle
         dataToSend.append("image", formData.image);
       } else if (key !== "image") {
+        // Joint toutes les autres clés
         dataToSend.append(key, formData[key]);
       }
     });
 
+    // Appelle la bonne mutation
     if (isEditMode) {
+      // --- Logique de MISE À JOUR ---
       updateEventMutation.mutate(
         { id: eventIdToEdit, formData: dataToSend },
         {
@@ -199,6 +195,7 @@ const EventForm = () => {
         }
       );
     } else {
+      // --- Logique de CRÉATION ---
       createEventMutation.mutate(dataToSend, {
         onSuccess: (createdEvent) => {
           alert("Événement créé avec succès !");
@@ -210,11 +207,13 @@ const EventForm = () => {
     }
   };
 
+  // Combine les états de chargement
   const isLoading =
     isLoadingCategories || (isEditMode && isLoadingEventDetails);
   const isSubmitting =
     createEventMutation.isPending || updateEventMutation.isPending;
 
+  // Affiche un loader si on charge les catégories ou les données de l'événement
   if (isLoading) {
     return (
       <MainLayout>
@@ -228,29 +227,33 @@ const EventForm = () => {
   return (
     <MainLayout>
       <div className="max-w-3xl mx-auto my-8 p-6 sm:p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-900 dark:text-gray-100">
+        <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100 text-center">
           {isEditMode ? "Modifier l'Événement" : "Créer un Nouvel Événement 🚀"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Nom */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label htmlFor="name" className="block text-sm font-medium mb-1">
               Nom <span className="text-red-500">*</span>
             </label>
             <input
+              id="name"
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full border rounded-lg px-3 py-2 dark:bg-gray-700"
+              minLength="3"
+              className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
           {/* Catégorie */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="category"
+              className="block text-sm font-medium mb-1"
+            >
               Catégorie <span className="text-red-500">*</span>
             </label>
             {isErrorCategories ? (
@@ -259,11 +262,12 @@ const EventForm = () => {
               </p>
             ) : (
               <select
+                id="category"
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
                 required
-                className="w-full border rounded-lg px-3 py-2 dark:bg-gray-700"
+                className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>
                   -- Sélectionner --
@@ -276,172 +280,180 @@ const EventForm = () => {
               </select>
             )}
           </div>
-
           {/* Dates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label
+                htmlFor="startDate"
+                className="block text-sm font-medium mb-1"
+              >
                 Date de début <span className="text-red-500">*</span>
               </label>
               <input
+                id="startDate"
                 type="date"
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
                 required
-                className="w-full border rounded-lg px-3 py-2 dark:bg-gray-700"
+                className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Date de fin
+              <label
+                htmlFor="endDate"
+                className="block text-sm font-medium mb-1"
+              >
+                Date de fin <span className="text-gray-400">(Optionnel)</span>
               </label>
               <input
+                id="endDate"
                 type="date"
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleChange}
                 min={formData.startDate}
-                className="w-full border rounded-lg px-3 py-2 dark:bg-gray-700"
+                disabled={!formData.startDate}
+                className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 disabled:opacity-50"
               />
             </div>
           </div>
-
           {/* Heure */}
           <div>
-            <label className="block text-sm font-medium mb-1">Heure</label>
+            <label htmlFor="time" className="block text-sm font-medium mb-1">
+              Heure <span className="text-gray-400">(Optionnel)</span>
+            </label>
             <input
+              id="time"
               type="time"
               name="time"
               value={formData.time}
               onChange={handleChange}
-              className="w-full border rounded-lg px-3 py-2 dark:bg-gray-700"
+              className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700"
             />
           </div>
-
           {/* Localisation */}
-          <div>
-            <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-200 mb-2">
-              📍 Localisation
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Ville <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  required
-                  className="w-full border rounded-lg px-3 py-2 dark:bg-gray-700"
-                >
-                  <option value="" disabled>
-                    -- Sélectionner --
-                  </option>
-                  {cameroonianCities.map((ville) => (
-                    <option key={ville} value={ville}>
-                      {ville}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Quartier
-                </label>
-                <input
-                  type="text"
-                  name="neighborhood"
-                  value={formData.neighborhood}
-                  onChange={handleChange}
-                  placeholder="Ex: Tchitchap"
-                  className="w-full border rounded-lg px-3 py-2 dark:bg-gray-700"
-                />
-              </div>
-            </div>
-
-            {/* Carte interactive */}
-            <MapContainer
-              center={[formData.latitude, formData.longitude]}
-              zoom={13}
-              style={{ height: "300px", width: "100%", borderRadius: "12px" }}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='© <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-              />
-              <LocationMarker onSelect={handleMapClick} />
-              <Marker
-                position={[formData.latitude, formData.longitude]}
-                icon={markerIcon}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium mb-1">
+                Ville <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="city"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                required
+                className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700"
               >
-                <Popup>Emplacement de l'événement</Popup>
-              </Marker>
-            </MapContainer>
-
-            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              <p>Latitude : {formData.latitude.toFixed(6)}</p>
-              <p>Longitude : {formData.longitude.toFixed(6)}</p>
+                <option value="" disabled>
+                  -- Sélectionner --
+                </option>
+                {cameroonianCities.map((ville) => (
+                  <option key={ville} value={ville}>
+                    {ville}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="neighborhood"
+                className="block text-sm font-medium mb-1"
+              >
+                Quartier <span className="text-gray-400">(Optionnel)</span>
+              </label>
+              <input
+                id="neighborhood"
+                type="text"
+                name="neighborhood"
+                value={formData.neighborhood}
+                onChange={handleChange}
+                className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700"
+              />
             </div>
           </div>
-
+          <div>
+            <label htmlFor="country" className="block text-sm font-medium mb-1">
+              Pays
+            </label>
+            <input
+              id="country"
+              type="text"
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+              className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700"
+            />
+          </div>
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium mb-1"
+            >
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
+              id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              rows="4"
+              rows="5"
               required
-              className="w-full border rounded-lg px-3 py-2 dark:bg-gray-700"
-            ></textarea>
+              minLength="10"
+              className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 resize-none"
+            />
           </div>
-
           {/* Prix */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label htmlFor="price" className="block text-sm font-medium mb-1">
               Prix (FCFA)
             </label>
             <input
+              id="price"
               type="number"
               name="price"
               value={formData.price}
               onChange={handleChange}
               min="0"
-              className="w-full border rounded-lg px-3 py-2 dark:bg-gray-700"
+              className="w-full border dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700"
             />
           </div>
-
-          {/* QR Option */}
+          {/* Option QR */}
           <div className="flex items-center space-x-3 pt-2">
             <input
+              id="qrOption"
               type="checkbox"
               name="qrOption"
               checked={formData.qrOption}
               onChange={handleChange}
               className="h-5 w-5 text-blue-600"
             />
-            <label className="text-sm cursor-pointer">
+            <label htmlFor="qrOption" className="text-sm cursor-pointer">
               Activer les QR codes pour l'accès
             </label>
           </div>
-
           {/* Image */}
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Image de couverture
+            <label htmlFor="image" className="block text-sm font-medium mb-1">
+              Image de couverture{" "}
+              <span className="text-gray-400">(Optionnel)</span>
             </label>
             <input
+              id="image"
               type="file"
               name="image"
               accept="image/*"
               onChange={handleChange}
-              className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-semibold file:bg-blue-50 dark:file:bg-gray-600 file:text-blue-600 dark:file:text-gray-200 hover:file:bg-blue-100"
+              className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-semibold file:bg-blue-50 dark:file:bg-gray-600 file:text-blue-600 dark:file:text-gray-200 hover:file:bg-blue-100 dark:hover:file:bg-gray-500"
             />
+            {isEditMode && existingEventData?.imageUrl && !formData.image && (
+              <p className="text-xs text-gray-500 mt-1">
+                Image actuelle conservée. Choisissez un nouveau fichier pour la
+                remplacer.
+              </p>
+            )}
           </div>
 
           {/* Bouton de soumission */}

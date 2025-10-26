@@ -28,7 +28,6 @@ const Button = ({
     connecter: "w-full bg-green-500 text-white hover:bg-green-600",
     inscrire: "w-full bg-green-500 text-white hover:bg-green-600",
 
-    // 🧩 Nouveau style "toggle" inspiré de tes boutons Connexion / Inscription
     toggle: `
       px-6 py-2 border-b-2 transition-all duration-300 font-medium
       ${

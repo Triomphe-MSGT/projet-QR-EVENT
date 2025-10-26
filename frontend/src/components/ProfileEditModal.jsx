@@ -10,7 +10,6 @@ const ProfileEditModal = ({
   updateError,
   isUpdateSuccess,
 }) => {
-  // CORRECTION : Utiliser 'nom' et les champs du backend
   const [form, setForm] = useState({
     nom: user.nom || "",
     email: user.email || "",
@@ -55,7 +54,6 @@ const ProfileEditModal = ({
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* CORRECTION : 'username' -> 'nom' */}
           <div>
             <label className="block mb-1 text-gray-700 dark:text-gray-300">
               Nom complet
@@ -86,7 +84,6 @@ const ProfileEditModal = ({
             />
           </div>
 
-          {/* Champs additionnels du backend */}
           <div>
             <label className="block mb-1 text-gray-700 dark:text-gray-300">
               Téléphone
@@ -142,7 +139,6 @@ const ProfileEditModal = ({
             </p>
           )}
 
-          {/* Boutons */}
           <div className="flex justify-between mt-4">
             <button
               type="button"
