@@ -27,10 +27,11 @@ import RoleRouter from "./routes/RoleRouter";
 import PrivateRoute from "./routes/PrivateRoute";
 import Unauthorized from "./pages/Unauthorized";
 import ProfilePage from "./pages/ProfilePage";
-import AuthFormRegisterConnection from "./components/ui/AuthFormRegisterConnection";
+
 import AdminDashboard from "./components/admin/AdminDashboard";
 import ScanQrPage from "./pages/organizer/ScanQrPage";
 import SettingsPage from "./pages/SettingsPage";
+import AuthFormRegisterConnection from "./components/ui/AuthFormRegisterConnection";
 
 const AppRouter = () => {
   return (
