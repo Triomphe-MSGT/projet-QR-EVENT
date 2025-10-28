@@ -2,8 +2,9 @@ import api from "../slices/axiosInstance"; // ✅ Vérifiez ce chemin
 
 // Récupère tous les événements
 export const getEvents = async () => {
-  const { data } = await api.get("/events");
-  return data;
+  const response = await api.get("/events");
+
+  return response.data || [];
 };
 
 // Récupère un événement par ID
