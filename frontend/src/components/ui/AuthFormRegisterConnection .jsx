@@ -28,7 +28,7 @@ const AuthFormRegisterConnection = () => {
   const [registerUsername, setRegisterUsername] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("Participant");
+  const [role, setRole] = useState("visiteur");
   const [sexe, setSexe] = useState("");
   const [phone, setPhone] = useState("");
   const [profession, setProfession] = useState("");
@@ -47,7 +47,7 @@ const AuthFormRegisterConnection = () => {
 
       const role = data.user.role;
       if (role === "Organisateur") navigate("/createevent");
-      else if (role === "Participant") navigate("/dashboard");
+      else if (role === "Participant") navigate("/home");
       else navigate("/");
     } catch (err) {
       setError(err.message || "Erreur lors de la connexion");

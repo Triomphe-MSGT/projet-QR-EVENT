@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { ArrowRight } from "lucide-react";
 
 // --- Composant de chargement (Splash Screen) ---
@@ -42,16 +41,12 @@ const LoadingScreen = () => {
 const OpenPage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { user, token } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (token && user) {
-      navigate("/home", { replace: true });
-      return;
-    }
+    // Splash screen de 3s
     const timer = setTimeout(() => setLoading(false), 3000);
     return () => clearTimeout(timer);
-  }, [token, user, navigate]);
+  }, []);
 
   const handleCreateEvent = () => {
     navigate("/createevent");
@@ -258,8 +253,8 @@ const OpenPage = () => {
             En continuant, vous acceptez nos{" "}
             <Link to="/terms" className="text-blue-500 hover:underline">
               Conditions d'utilisation
-            </Link>{" "}
-            et{" "}
+            </Link>
+            et
             <Link to="/privacy" className="text-blue-500 hover:underline">
               Politique de confidentialité
             </Link>

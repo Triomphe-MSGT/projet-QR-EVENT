@@ -1,34 +1,23 @@
-// src/components/scanner/QrScanner.jsx
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { useValidateQrCode } from "../../hooks/useEvents";
 import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 
-/**
- * Composant QrScanner :
- * - Initialise et gère un scanner QR via html5-qrcode.
- * - Décode les QR codes et valide leur token via l’API backend.
- * - Fournit un retour visuel clair selon l’état du scan (en cours, succès, erreur...).
- */
 const QrScanner = ({ eventName }) => {
-  const scannerRef = useRef(null); // Instance active du scanner
-  const validateMutation = useValidateQrCode(); // Hook API pour la validation serveur
+  const scannerRef = useRef(null);
+  const validateMutation = useValidateQrCode();
 
-  // État central du scanner : statut et message à afficher à l'utilisateur
   const [feedback, setFeedback] = useState({ status: "idle", message: "" });
+  const feedbackRef = useRef(feedback);
+  feedbackRef.current = feedback;
 
-  /**
-   * Affiche un message temporaire (succès / erreur / validation)
-   * puis relance automatiquement le scan après un délai donné.
-   * Permet d’enchaîner les validations sans recharger la page.
-   */
   const showTemporaryFeedback = useCallback(
     (status, message, duration = 3000) => {
       setFeedback({ status, message });
       setTimeout(() => {
         if (scannerRef.current) {
           try {
-            scannerRef.current.resume(); // Reprise du flux vidéo
+            scannerRef.current.resume();
             setFeedback({
               status: "scanning",
               message: "Scanner à nouveau...",
@@ -45,14 +34,10 @@ const QrScanner = ({ eventName }) => {
     []
   );
 
-  /**
-   * Initialise le scanner dès que le composant est monté.
-   * Détruit proprement l’instance au démontage pour libérer la caméra.
-   */
   useEffect(() => {
-    const scannerElementId = "qr-reader-element";
+    if (scannerRef.current) return; // ⚠️ Empêche la réinitialisation multiple
 
-    // Configuration de la capture vidéo
+    const scannerElementId = "qr-reader-element";
     const config = {
       fps: 10,
       qrbox: { width: 250, height: 250 },
@@ -60,28 +45,27 @@ const QrScanner = ({ eventName }) => {
       supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
     };
 
-    /** Callback exécuté à chaque QR code détecté */
     const onScanSuccess = (decodedText) => {
-      // Empêche les doublons pendant une phase de validation
-      if (["validating", "success", "error"].includes(feedback.status)) return;
+      if (
+        ["validating", "success", "error"].includes(feedbackRef.current.status)
+      )
+        return;
 
       scannerRef.current?.pause(true);
       setFeedback({ status: "validating", message: "Validation en cours..." });
 
       try {
-        // Certains QR codes peuvent contenir un JSON, d'autres un simple token brut
         let qrToken = "";
         try {
           const qrData = JSON.parse(decodedText);
           qrToken = qrData.token ?? "";
           if (!qrToken) throw new Error("Token manquant.");
         } catch {
-          qrToken = decodedText; // Fallback si non-JSON
+          qrToken = decodedText;
         }
 
         if (!qrToken) throw new Error("QR code invalide.");
 
-        // Appel API de validation
         validateMutation.mutate(
           { qrCodeToken: qrToken, eventName },
           {
@@ -102,12 +86,10 @@ const QrScanner = ({ eventName }) => {
           }
         );
       } catch (err) {
-        // Cas d’erreur avant l'appel API
         showTemporaryFeedback("error", `Erreur QR: ${err.message}`, 3500);
       }
     };
 
-    /** Callback pour erreurs de capture (caméra / environnement) */
     const onScanFailure = (error) => {
       if (!error.includes("NotFoundException")) {
         console.warn("Erreur scanner:", error);
@@ -115,34 +97,30 @@ const QrScanner = ({ eventName }) => {
       }
     };
 
-    // Démarrage du scanner
-    const readerElement = document.getElementById(scannerElementId);
-    if (readerElement && !scannerRef.current) {
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        scannerElementId,
-        config,
-        false
-      );
-      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-      scannerRef.current = html5QrcodeScanner;
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      scannerElementId,
+      config,
+      false
+    );
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    scannerRef.current = html5QrcodeScanner;
+
+    // ✅ Mise à jour une seule fois après initialisation
+    setTimeout(() => {
       setFeedback({
         status: "scanning",
         message: "Veuillez scanner le QR code...",
       });
-    }
+    }, 300);
 
-    // Nettoyage à la fermeture du composant
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current
-          .clear()
-          .catch((err) => console.error("Échec arrêt scanner:", err));
-        scannerRef.current = null;
-      }
+      html5QrcodeScanner
+        .clear()
+        .catch((err) => console.error("Échec arrêt scanner:", err));
+      scannerRef.current = null;
     };
-  }, [eventName, feedback.status, showTemporaryFeedback, validateMutation]);
+  }, [eventName, showTemporaryFeedback, validateMutation]);
 
-  // Choisit le style visuel selon l’état du scan
   const getFeedbackStyle = () => {
     switch (feedback.status) {
       case "validating":
@@ -160,23 +138,10 @@ const QrScanner = ({ eventName }) => {
 
   return (
     <div className="w-full max-w-sm mx-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border dark:border-gray-700">
-      {/* Zone vidéo du scanner */}
       <div
         id="qr-reader-element"
         className="relative w-full aspect-square border dark:border-gray-600 rounded-md overflow-hidden mb-4"
-      >
-        {/* Cadre animé pendant la détection */}
-        {(feedback.status === "scanning" ||
-          feedback.status === "validating") && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[70%] h-[70%] border-4 border-blue-500/50 rounded-lg animate-pulse-border">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent animate-scan-line"></div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Message d'état */}
+      />
       <div
         className={`p-3 rounded-md border text-center font-medium text-sm transition-all ${getFeedbackStyle()}`}
       >
@@ -191,24 +156,6 @@ const QrScanner = ({ eventName }) => {
         )}
         {feedback.message || "Initialisation..."}
       </div>
-
-      {/* Animations CSS */}
-      <style>{`
-        @keyframes scanLine {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(calc(100% - 4px)); }
-        }
-        .animate-scan-line {
-          animation: scanLine 2.5s infinite alternate ease-in-out;
-        }
-        @keyframes pulseBorder {
-          0%, 100% { border-color: rgba(59, 130, 246, 0.5); }
-          50% { border-color: rgba(59, 130, 246, 0.9); }
-        }
-        .animate-pulse-border {
-          animation: pulseBorder 1.5s infinite ease-in-out;
-        }
-      `}</style>
     </div>
   );
 };

@@ -42,6 +42,8 @@ const AppRouter = () => {
         <Route path="/user-profile" element={<ProfilePage />} />
         <Route path="/events" element={<EventListPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
 
         {/* Routes protégées */}
         <Route
@@ -111,10 +113,6 @@ const AppRouter = () => {
             </PrivateRoute>
           }
         />
-
-        {/* Routes de secours */}
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

@@ -5,9 +5,7 @@ import { Navigate } from "react-router-dom";
 const RoleRouter = () => {
   const { user } = useSelector((state) => state.auth);
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return null;
 
   switch (user.role) {
     case "Organisateur":
