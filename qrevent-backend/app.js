@@ -23,7 +23,6 @@ mongoose
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static("dist"));
 app.use("/api/users", usersRouter);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/events", eventsRouter);
