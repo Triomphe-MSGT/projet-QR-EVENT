@@ -1,11 +1,12 @@
 // src/services/categoryService.js
-import api from "../slices/axiosInstance"; // ✅ Assurez-vous que ce chemin est correct
+import api from "../slices/axiosInstance";
 
 // Récupère toutes les catégories
 export const getCategories = async () => {
   try {
-    const { data } = await api.get("/categories");
-    return data || [];
+    const response = await api.get("/categories");
+
+    return response.data || [];
   } catch (error) {
     console.error("Échec récupération catégories:", error);
     throw error; // Relance l'erreur pour React Query

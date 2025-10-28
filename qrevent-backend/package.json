@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "build:ui": "rm -rf dist && cd ../frontend && npm run build &&cp -r dist ../qrevent-backend"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
