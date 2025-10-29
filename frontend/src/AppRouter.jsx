@@ -37,11 +37,11 @@ const AppRouter = () => {
     <Router>
       <Routes>
         {/* Routes publiques */}
+        <Route path="/home" element={<HomePage />} />
         <Route path="/" element={<OpenPage />} />
         <Route path="/login" element={<AuthFormRegisterConnection />} />
         <Route path="/user-profile" element={<ProfilePage />} />
         <Route path="/events" element={<EventListPage />} />
-        <Route path="/home" element={<HomePage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* Routes protégées */}

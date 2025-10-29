@@ -84,8 +84,7 @@ const AuthFormRegisterConnection = () => {
 
       const roleUser = data.user.role;
       if (roleUser === "Organisateur") navigate("/createevent");
-      else if (roleUser === "Participant") navigate("/dashboard");
-      else navigate("/");
+      else navigate("/home");
     } catch (err) {
       setError(err.message || "Erreur lors de l'inscription");
     } finally {
@@ -109,8 +108,7 @@ const AuthFormRegisterConnection = () => {
 
       const roleUser = data.user.role;
       if (roleUser === "Organisateur") navigate("/createevent");
-      else if (roleUser === "Participant") navigate("/dashboard");
-      else navigate("/");
+      else navigate("/home");
     } catch (err) {
       console.error(err);
       setError(

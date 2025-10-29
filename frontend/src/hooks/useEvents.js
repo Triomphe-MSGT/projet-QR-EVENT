@@ -5,17 +5,17 @@ import {
   getEvents,
   getEventById,
   registerToEvent,
-  unregisterFromEvent, // ✅ Importé
+  unregisterFromEvent,
   createEvent,
   updateEvent,
   deleteEvent,
   validateQrCode,
-  addParticipant, // ✅ Importé
+  addParticipant,
   removeParticipant,
-} from "../services/eventService"; // ✅ Vérifiez ce chemin
+} from "../services/eventService";
 
 // --- Service pour les données spécifiques au dashboard ---
-import { getMyOrganizedEvents } from "../services/dashboardService"; // ✅ Vérifiez ce chemin
+import { getMyOrganizedEvents } from "../services/dashboardService";
 
 // Hook pour la liste de TOUS les événements (public)
 export const useEvents = () => {

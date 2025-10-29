@@ -42,6 +42,10 @@ const OpenPage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const handleExploreEvents = () => {
+    navigate("/home");
+  };
+
   useEffect(() => {
     // Splash screen de 3s
     const timer = setTimeout(() => setLoading(false), 3000);
@@ -50,9 +54,6 @@ const OpenPage = () => {
 
   const handleCreateEvent = () => {
     navigate("/createevent");
-  };
-  const handleExploreEvents = () => {
-    navigate("/home");
   };
 
   return (

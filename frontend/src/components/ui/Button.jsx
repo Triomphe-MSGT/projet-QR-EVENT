@@ -6,7 +6,7 @@ const Button = ({
   size = "md",
   onClick,
   disabled = false,
-  active = false, // <== ajouté pour gérer l’état actif du toggle
+  active = false, // <== pour gérer l’état actif du toggle
   className = "",
   type = "button",
 }) => {

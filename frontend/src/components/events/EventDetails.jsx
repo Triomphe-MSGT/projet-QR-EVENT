@@ -13,6 +13,7 @@ import {
   MapPin,
   Clock,
   Tag,
+  CheckCircle,
 } from "lucide-react";
 
 const EventDetails = ({ event }) => {
