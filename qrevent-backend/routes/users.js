@@ -17,10 +17,28 @@ const { userExtractor, authorize } = require("../utils/middleware");
 const createUpload = require("../utils/multerConfig");
 const upload = createUpload("users");
 
-router.get("/me", userExtractor, getMe);
+// --- Route publique pour les visiteurs ---
+router.get(
+  "/me",
+  (req, res, next) => {
+    const authHeader = req.headers.authorization;
 
-// GET /api/users/me
-router.get("/me", userExtractor, getMe);
+    // 🚫 Si pas de token → on renvoie une réponse "visiteur"
+    if (!authHeader) {
+      return res.json({
+        message: "Visiteur non connecté",
+        user: null,
+        role: "visiteur",
+      });
+    }
+
+    next();
+  },
+  userExtractor,
+  getMe
+);
+
+// --- Routes protégées pour les utilisateurs connectés ---
 
 // PUT /api/users/me
 router.put("/me", userExtractor, updateMe);
@@ -28,7 +46,7 @@ router.put("/me", userExtractor, updateMe);
 // GET /api/users/me/events
 router.get("/me/events", userExtractor, getMyEvents);
 
-// POST /api/users/avatar (gère 'upload.single' ici)
+// POST /api/users/avatar
 router.post(
   "/avatar",
   userExtractor,
@@ -36,7 +54,7 @@ router.post(
   uploadUserAvatar
 );
 
-// --- Routes pour l'administration (général) ---
+// --- Routes réservées aux administrateurs et organisateurs ---
 
 // GET /api/users/
 router.get(
