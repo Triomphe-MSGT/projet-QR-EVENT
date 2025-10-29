@@ -10,7 +10,6 @@
     "server": "json-server -p 3001 db.json",
     "test": "jest",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "proxy": "node proxy.js",
     "dev:all": "concurrently \"npm run proxy\" \"npm run dev\""
   },
   "dependencies": {

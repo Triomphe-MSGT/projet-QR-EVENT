@@ -1,24 +1,25 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
-import { useValidateQrCode } from "../../hooks/useEvents";
-import { Loader2, CheckCircle, AlertTriangle, ScanLine } from "lucide-react"; // Ajout de ScanLine
+import { useValidateQrCode } from "../../hooks/useEvents"; // Assurez-vous que le chemin est correct
+import { Loader2, CheckCircle, AlertTriangle, ScanLine } from "lucide-react";
 
 const QrScanner = ({ eventName }) => {
-  const scannerRef = useRef(null);
-  const validateMutation = useValidateQrCode();
+  const scannerRef = useRef(null); // Référence pour contrôler le scanner
+  const validateMutation = useValidateQrCode(); // Hook pour appeler l'API de validation
 
+  // État pour afficher les messages (Scanning, Validating, Success, Error)
   const [feedback, setFeedback] = useState({ status: "idle", message: "" });
+  // Ref pour accéder à l'état actuel dans le callback du scanner (qui est créé une seule fois)
   const feedbackRef = useRef(feedback);
-  feedbackRef.current = feedback; // Garde la réf à jour pour onScanSuccess
+  feedbackRef.current = feedback;
 
-  // --- SUPPRESSION DE 'showTemporaryFeedback' ---
-  // Nous n'allons plus redémarrer automatiquement.
-
-  // --- AJOUT : Bouton pour redémarrer manuellement ---
+  // Fonction pour réactiver manuellement le scanner
   const handleScanNext = useCallback(() => {
     if (scannerRef.current) {
       try {
+        // Réactive la caméra
         scannerRef.current.resume();
+        // Met à jour le message
         setFeedback({
           status: "scanning",
           message: "Veuillez scanner le QR code...",
@@ -31,67 +32,71 @@ const QrScanner = ({ eventName }) => {
         });
       }
     }
-  }, []); // Pas de dépendances, n'utilise que le ref et le setter
+  }, []); // Pas de dépendances externes
 
+  // Effet pour initialiser et nettoyer le scanner
   useEffect(() => {
+    // Empêche de créer plusieurs scanners si le composant se re-rend
     if (scannerRef.current) return;
 
-    const scannerElementId = "qr-reader-element";
+    const scannerElementId = "qr-reader-element"; // ID de la div où afficher la caméra
+    // Configuration du scanner
     const config = {
-      fps: 10,
-      qrbox: { width: 250, height: 250 },
-      rememberLastUsedCamera: true,
-      supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+      fps: 10, // Images par seconde (pas trop élevé)
+      qrbox: { width: 250, height: 250 }, // Taille de la zone de scan
+      rememberLastUsedCamera: true, // Retenir la dernière caméra utilisée
+      supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA], // Utiliser seulement la caméra
     };
 
+    // --- Callback appelé quand un QR code est détecté ---
     const onScanSuccess = (decodedText) => {
-      // Empêche le double scan si une validation est déjà en cours ou affichée
+      // Si on est déjà en train de valider ou d'afficher un résultat, ignorer
       if (
         ["validating", "success", "error"].includes(feedbackRef.current.status)
       ) {
         return;
       }
 
-      scannerRef.current?.pause(true); // Met la caméra en pause
+      // 1. Mettre la caméra en PAUSE
+      scannerRef.current?.pause(true);
       setFeedback({ status: "validating", message: "Validation en cours..." });
 
       try {
         let qrToken = "";
+        // Essayer de parser le QR code comme du JSON
         try {
           const qrData = JSON.parse(decodedText);
-          qrToken = qrData.token ?? "";
-          if (!qrToken) throw new Error("Token manquant.");
+          qrToken = qrData.token ?? ""; // Récupérer le token
+          if (!qrToken) throw new Error("Token manquant dans le JSON.");
         } catch {
-          // Si ce n'est pas du JSON, on suppose que le texte brut est le token
+          // Si ce n'est pas du JSON, utiliser le texte brut comme token
           qrToken = decodedText;
         }
 
-        if (!qrToken) throw new Error("QR code invalide.");
+        if (!qrToken) throw new Error("QR code invalide (vide).");
 
-        // Appel de la mutation
+        // 2. Appeler l'API backend pour valider le token
         validateMutation.mutate(
-          { qrCodeToken: qrToken, eventName },
+          { qrCodeToken: qrToken, eventName }, // Données envoyées à l'API
           {
-            // --- MODIFICATION ---
-            // Affiche un message de succès permanent (jusqu'au clic)
+            // 3. Si l'API répond avec succès
             onSuccess: (res) =>
               setFeedback({
-                status: "success",
+                status: "success", // Affiche le message vert
                 message: `Ticket OK: ${res.participant?.nom || "Inconnu"}`,
               }),
-            // Affiche un message d'erreur permanent (jusqu'au clic)
+            // 4. Si l'API répond avec une erreur
             onError: (err) =>
               setFeedback({
-                status: "error",
+                status: "error", // Affiche le message rouge
                 message: `Échec: ${
                   err.response?.data?.error || err.message || "Erreur inconnue"
                 }`,
               }),
-            // --- FIN MODIFICATION ---
           }
         );
       } catch (err) {
-        // Gère les erreurs de parsing QR
+        // Erreur de lecture/parsing du QR code lui-même
         setFeedback({
           status: "error",
           message: `Erreur QR: ${err.message}`,
@@ -99,62 +104,101 @@ const QrScanner = ({ eventName }) => {
       }
     };
 
+    // Callback pour les erreurs internes du scanner (caméra, etc.)
     const onScanFailure = (error) => {
-      // Ignore les erreurs "QR code non trouvé" qui arrivent 10x par seconde
+      // Ignorer les erreurs fréquentes "QR code not found"
       if (!error.includes("NotFoundException")) {
         console.warn("Erreur scanner:", error);
         setFeedback({ status: "error", message: "Erreur caméra ou scan." });
       }
     };
 
+    // Initialisation du scanner
     const html5QrcodeScanner = new Html5QrcodeScanner(
       scannerElementId,
       config,
-      false
+      false // Verbose logging désactivé
     );
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-    scannerRef.current = html5QrcodeScanner;
+    scannerRef.current = html5QrcodeScanner; // Sauvegarder la référence
 
+    // Message initial après un court délai
     setTimeout(() => {
-      setFeedback({
-        status: "scanning",
-        message: "Veuillez scanner le QR code...",
-      });
-    }, 300);
+      // Vérifie si le composant est toujours monté
+      if (scannerRef.current) {
+        setFeedback({
+          status: "scanning",
+          message: "Veuillez scanner le QR code...",
+        });
+      }
+    }, 500); // Délai augmenté pour laisser le temps à la caméra de s'initialiser
 
+    // Fonction de nettoyage (quand le composant est démonté)
     return () => {
-      html5QrcodeScanner
-        .clear()
-        .catch((err) => console.error("Échec arrêt scanner:", err));
-      scannerRef.current = null;
+      if (scannerRef.current) {
+        scannerRef.current
+          .clear()
+          .then(() => {
+            console.log("Scanner arrêté avec succès.");
+            scannerRef.current = null;
+          })
+          .catch((err) => {
+            console.error("Échec lors de l'arrêt du scanner:", err);
+            scannerRef.current = null; // S'assurer que la réf est nulle même en cas d'erreur
+          });
+      } else {
+        console.log("Nettoyage : Pas de scanner à arrêter.");
+      }
     };
-  }, [eventName, validateMutation]); // Dépendance 'showTemporaryFeedback' retirée
+    // Les dépendances de l'effet (ne se relance que si elles changent)
+  }, [eventName, validateMutation, handleScanNext]);
 
-  // ... (getFeedbackStyle reste inchangé)
+  // Fonction pour déterminer le style du message de feedback
   const getFeedbackStyle = () => {
-    /* ... */
+    switch (feedback.status) {
+      case "validating":
+        return "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-200";
+      case "success":
+        return "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/50 dark:text-green-200";
+      case "error":
+        return "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-200";
+      case "scanning":
+        return "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-200";
+      default: // idle
+        return "bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-700 dark:text-gray-300";
+    }
   };
 
   return (
     <div className="w-full max-w-sm mx-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border dark:border-gray-700">
+      {/* La div où la caméra s'affichera */}
       <div
         id="qr-reader-element"
         className="relative w-full aspect-square border dark:border-gray-600 rounded-md overflow-hidden mb-4"
       />
+      {/* Zone de message */}
       <div
         className={`p-3 rounded-md border text-center font-medium text-sm transition-all ${getFeedbackStyle()}`}
       >
-        {/* ... (icônes de feedback inchangées) ... */}
-        {feedback.message || "Initialisation..."}
+        {feedback.status === "validating" && (
+          <Loader2 className="inline-block animate-spin mr-2" size={16} />
+        )}
+        {feedback.status === "success" && (
+          <CheckCircle className="inline-block mr-2" size={16} />
+        )}
+        {feedback.status === "error" && (
+          <AlertTriangle className="inline-block mr-2" size={16} />
+        )}
+        {feedback.message || "Initialisation du scanner..."}
       </div>
 
-      {/* --- AJOUT : Bouton de Scan Suivant --- */}
-      {/* Ce bouton n'apparaît qu'après un succès ou une erreur */}
+      {/* Le bouton pour scanner le suivant */}
+      {/* Il n'apparaît qu'après un succès ou une erreur */}
       {["success", "error"].includes(feedback.status) && (
         <button
-          onClick={handleScanNext}
-          className="w-full mt-4 py-3 px-4 flex items-center justify-center 
-                     bg-blue-600 text-white font-semibold rounded-lg 
+          onClick={handleScanNext} // Appelle la fonction pour réactiver la caméra
+          className="w-full mt-4 py-3 px-4 flex items-center justify-center
+                     bg-blue-600 text-white font-semibold rounded-lg
                      shadow-md hover:bg-blue-700 transition-colors
                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
@@ -162,7 +206,6 @@ const QrScanner = ({ eventName }) => {
           Scanner le ticket suivant
         </button>
       )}
-      {/* --- FIN AJOUT --- */}
     </div>
   );
 };
