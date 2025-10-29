@@ -1,22 +1,25 @@
-import api from "../slices/apiInstance";
+import axios from "axios";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 const authService = {
   login: async (email, password) => {
     try {
-      const res = await api.post("/auth/login", { email, password });
+      const res = await axios.post(`${API_BASE}/auth/login`, {
+        email,
+        password,
+      });
       const { token, user } = res.data;
       return {
         user: { nom: user.nom, email: user.email, role: user.role },
         token,
       };
     } catch (err) {
-      // Gestion des erreurs 401 (identifiants incorrects)
-      if (err.response?.status === 401) {
+      if (err.response && err.response.status === 401) {
         throw new Error(
-          err.response.data?.message || "Email ou mot de passe incorrect"
+          err.response.data.message || "Email ou mot de passe incorrect"
         );
       }
-      // Autres erreurs serveur
       throw new Error("Erreur serveur");
     }
   },
@@ -29,13 +32,17 @@ const authService = {
         password: userData.password,
         role: userData.role,
         sexe: userData.sexe,
-        phone: userData.phone || "Non renseigné",
-        profession: userData.profession || "Non renseigné",
+        phone: userData.phone,
+        profession: userData.profession,
       };
 
-      await api.post("/auth/register", payload);
+      if (["Organisateur"].includes(payload.role)) {
+        payload.phone = userData.phone || "Non renseigné";
+        payload.profession = userData.profession || "Non renseigné";
+      }
 
-      // Auto-login après inscription
+      await axios.post(`${API_BASE}/auth/register`, payload);
+
       return authService.login(payload.email, payload.password);
     } catch (err) {
       console.error(
@@ -55,7 +62,9 @@ const authService = {
   // ------------------------
   googleLogin: async (googleToken) => {
     try {
-      const res = await api.post("/auth/google", { token: googleToken });
+      const res = await axios.post(`${API_BASE}/auth/google`, {
+        token: googleToken,
+      });
       const { token, user } = res.data;
       return { user, token };
     } catch (err) {
@@ -66,7 +75,7 @@ const authService = {
       throw new Error(
         err.response?.data?.error ||
           err.message ||
-          "Erreur lors de la connexion Google"
+          "Erreur lors de l'inscription"
       );
     }
   },
