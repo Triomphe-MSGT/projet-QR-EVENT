@@ -25,7 +25,6 @@ const createStorage = (folderName) => {
   });
 };
 
-// Filtre pour accepter uniquement les images
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
   if (allowedTypes.includes(file.mimetype)) {
