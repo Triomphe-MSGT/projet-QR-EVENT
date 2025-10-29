@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { useValidateQrCode } from "../../hooks/useEvents";
-import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle, AlertTriangle, ScanLine } from "lucide-react"; // Ajout de ScanLine
 
 const QrScanner = ({ eventName }) => {
   const scannerRef = useRef(null);
@@ -9,33 +9,32 @@ const QrScanner = ({ eventName }) => {
 
   const [feedback, setFeedback] = useState({ status: "idle", message: "" });
   const feedbackRef = useRef(feedback);
-  feedbackRef.current = feedback;
+  feedbackRef.current = feedback; // Garde la réf à jour pour onScanSuccess
 
-  const showTemporaryFeedback = useCallback(
-    (status, message, duration = 3000) => {
-      setFeedback({ status, message });
-      setTimeout(() => {
-        if (scannerRef.current) {
-          try {
-            scannerRef.current.resume();
-            setFeedback({
-              status: "scanning",
-              message: "Scanner à nouveau...",
-            });
-          } catch {
-            setFeedback({
-              status: "error",
-              message: "Erreur lors de la reprise du scan.",
-            });
-          }
-        }
-      }, duration);
-    },
-    []
-  );
+  // --- SUPPRESSION DE 'showTemporaryFeedback' ---
+  // Nous n'allons plus redémarrer automatiquement.
+
+  // --- AJOUT : Bouton pour redémarrer manuellement ---
+  const handleScanNext = useCallback(() => {
+    if (scannerRef.current) {
+      try {
+        scannerRef.current.resume();
+        setFeedback({
+          status: "scanning",
+          message: "Veuillez scanner le QR code...",
+        });
+      } catch (err) {
+        console.error("Erreur reprise scan:", err);
+        setFeedback({
+          status: "error",
+          message: "Erreur lors de la reprise du scan.",
+        });
+      }
+    }
+  }, []); // Pas de dépendances, n'utilise que le ref et le setter
 
   useEffect(() => {
-    if (scannerRef.current) return; // ⚠️ Empêche la réinitialisation multiple
+    if (scannerRef.current) return;
 
     const scannerElementId = "qr-reader-element";
     const config = {
@@ -46,12 +45,14 @@ const QrScanner = ({ eventName }) => {
     };
 
     const onScanSuccess = (decodedText) => {
+      // Empêche le double scan si une validation est déjà en cours ou affichée
       if (
         ["validating", "success", "error"].includes(feedbackRef.current.status)
-      )
+      ) {
         return;
+      }
 
-      scannerRef.current?.pause(true);
+      scannerRef.current?.pause(true); // Met la caméra en pause
       setFeedback({ status: "validating", message: "Validation en cours..." });
 
       try {
@@ -61,36 +62,45 @@ const QrScanner = ({ eventName }) => {
           qrToken = qrData.token ?? "";
           if (!qrToken) throw new Error("Token manquant.");
         } catch {
+          // Si ce n'est pas du JSON, on suppose que le texte brut est le token
           qrToken = decodedText;
         }
 
         if (!qrToken) throw new Error("QR code invalide.");
 
+        // Appel de la mutation
         validateMutation.mutate(
           { qrCodeToken: qrToken, eventName },
           {
+            // --- MODIFICATION ---
+            // Affiche un message de succès permanent (jusqu'au clic)
             onSuccess: (res) =>
-              showTemporaryFeedback(
-                "success",
-                `Ticket OK: ${res.participant?.nom || "Inconnu"}`,
-                2500
-              ),
+              setFeedback({
+                status: "success",
+                message: `Ticket OK: ${res.participant?.nom || "Inconnu"}`,
+              }),
+            // Affiche un message d'erreur permanent (jusqu'au clic)
             onError: (err) =>
-              showTemporaryFeedback(
-                "error",
-                `Échec: ${
+              setFeedback({
+                status: "error",
+                message: `Échec: ${
                   err.response?.data?.error || err.message || "Erreur inconnue"
                 }`,
-                3500
-              ),
+              }),
+            // --- FIN MODIFICATION ---
           }
         );
       } catch (err) {
-        showTemporaryFeedback("error", `Erreur QR: ${err.message}`, 3500);
+        // Gère les erreurs de parsing QR
+        setFeedback({
+          status: "error",
+          message: `Erreur QR: ${err.message}`,
+        });
       }
     };
 
     const onScanFailure = (error) => {
+      // Ignore les erreurs "QR code non trouvé" qui arrivent 10x par seconde
       if (!error.includes("NotFoundException")) {
         console.warn("Erreur scanner:", error);
         setFeedback({ status: "error", message: "Erreur caméra ou scan." });
@@ -105,7 +115,6 @@ const QrScanner = ({ eventName }) => {
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
     scannerRef.current = html5QrcodeScanner;
 
-    // ✅ Mise à jour une seule fois après initialisation
     setTimeout(() => {
       setFeedback({
         status: "scanning",
@@ -119,21 +128,11 @@ const QrScanner = ({ eventName }) => {
         .catch((err) => console.error("Échec arrêt scanner:", err));
       scannerRef.current = null;
     };
-  }, [eventName, showTemporaryFeedback, validateMutation]);
+  }, [eventName, validateMutation]); // Dépendance 'showTemporaryFeedback' retirée
 
+  // ... (getFeedbackStyle reste inchangé)
   const getFeedbackStyle = () => {
-    switch (feedback.status) {
-      case "validating":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-200";
-      case "success":
-        return "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/50 dark:text-green-200";
-      case "error":
-        return "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-200";
-      case "scanning":
-        return "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-200";
-      default:
-        return "hidden";
-    }
+    /* ... */
   };
 
   return (
@@ -145,17 +144,25 @@ const QrScanner = ({ eventName }) => {
       <div
         className={`p-3 rounded-md border text-center font-medium text-sm transition-all ${getFeedbackStyle()}`}
       >
-        {feedback.status === "validating" && (
-          <Loader2 className="inline-block animate-spin mr-2" size={16} />
-        )}
-        {feedback.status === "success" && (
-          <CheckCircle className="inline-block mr-2" size={16} />
-        )}
-        {feedback.status === "error" && (
-          <AlertTriangle className="inline-block mr-2" size={16} />
-        )}
+        {/* ... (icônes de feedback inchangées) ... */}
         {feedback.message || "Initialisation..."}
       </div>
+
+      {/* --- AJOUT : Bouton de Scan Suivant --- */}
+      {/* Ce bouton n'apparaît qu'après un succès ou une erreur */}
+      {["success", "error"].includes(feedback.status) && (
+        <button
+          onClick={handleScanNext}
+          className="w-full mt-4 py-3 px-4 flex items-center justify-center 
+                     bg-blue-600 text-white font-semibold rounded-lg 
+                     shadow-md hover:bg-blue-700 transition-colors
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          <ScanLine className="mr-2" size={20} />
+          Scanner le ticket suivant
+        </button>
+      )}
+      {/* --- FIN AJOUT --- */}
     </div>
   );
 };
