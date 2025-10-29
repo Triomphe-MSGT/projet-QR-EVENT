@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { useValidateQrCode } from "../../hooks/useEvents"; // Assurez-vous que le chemin est correct
 import { Loader2, CheckCircle, AlertTriangle, ScanLine } from "lucide-react";
@@ -109,7 +110,8 @@ const QrScanner = ({ eventName }) => {
       // Ignorer les erreurs fréquentes "QR code not found"
       if (!error.includes("NotFoundException")) {
         console.warn("Erreur scanner:", error);
-        setFeedback({ status: "error", message: "Erreur caméra ou scan." });
+        // Optionnel : afficher une erreur si la caméra pose problème
+        // setFeedback({ status: "error", message: "Erreur caméra ou scan." });
       }
     };
 
@@ -122,35 +124,37 @@ const QrScanner = ({ eventName }) => {
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
     scannerRef.current = html5QrcodeScanner; // Sauvegarder la référence
 
-    // Message initial après un court délai
-    setTimeout(() => {
-      // Vérifie si le composant est toujours monté
+    // Message initial après un court délai pour l'init caméra
+    const initTimeout = setTimeout(() => {
+      // Vérifie si le composant est toujours monté et que le scanner existe
       if (scannerRef.current) {
         setFeedback({
           status: "scanning",
           message: "Veuillez scanner le QR code...",
         });
       }
-    }, 500); // Délai augmenté pour laisser le temps à la caméra de s'initialiser
+    }, 500);
 
     // Fonction de nettoyage (quand le composant est démonté)
     return () => {
+      clearTimeout(initTimeout); // Annule le timeout si démonté avant
       if (scannerRef.current) {
         scannerRef.current
           .clear()
           .then(() => {
             console.log("Scanner arrêté avec succès.");
-            scannerRef.current = null;
           })
           .catch((err) => {
             console.error("Échec lors de l'arrêt du scanner:", err);
-            scannerRef.current = null; // S'assurer que la réf est nulle même en cas d'erreur
+          })
+          .finally(() => {
+            scannerRef.current = null; // Important de nullifier la référence
           });
       } else {
         console.log("Nettoyage : Pas de scanner à arrêter.");
       }
     };
-    // Les dépendances de l'effet (ne se relance que si elles changent)
+    // Les dépendances de l'effet
   }, [eventName, validateMutation, handleScanNext]);
 
   // Fonction pour déterminer le style du message de feedback
