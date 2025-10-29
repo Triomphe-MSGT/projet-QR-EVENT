@@ -10,8 +10,6 @@ const RoleRouter = () => {
   switch (user.role) {
     case "Organisateur":
       return <Navigate to="/createevent" replace />;
-    case "Participant":
-      return <Navigate to="/home" replace />;
     case "administrateur":
       return <Navigate to="/admin" replace />;
     default:

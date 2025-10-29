@@ -43,7 +43,6 @@ const AppRouter = () => {
         <Route path="/events" element={<EventListPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
 
         {/* Routes protégées */}
         <Route
@@ -104,7 +103,7 @@ const AppRouter = () => {
           }
         />
         <Route
-          path="/account-settings" // Ou simplement /settings
+          path="/account-settings"
           element={
             <PrivateRoute
               allowedRoles={["administrateur", "Organisateur", "Participant"]}
