@@ -7,7 +7,7 @@ const User = require("../models/user");
 const Category = require("../models/category");
 const Inscription = require("../models/inscription");
 const qrCodeService = require("../services/qrCodeService"); // ✅ Vérifiez le chemin
-
+const PDFDocument = require("pdfkit");
 // --- Obtenir tous les événements ---
 const getAllEvents = async (req, res, next) => {
   try {
@@ -514,112 +514,131 @@ const getValidatedAttendees = async (req, res, next) => {
   }
 };
 
-const generateEventReport = async (req, res, next) => {
+// --- Générer un rapport PDF (avec PDFKit) ---
+// --- Générer un rapport PDF (avec PDFKit) ---
+const generateEventReport = async (req, res) => {
   try {
-    const eventId = req.params.id;
-    const userId = req.user.id;
+    const { eventId } = req.params;
 
-    // 1. Récupérer l'événement
-    const event = await Event.findById(eventId).populate("category", "name");
-    if (!event) {
-      return res.status(404).json({ error: "Événement non trouvé" });
-    }
+    const event = await Event.findById(eventId).populate("organizer");
+    if (!event)
+      return res.status(404).json({ message: "Événement non trouvé" });
 
-    // 2. Sécurité : Vérifier les droits
-    const isOwner = event.organizer.toString() === userId;
-    const isAdmin = req.user.role === "administrateur";
-    if (!isOwner && !isAdmin) {
-      return res.status(403).json({ error: "Action non autorisée." });
-    }
-
-    // 3. Récupérer TOUTES les inscriptions (pour les stats complètes)
+    // ✅ Correction ici : populate("participant") au lieu de populate("user")
     const inscriptions = await Inscription.find({ event: eventId }).populate(
-      "participant",
-      "nom email sexe profession"
+      "participant"
     );
 
-    // 4. Calculer les statistiques
-    const totalRegistered = inscriptions.length;
-    const validatedInscriptions = inscriptions.filter((i) => i.isValidated);
-    const totalValidated = validatedInscriptions.length;
-    const participationRate =
-      totalRegistered > 0 ? (totalValidated / totalRegistered) * 100 : 0;
+    const totalParticipants = inscriptions.length;
+    const validatedParticipants = inscriptions.filter(
+      (i) => i.isValidated
+    ).length;
 
-    // Stats par Sexe
-    const statsSexRegistered = inscriptions.reduce((acc, i) => {
-      const sexe = i.participant?.sexe || "Inconnu";
-      acc[sexe] = (acc[sexe] || 0) + 1;
-      return acc;
-    }, {});
-    const statsSexValidated = validatedInscriptions.reduce((acc, i) => {
-      const sexe = i.participant?.sexe || "Inconnu";
-      acc[sexe] = (acc[sexe] || 0) + 1;
-      return acc;
-    }, {});
+    const PDFDocument = require("pdfkit");
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => {
+      const pdfBuffer = Buffer.concat(chunks);
+      res
+        .writeHead(200, {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename=rapport_${event.name}.pdf`,
+          "Content-Length": pdfBuffer.length,
+        })
+        .end(pdfBuffer);
+    });
 
-    // Stats par Profession (Top 5)
-    const statsProfRegistered = inscriptions.reduce((acc, i) => {
-      const prof = i.participant?.profession || "Inconnu";
-      acc[prof] = (acc[prof] || 0) + 1;
-      return acc;
-    }, {});
+    // --- Titre principal ---
+    doc
+      .fontSize(22)
+      .fillColor("#1E88E5")
+      .text("Rapport d'Événement", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(16).fillColor("black").text(event.name, { align: "center" });
+    doc.moveDown();
 
-    // 5. Générer le HTML pour le PDF
-    const htmlContent = getReportHTML(
-      event,
-      inscriptions,
-      validatedInscriptions,
-      {
-        totalRegistered,
-        totalValidated,
-        participationRate,
-        statsSexRegistered,
-        statsSexValidated,
-        statsProfRegistered,
-      }
+    // --- Informations générales ---
+    doc
+      .fontSize(12)
+      .text(
+        `📅 Date : ${
+          event.date
+            ? new Date(event.date).toLocaleDateString()
+            : "Non spécifiée"
+        }`
+      );
+    doc.text(`📍 Lieu : ${event.location || "Non précisé"}`);
+    doc.text(`👤 Organisateur : ${event.organizer?.name || "Inconnu"}`);
+    doc.moveDown();
+
+    doc.text("📝 Description :", { underline: true });
+    doc.text(event.description || "Aucune description fournie.", {
+      indent: 20,
+    });
+    doc.moveDown(2);
+
+    // --- Statistiques ---
+    doc
+      .fontSize(14)
+      .fillColor("#1E88E5")
+      .text("📊 Statistiques", { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor("black");
+    doc.text(`Nombre total d'inscriptions : ${totalParticipants}`);
+    doc.text(`Participants validés : ${validatedParticipants}`);
+    doc.text(
+      `Taux de validation : ${
+        totalParticipants
+          ? ((validatedParticipants / totalParticipants) * 100).toFixed(1)
+          : 0
+      }%`
     );
+    doc.moveDown(2);
 
-    // 6. Lancer Puppeteer pour convertir le HTML en PDF
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"], // Nécessaire pour Render/Linux
-    });
-    const page = await browser.newPage();
+    // --- Liste des participants validés ---
+    doc
+      .fontSize(14)
+      .fillColor("#1E88E5")
+      .text("✅ Participants validés", { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor("black");
 
-    // Injecter Chart.js dans la page
-    await page.addScriptTag({ path: require.resolve("chart.js/auto") });
+    const validatedList = inscriptions.filter((i) => i.isValidated);
 
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    if (validatedList.length === 0) {
+      doc.text("Aucun participant validé pour cet événement.");
+    } else {
+      validatedList.forEach((insc, index) => {
+        const participant = insc.participant;
+        doc.text(
+          `${index + 1}. ${participant?.name || "Utilisateur inconnu"} (${
+            participant?.email || "Email inconnu"
+          })`
+        );
+      });
+    }
 
-    // Exécuter le JS dans la page pour dessiner le graphique
-    await page.evaluate(() => {
-      const ctx = document
-        .getElementById("participationChart")
-        .getContext("2d");
-      // Les données sont passées via un script dans getReportHTML
-      new Chart(ctx, window.chartConfig);
-    });
+    // --- Pied de page ---
+    doc.moveDown(2);
+    doc
+      .fontSize(10)
+      .fillColor("gray")
+      .text(`Généré le ${new Date().toLocaleString()}`, {
+        align: "right",
+      });
 
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true, // Important pour les couleurs des graphiques
-      margin: { top: "40px", right: "40px", bottom: "40px", left: "40px" },
-    });
-
-    await browser.close();
-
-    // 7. Envoyer le PDF
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="rapport-${event.name.replace(/ /g, "_")}.pdf"`
-    );
-    res.send(pdfBuffer);
+    doc.end();
   } catch (error) {
-    console.error("❌ Erreur génération PDF:", error);
-    next(error);
+    console.error(
+      "Erreur lors de la génération du PDF :",
+      error.message,
+      error.stack
+    );
+    res.status(500).json({ error: error.message });
   }
 };
+
 // --- FIN NOUVELLE FONCTION ---
 
 // --- FONCTION UTILITAIRE (à mettre dans le même fichier) ---
