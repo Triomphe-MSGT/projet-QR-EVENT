@@ -74,4 +74,11 @@ router.get(
   eventsController.getEventsByOrganizer
 );
 
+router.get(
+  "/:id/validated-attendees",
+  userExtractor,
+  authorize(["administrateur", "Organisateur"]),
+  eventsController.getValidatedAttendees
+);
+
 module.exports = router;

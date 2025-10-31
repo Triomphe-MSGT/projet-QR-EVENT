@@ -63,7 +63,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    queryClient.clear(); // Invalide toutes les données en cache
+    queryClient.clear(); 
     navigate("/login");
   };
 

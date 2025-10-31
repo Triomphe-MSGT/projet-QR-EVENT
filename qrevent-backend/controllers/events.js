@@ -466,6 +466,53 @@ const getEventsByOrganizer = async (req, res, next) => {
     next(error);
   }
 };
+const getValidatedAttendees = async (req, res, next) => {
+  try {
+    const eventId = req.params.id;
+    const userId = req.user.id; // ID de l'organisateur/admin connecté
+
+    // 1. Vérifier que l'ID de l'événement est valide
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+      return res.status(400).json({ error: "ID d'événement invalide" });
+    }
+
+    // 2. Trouver l'événement
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ error: "Événement non trouvé" });
+    }
+
+    // 3. Sécurité : Vérifier que l'utilisateur est l'organisateur OU un admin
+    const isOwner = event.organizer.toString() === userId;
+    const isAdmin = req.user.role === "administrateur";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        error:
+          "Action non autorisée. Seul l'organisateur ou un admin peut voir cette liste.",
+      });
+    }
+
+    // 4. Trouver toutes les inscriptions pour cet événement qui sont validées
+    const inscriptions = await Inscription.find({
+      event: eventId,
+      isValidated: true, // Ne prend que les tickets scannés
+    }).populate({
+      // 5. Remplir les détails du participant
+      path: "participant",
+      select: "nom email sexe profession", // Sélectionne les champs demandés
+    });
+
+    // 6. Extraire les participants de la liste des inscriptions
+    const attendees = inscriptions.map(
+      (inscription) => inscription.participant
+    );
+
+    res.json(attendees);
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   getAllEvents,
@@ -479,4 +526,6 @@ module.exports = {
   addParticipant,
   removeParticipant,
   getEventsByOrganizer,
+  validateQRCodeWithEventName,
+  getValidatedAttendees,
 };

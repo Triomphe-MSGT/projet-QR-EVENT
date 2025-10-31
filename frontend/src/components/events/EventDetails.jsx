@@ -51,9 +51,7 @@ const EventDetails = ({ event }) => {
       }
 
       try {
-        // 2. Send the full address to the geocoding proxy
-        console.log(`[Geocoding] Searching for: "${fullAddress}"`);
-        const proxyRes = await axios.get("http://localhost:4000/geocode", {
+        const proxyRes = await axios.get("http://localhost:3001/api/geocode", {
           params: { q: fullAddress },
         });
 
