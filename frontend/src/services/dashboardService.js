@@ -1,4 +1,5 @@
 import api from "../slices/axiosInstance";
+import { saveAs } from "file-saver";
 
 export const getDashboardStats = async () => {
   try {
@@ -19,5 +20,23 @@ export const getMyOrganizedEvents = async () => {
   } catch (error) {
     console.error("❌ Échec récupération événements organisés:", error);
     return [];
+  }
+};
+
+export const downloadEventReport = async (eventId, eventName) => {
+  try {
+    const response = await api.get(`/events/${eventId}/report`, {
+      responseType: "blob", // !! Important: dit à axios de s'attendre à un fichier
+    });
+
+    // Crée un Blob à partir de la réponse
+    const blob = new Blob([response.data], { type: "application/pdf" });
+
+    // Utilise file-saver pour déclencher le téléchargement
+    saveAs(blob, `Rapport_${eventName.replace(/ /g, "_")}.pdf`);
+  } catch (error) {
+    console.error("❌ Échec téléchargement du rapport:", error);
+    // Gérer l'erreur (par exemple, afficher une notification)
+    alert("Impossible de télécharger le rapport.");
   }
 };

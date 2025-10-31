@@ -514,6 +514,270 @@ const getValidatedAttendees = async (req, res, next) => {
   }
 };
 
+const generateEventReport = async (req, res, next) => {
+  try {
+    const eventId = req.params.id;
+    const userId = req.user.id;
+
+    // 1. Récupérer l'événement
+    const event = await Event.findById(eventId).populate("category", "name");
+    if (!event) {
+      return res.status(404).json({ error: "Événement non trouvé" });
+    }
+
+    // 2. Sécurité : Vérifier les droits
+    const isOwner = event.organizer.toString() === userId;
+    const isAdmin = req.user.role === "administrateur";
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Action non autorisée." });
+    }
+
+    // 3. Récupérer TOUTES les inscriptions (pour les stats complètes)
+    const inscriptions = await Inscription.find({ event: eventId }).populate(
+      "participant",
+      "nom email sexe profession"
+    );
+
+    // 4. Calculer les statistiques
+    const totalRegistered = inscriptions.length;
+    const validatedInscriptions = inscriptions.filter((i) => i.isValidated);
+    const totalValidated = validatedInscriptions.length;
+    const participationRate =
+      totalRegistered > 0 ? (totalValidated / totalRegistered) * 100 : 0;
+
+    // Stats par Sexe
+    const statsSexRegistered = inscriptions.reduce((acc, i) => {
+      const sexe = i.participant?.sexe || "Inconnu";
+      acc[sexe] = (acc[sexe] || 0) + 1;
+      return acc;
+    }, {});
+    const statsSexValidated = validatedInscriptions.reduce((acc, i) => {
+      const sexe = i.participant?.sexe || "Inconnu";
+      acc[sexe] = (acc[sexe] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Stats par Profession (Top 5)
+    const statsProfRegistered = inscriptions.reduce((acc, i) => {
+      const prof = i.participant?.profession || "Inconnu";
+      acc[prof] = (acc[prof] || 0) + 1;
+      return acc;
+    }, {});
+
+    // 5. Générer le HTML pour le PDF
+    const htmlContent = getReportHTML(
+      event,
+      inscriptions,
+      validatedInscriptions,
+      {
+        totalRegistered,
+        totalValidated,
+        participationRate,
+        statsSexRegistered,
+        statsSexValidated,
+        statsProfRegistered,
+      }
+    );
+
+    // 6. Lancer Puppeteer pour convertir le HTML en PDF
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"], // Nécessaire pour Render/Linux
+    });
+    const page = await browser.newPage();
+
+    // Injecter Chart.js dans la page
+    await page.addScriptTag({ path: require.resolve("chart.js/auto") });
+
+    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+    // Exécuter le JS dans la page pour dessiner le graphique
+    await page.evaluate(() => {
+      const ctx = document
+        .getElementById("participationChart")
+        .getContext("2d");
+      // Les données sont passées via un script dans getReportHTML
+      new Chart(ctx, window.chartConfig);
+    });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true, // Important pour les couleurs des graphiques
+      margin: { top: "40px", right: "40px", bottom: "40px", left: "40px" },
+    });
+
+    await browser.close();
+
+    // 7. Envoyer le PDF
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="rapport-${event.name.replace(/ /g, "_")}.pdf"`
+    );
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("❌ Erreur génération PDF:", error);
+    next(error);
+  }
+};
+// --- FIN NOUVELLE FONCTION ---
+
+// --- FONCTION UTILITAIRE (à mettre dans le même fichier) ---
+// Crée le HTML qui sera transformé en PDF
+function getReportHTML(event, inscriptions, validatedInscriptions, stats) {
+  // Fonction pour générer une ligne de tableau
+  const createRow = (participant) => `
+    <tr>
+      <td>${participant?.nom || "N/A"}</td>
+      <td>${participant?.email || "N/A"}</td>
+      <td>${participant?.sexe || "N/A"}</td>
+      <td>${participant?.profession || "N/A"}</td>
+    </tr>
+  `;
+
+  // Fonction pour générer les stats par sexe
+  const createSexStats = (registered, validated) => {
+    const allSexes = new Set([
+      ...Object.keys(registered),
+      ...Object.keys(validated),
+    ]);
+    let rows = "";
+    allSexes.forEach((sexe) => {
+      rows += `<tr>
+        <td>${sexe}</td>
+        <td>${registered[sexe] || 0}</td>
+        <td>${validated[sexe] || 0}</td>
+      </tr>`;
+    });
+    return rows;
+  };
+
+  // Configuration du graphique (la "courbe")
+  const chartConfig = {
+    type: "doughnut", // Un "doughnut" est visuel
+    data: {
+      labels: ["Participants Validés", "Inscrits (non-validés)"],
+      datasets: [
+        {
+          label: "Taux de Participation",
+          data: [
+            stats.totalValidated,
+            stats.totalRegistered - stats.totalValidated,
+          ],
+          backgroundColor: [
+            "rgba(54, 162, 235, 0.8)", // Bleu
+            "rgba(201, 203, 207, 0.5)", // Gris
+          ],
+          borderColor: ["rgba(54, 162, 235, 1)", "rgba(201, 203, 207, 1)"],
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "top" },
+        title: { display: true, text: "Répartition des Inscriptions" },
+      },
+    },
+  };
+
+  return `
+    <html>
+      <head>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 10px; line-height: 1.4; color: #333; }
+          .container { width: 100%; margin: 0 auto; }
+          h1, h2, h3 { color: #000; font-weight: 600; }
+          h1 { font-size: 24px; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+          h2 { font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+          .info-grid p { margin: 0; }
+          .info-grid strong { color: #555; }
+          .chart-container { width: 80%; max-width: 400px; margin: 20px auto; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; font-weight: 600; }
+          tr:nth-child(even) { background-color: #f9f9f9; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Rapport d'Événement</h1>
+          
+          <h2>Détails de l'Événement</h2>
+          <div class="info-grid">
+            <p><strong>Nom:</strong> ${event.name}</p>
+            <p><strong>Catégorie:</strong> ${event.category?.name || "N/A"}</p>
+            <p><strong>Date de début:</strong> ${new Date(
+              event.startDate
+            ).toLocaleDateString("fr-FR")}</p>
+            <p><strong>Ville:</strong> ${event.city}</p>
+            <p><strong>Lieu:</strong> ${event.neighborhood || "N/A"}</p>
+            <p><strong>Prix:</strong> ${
+              event.price > 0 ? `${event.price} FCFA` : "Gratuit"
+            }</p>
+          </div>
+          <p><strong>Description:</strong> ${event.description}</p>
+
+          <h2>Statistiques de Participation</h2>
+          <div class="info-grid">
+            <p><strong>Total Inscrits:</strong> ${stats.totalRegistered}</p>
+            <p><strong>Total Validés (Présents):</strong> ${
+              stats.totalValidated
+            }</p>
+            <p><strong>Taux de Participation:</strong> ${stats.participationRate.toFixed(
+              1
+            )}%</p>
+          </div>
+          
+          <div class="chart-container">
+            <canvas id="participationChart"></canvas>
+          </div>
+          
+          <h2>Statistiques Démographiques</h2>
+          <table>
+            <thead>
+              <tr><th>Sexe</th><th>Inscrits</th><th>Validés</th></tr>
+            </thead>
+            <tbody>
+              ${createSexStats(
+                stats.statsSexRegistered,
+                stats.statsSexValidated
+              )}
+            </tbody>
+          </table>
+
+          <h2>Liste des Participants Validés (${stats.totalValidated})</h2>
+          <table>
+            <thead>
+              <tr><th>Nom</th><th>Email</th><th>Sexe</th><th>Profession</th></tr>
+            </thead>
+            <tbody>
+              ${validatedInscriptions
+                .map((i) => createRow(i.participant))
+                .join("")}
+            </tbody>
+          </table>
+          
+          <h2>Liste de Tous les Inscrits (${stats.totalRegistered})</h2>
+          <table>
+            <thead>
+              <tr><th>Nom</th><th>Email</th><th>Sexe</th><th>Profession</th></tr>
+            </thead>
+            <tbody>
+              ${inscriptions.map((i) => createRow(i.participant)).join("")}
+            </tbody>
+          </table>
+        </div>
+        
+        <script>
+          window.chartConfig = ${JSON.stringify(chartConfig)};
+        </script>
+      </body>
+    </html>
+  `;
+}
 module.exports = {
   getAllEvents,
   getEventById,
@@ -528,4 +792,5 @@ module.exports = {
   getEventsByOrganizer,
   validateQRCodeWithEventName,
   getValidatedAttendees,
+  generateEventReport,
 };

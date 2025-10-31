@@ -1,17 +1,37 @@
-// src/components/dashboard/OrganizerEventList.jsx
+// src/components/dashboard/OrganizerEventList.jsx (Complet et Corrigé)
+
 import React, { useState } from "react"; // <-- 1. Importer useState
 import { Link, useNavigate } from "react-router-dom";
 import { useDeleteEvent } from "../../hooks/useEvents"; // Hook pour la suppression
-import { Edit, Trash2, PlusCircle, Eye, Users, Loader2 } from "lucide-react"; // <-- 2. Importer Users et Loader2
+
+// --- AJOUT ---
+// Importer les icônes nécessaires et le service de téléchargement
+import {
+  Edit,
+  Trash2,
+  PlusCircle,
+  Eye,
+  Users,
+  Loader2,
+  Download,
+} from "lucide-react";
+// Assurez-vous que le chemin est correct
+// --- FIN AJOUT ---
+
 import Button from "../ui/Button";
 import ParticipantManagementModal from "./ParticipantManagementModal"; // <-- 3. Importer la nouvelle modale
+import { downloadEventReport } from "../../services/dashboardService";
 
 const OrganizerEventList = ({ events }) => {
   const navigate = useNavigate();
   const deleteMutation = useDeleteEvent();
 
-  // --- 4. États pour la modale ---
   const [managingEvent, setManagingEvent] = useState(null); // Stocke l'événement dont on gère les participants
+
+  // --- AJOUT ---
+  // Nouvel état pour suivre le téléchargement
+  const [downloadingId, setDownloadingId] = useState(null); // Stocke l'ID de l'événement en cours de téléchargement
+  // --- FIN AJOUT ---
 
   const formatDate = (dateString) => {
     if (!dateString) return "?";
@@ -34,11 +54,7 @@ const OrganizerEventList = ({ events }) => {
     navigate(`/createevent?edit=${eventId}`);
   };
 
-  // Ouvre la modale avec l'événement sélectionné
   const handleManageParticipants = (event) => {
-    // Note: 'event' doit contenir la liste 'participants' peuplée.
-    // Le hook useMyOrganizedEvents (appelé dans DashboardPage) doit s'assurer
-    // que le backend peuple bien les participants.
     if (!event.participants) {
       console.error(
         "Données participants manquantes. Assurez-vous que l'API popule les participants."
@@ -49,9 +65,24 @@ const OrganizerEventList = ({ events }) => {
     setManagingEvent(event);
   };
 
+  // --- AJOUT ---
+  // Fonction pour gérer le téléchargement du rapport
+  const handleDownload = async (e, eventId, eventName) => {
+    e.stopPropagation(); // Empêche le clic de se propager au <Link>
+    setDownloadingId(eventId); // Active le loader pour ce bouton
+    try {
+      await downloadEventReport(eventId, eventName);
+    } catch (error) {
+      console.error("Échec du téléchargement du rapport:", error);
+      alert("Le téléchargement du rapport a échoué.");
+    }
+    setDownloadingId(null); // Désactive le loader
+  };
+  // --- FIN AJOUT ---
+
   return (
     <>
-      {/* --- 5. Rendu conditionnel de la Modale --- */}
+      {/* Rendu conditionnel de la Modale */}
       {managingEvent && (
         <ParticipantManagementModal
           event={managingEvent}
@@ -101,8 +132,9 @@ const OrganizerEventList = ({ events }) => {
                   </p>
                 </Link>
 
+                {/* --- MODIFIÉ : Ajout du bouton Télécharger --- */}
                 <div className="flex-shrink-0 flex items-center gap-2 self-end md:self-center flex-wrap">
-                  {/* --- 6. NOUVEAU BOUTON "Gérer Inscrits" --- */}
+                  {/* Bouton "Gérer Inscrits" */}
                   <Button
                     variant="secondary"
                     size="xs"
@@ -112,6 +144,25 @@ const OrganizerEventList = ({ events }) => {
                   >
                     <Users size={14} className="mr-1" />
                     Gérer Inscrits
+                  </Button>
+
+                  {/* Bouton Télécharger Rapport */}
+                  {/* --- MODIFIÉ : Bouton de Rapport plus visible --- */}
+                  <Button
+                    variant="secondary" // Utilise le même style que "Gérer"
+                    size="xs"
+                    onClick={(e) => handleDownload(e, event.id, event.name)}
+                    disabled={downloadingId === event.id}
+                    title="Télécharger le rapport PDF"
+                    // Couleur verte distincte pour le rapport
+                    className="bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300"
+                  >
+                    {downloadingId === event.id ? (
+                      <Loader2 className="animate-spin w-4 h-4 mr-1" />
+                    ) : (
+                      <Download size={14} className="mr-1" />
+                    )}
+                    Rapport
                   </Button>
 
                   {/* Bouton Modifier */}
@@ -143,6 +194,7 @@ const OrganizerEventList = ({ events }) => {
                     )}
                   </Button>
                 </div>
+                {/* --- FIN MODIFICATION --- */}
               </div>
             ))}
           </div>

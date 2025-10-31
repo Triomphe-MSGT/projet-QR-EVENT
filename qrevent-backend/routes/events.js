@@ -81,4 +81,11 @@ router.get(
   eventsController.getValidatedAttendees
 );
 
+router.get(
+  "/:id/report",
+  userExtractor,
+  authorize(["administrateur", "Organisateur"]),
+  eventsController.generateEventReport
+);
+
 module.exports = router;

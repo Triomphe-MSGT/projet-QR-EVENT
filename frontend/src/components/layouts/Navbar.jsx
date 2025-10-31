@@ -63,7 +63,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    queryClient.clear(); 
+    queryClient.clear();
     navigate("/login");
   };
 
@@ -74,7 +74,7 @@ const Navbar = () => {
   const menuItems = useMemo(() => {
     const baseItems = [
       { label: "Accueil", icon: Home, path: "/home" },
-      { label: "Catégories", icon: Grid, path: "/categories" },
+      { label: "Catégories", icon: Grid, path: "/home" },
       { label: "Mes QR Codes", icon: QrCode, path: "/my-qrcodes" },
       { label: "Mon Profil", icon: UserCircle, path: "/user-profile" },
       { label: "Paramètres", icon: Settings, path: "/account-settings" },
