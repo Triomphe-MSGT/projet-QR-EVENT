@@ -13,8 +13,11 @@ import {
   Grid,
   CheckSquare as QrCode,
   Loader2,
+  Download, // 1. Importer l'icône de téléchargement
 } from "lucide-react";
 import UserCards from "./UserCards";
+import Button from "../../components/ui/Button"; // 2. Importer votre composant Bouton
+import { downloadAdminReport } from "../../services/dashboardService"; // 3. Importer le service de téléchargement (vérifiez le chemin)
 
 const AdminDashboard = () => {
   const {
@@ -25,12 +28,27 @@ const AdminDashboard = () => {
   } = useAdminStats();
   const [activeTab, setActiveTab] = useState("stats");
 
+  // 4. Ajouter l'état pour le chargement du téléchargement
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const TABS = [
     { id: "stats", label: "Statistiques", icon: BarChart3 },
     { id: "users", label: "Utilisateurs", icon: Users },
     { id: "events", label: "Événements", icon: Calendar },
     { id: "categories", label: "Catégories", icon: Grid },
   ];
+
+  // 5. Ajouter la fonction pour gérer le clic sur le bouton
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      await downloadAdminReport();
+    } catch (error) {
+      console.error("Erreur lors du téléchargement du rapport:", error);
+      alert("Le téléchargement a échoué.");
+    }
+    setIsDownloading(false);
+  };
 
   return (
     <MainLayout>
@@ -69,15 +87,29 @@ const AdminDashboard = () => {
           {activeTab === "stats" && (
             <section className="space-y-8 animate-fade-in">
               <div>
-                <h2 className="text-xl font-semibold mb-4">
-                  Statistiques Globales
-                </h2>
+                {/* 6. Bouton de téléchargement ajouté ici */}
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">
+                    Statistiques Globales
+                  </h2>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleDownload}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? (
+                      <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    Télécharger le Rapport (.csv)
+                  </Button>
+                </div>
+
                 {isLoadingStats ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
-                    <div className="h-28 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                    <div className="h-28 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                    <div className="h-28 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                    <div className="h-28 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+                    {/* ... (votre squelette de chargement) ... */}
                   </div>
                 ) : isStatsError ? (
                   <p className="text-red-500">
@@ -112,6 +144,7 @@ const AdminDashboard = () => {
                   </div>
                 )}
               </div>
+
               <div>
                 <h2 className="text-xl font-semibold mb-4 mt-8">
                   Statistiques Utilisateurs

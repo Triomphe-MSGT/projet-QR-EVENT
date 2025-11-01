@@ -40,3 +40,23 @@ export const downloadEventReport = async (eventId, eventName) => {
     alert("Impossible de télécharger le rapport.");
   }
 };
+
+export const downloadAdminReport = async () => {
+  try {
+    const response = await api.get("/dashboard/admin-report", {
+      responseType: "text", // On attend du texte (CSV)
+    });
+
+    // Crée un Blob à partir du texte CSV
+    const blob = new Blob([response.data], { type: "text/csv;charset=utf-8;" });
+
+    // Déclenche le téléchargement
+    saveAs(blob, `rapport_admin_${new Date().toISOString().split("T")[0]}.csv`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Échec téléchargement du rapport admin:", error);
+    alert("Impossible de télécharger le rapport.");
+    return { success: false };
+  }
+};

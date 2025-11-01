@@ -3,7 +3,7 @@ const express = require("express");
 const eventsController = require("../controllers/events");
 const { userExtractor, authorize } = require("../utils/middleware");
 const createUpload = require("../utils/multerConfig");
-
+const { generateAdminReport } = require("../controllers/dashboardController");
 const upload = createUpload("events");
 const router = express.Router();
 
@@ -49,6 +49,12 @@ router.get(
   userExtractor,
   authorize(["administrateur", "Organisateur"]),
   eventsController.generateEventReport
+);
+router.get(
+  "/admin-report",
+  userExtractor,
+  authorize(["administrateur"]),
+  generateAdminReport
 );
 
 // GET /api/events/:id/validated-attendees (Participants validés)
