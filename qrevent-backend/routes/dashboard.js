@@ -16,5 +16,11 @@ router.get(
   authorize(["administrateur"]),
   dashboardController.getAdminStats
 );
+router.get(
+  "/admin-report",
+  userExtractor,
+  authorize(["administrateur"]),
+  dashboardController.generateAdminReport
+);
 
 module.exports = router;
