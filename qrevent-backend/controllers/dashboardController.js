@@ -71,7 +71,7 @@ const getAdminStats = async (req, res, next) => {
 
 const generateAdminReport = async (req, res, next) => {
   try {
-    // 2. Récupérer les mêmes données que getAdminStats
+    // 2. Récupérer les mêmes données
     const totalUsers = await User.countDocuments();
     const participantCount = await User.countDocuments({ role: "Participant" });
     const organizerCount = await User.countDocuments({ role: "Organisateur" });
@@ -96,14 +96,14 @@ const generateAdminReport = async (req, res, next) => {
 
     // 4. Définir les colonnes du CSV
     const fields = ["Statistique", "Valeur"];
-    const json2csvParser = new Parser({ fields, delimiter: ";" }); // Utiliser ; pour Excel France
+    const json2csvParser = new Parser({ fields, delimiter: ";" });
     const csv = json2csvParser.parse(statsData);
 
     // 5. Envoyer le fichier CSV
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="rapport_statistiques_admin_${
+      `attachment; filename="rapport_admin_${
         new Date().toISOString().split("T")[0]
       }.csv"`
     );
