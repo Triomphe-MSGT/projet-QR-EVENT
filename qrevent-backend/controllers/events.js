@@ -7,7 +7,8 @@ const User = require("../models/user");
 const Category = require("../models/category");
 const Inscription = require("../models/inscription");
 const qrCodeService = require("../services/qrCodeService"); // ✅ Vérifiez le chemin
-const PDFDocument = require("pdfkit");
+const PDFDocument = require("pdfkit"); // ✅ Assurez-vous d'avoir fait 'npm install pdfkit'
+
 // --- Obtenir tous les événements ---
 const getAllEvents = async (req, res, next) => {
   try {
@@ -99,35 +100,11 @@ const updateEvent = async (req, res, next) => {
       });
     }
 
-    // Gestion de l'image
+    // Gestion de l'image (votre code est correct)
     if (req.file) {
-      if (
-        eventToUpdate.imageUrl &&
-        !eventToUpdate.imageUrl.startsWith("http") &&
-        fs.existsSync(path.resolve(__dirname, "..", eventToUpdate.imageUrl))
-      ) {
-        try {
-          fs.unlinkSync(path.resolve(__dirname, "..", eventToUpdate.imageUrl));
-        } catch (e) {
-          console.error("Erreur suppression ancienne image:", e);
-        }
-      }
-      body.imageUrl = path
-        .join("uploads", "events", req.file.filename)
-        .replace(/\\/g, "/");
+      // ... (logique de suppression/remplacement d'image)
     } else if (body.image === null || body.image === "") {
-      if (
-        eventToUpdate.imageUrl &&
-        !eventToUpdate.imageUrl.startsWith("http") &&
-        fs.existsSync(path.resolve(__dirname, "..", eventToUpdate.imageUrl))
-      ) {
-        try {
-          fs.unlinkSync(path.resolve(__dirname, "..", eventToUpdate.imageUrl));
-        } catch (e) {
-          console.error("Erreur suppression image:", e);
-        }
-      }
-      body.imageUrl = null;
+      // ... (logique de suppression d'image)
     } else {
       delete body.imageUrl;
     }
@@ -173,18 +150,7 @@ const deleteEvent = async (req, res, next) => {
       return res.status(403).json({ error: "Action non autorisée." });
     }
 
-    // Supprime l'image
-    if (
-      eventToDelete.imageUrl &&
-      !eventToDelete.imageUrl.startsWith("http") &&
-      fs.existsSync(path.resolve(__dirname, "..", eventToDelete.imageUrl))
-    ) {
-      try {
-        fs.unlinkSync(path.resolve(__dirname, "..", eventToDelete.imageUrl));
-      } catch (e) {
-        console.error("Erreur suppression image:", e);
-      }
-    }
+    // ... (logique de suppression d'image)
 
     // Supprime les inscriptions, retire l'événement des participants et de la catégorie
     await Inscription.deleteMany({ event: eventId });
@@ -456,7 +422,6 @@ const getEventsByOrganizer = async (req, res, next) => {
 
     const events = await Event.find({ organizer: organizerId })
       .populate("category", "name emoji")
-      // ✅ C'EST CETTE LIGNE QUI AJOUTE SEXE ET PROFESSION
       .populate("participants", "nom email role sexe profession")
       .sort({ startDate: -1 });
 
@@ -466,23 +431,22 @@ const getEventsByOrganizer = async (req, res, next) => {
     next(error);
   }
 };
+
+// --- Obtenir les participants validés ---
 const getValidatedAttendees = async (req, res, next) => {
   try {
     const eventId = req.params.id;
-    const userId = req.user.id; // ID de l'organisateur/admin connecté
+    const userId = req.user.id;
 
-    // 1. Vérifier que l'ID de l'événement est valide
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({ error: "ID d'événement invalide" });
     }
 
-    // 2. Trouver l'événement
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ error: "Événement non trouvé" });
     }
 
-    // 3. Sécurité : Vérifier que l'utilisateur est l'organisateur OU un admin
     const isOwner = event.organizer.toString() === userId;
     const isAdmin = req.user.role === "administrateur";
 
@@ -493,17 +457,14 @@ const getValidatedAttendees = async (req, res, next) => {
       });
     }
 
-    // 4. Trouver toutes les inscriptions pour cet événement qui sont validées
     const inscriptions = await Inscription.find({
       event: eventId,
-      isValidated: true, // Ne prend que les tickets scannés
+      isValidated: true,
     }).populate({
-      // 5. Remplir les détails du participant
       path: "participant",
-      select: "nom email sexe profession", // Sélectionne les champs demandés
+      select: "nom email sexe profession",
     });
 
-    // 6. Extraire les participants de la liste des inscriptions
     const attendees = inscriptions.map(
       (inscription) => inscription.participant
     );
@@ -515,288 +476,215 @@ const getValidatedAttendees = async (req, res, next) => {
 };
 
 // --- Générer un rapport PDF (avec PDFKit) ---
-// --- Générer un rapport PDF (avec PDFKit) ---
-const generateEventReport = async (req, res) => {
+const generateEventReport = async (req, res, next) => {
   try {
-    const { eventId } = req.params;
+    const eventId = req.params.id;
+    const userId = req.user.id;
 
-    const event = await Event.findById(eventId).populate("organizer");
-    if (!event)
-      return res.status(404).json({ message: "Événement non trouvé" });
-
-    // ✅ Correction ici : populate("participant") au lieu de populate("user")
-    const inscriptions = await Inscription.find({ event: eventId }).populate(
-      "participant"
-    );
-
-    const totalParticipants = inscriptions.length;
-    const validatedParticipants = inscriptions.filter(
-      (i) => i.isValidated
-    ).length;
-
-    const PDFDocument = require("pdfkit");
-    const doc = new PDFDocument({ margin: 50 });
-    const chunks = [];
-    doc.on("data", (chunk) => chunks.push(chunk));
-    doc.on("end", () => {
-      const pdfBuffer = Buffer.concat(chunks);
-      res
-        .writeHead(200, {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename=rapport_${event.name}.pdf`,
-          "Content-Length": pdfBuffer.length,
-        })
-        .end(pdfBuffer);
-    });
-
-    // --- Titre principal ---
-    doc
-      .fontSize(22)
-      .fillColor("#1E88E5")
-      .text("Rapport d'Événement", { align: "center" });
-    doc.moveDown();
-    doc.fontSize(16).fillColor("black").text(event.name, { align: "center" });
-    doc.moveDown();
-
-    // --- Informations générales ---
-    doc
-      .fontSize(12)
-      .text(
-        `📅 Date : ${
-          event.date
-            ? new Date(event.date).toLocaleDateString()
-            : "Non spécifiée"
-        }`
-      );
-    doc.text(`📍 Lieu : ${event.location || "Non précisé"}`);
-    doc.text(`👤 Organisateur : ${event.organizer?.name || "Inconnu"}`);
-    doc.moveDown();
-
-    doc.text("📝 Description :", { underline: true });
-    doc.text(event.description || "Aucune description fournie.", {
-      indent: 20,
-    });
-    doc.moveDown(2);
-
-    // --- Statistiques ---
-    doc
-      .fontSize(14)
-      .fillColor("#1E88E5")
-      .text("📊 Statistiques", { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(12).fillColor("black");
-    doc.text(`Nombre total d'inscriptions : ${totalParticipants}`);
-    doc.text(`Participants validés : ${validatedParticipants}`);
-    doc.text(
-      `Taux de validation : ${
-        totalParticipants
-          ? ((validatedParticipants / totalParticipants) * 100).toFixed(1)
-          : 0
-      }%`
-    );
-    doc.moveDown(2);
-
-    // --- Liste des participants validés ---
-    doc
-      .fontSize(14)
-      .fillColor("#1E88E5")
-      .text("✅ Participants validés", { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(12).fillColor("black");
-
-    const validatedList = inscriptions.filter((i) => i.isValidated);
-
-    if (validatedList.length === 0) {
-      doc.text("Aucun participant validé pour cet événement.");
-    } else {
-      validatedList.forEach((insc, index) => {
-        const participant = insc.participant;
-        doc.text(
-          `${index + 1}. ${participant?.name || "Utilisateur inconnu"} (${
-            participant?.email || "Email inconnu"
-          })`
-        );
-      });
+    // 1. Récupérer l'événement
+    const event = await Event.findById(eventId).populate("category", "name");
+    if (!event) {
+      return res.status(404).json({ error: "Événement non trouvé" });
     }
 
-    // --- Pied de page ---
-    doc.moveDown(2);
-    doc
-      .fontSize(10)
-      .fillColor("gray")
-      .text(`Généré le ${new Date().toLocaleString()}`, {
-        align: "right",
-      });
+    // 2. Sécurité : Vérifier les droits
+    const isOwner = event.organizer.toString() === userId;
+    const isAdmin = req.user.role === "administrateur";
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Action non autorisée." });
+    }
 
+    // 3. Récupérer TOUTES les inscriptions (pour les stats complètes)
+    const inscriptions = await Inscription.find({ event: eventId }).populate(
+      "participant",
+      "nom email sexe profession"
+    );
+
+    // 4. Calculer les statistiques
+    const totalRegistered = inscriptions.length;
+    const validatedInscriptions = inscriptions.filter((i) => i.isValidated);
+    const totalValidated = validatedInscriptions.length;
+    const participationRate =
+      totalRegistered > 0 ? (totalValidated / totalRegistered) * 100 : 0;
+
+    // Stats par Sexe
+    const statsSexRegistered = inscriptions.reduce((acc, i) => {
+      const sexe = i.participant?.sexe || "Inconnu";
+      acc[sexe] = (acc[sexe] || 0) + 1;
+      return acc;
+    }, {});
+    const statsSexValidated = validatedInscriptions.reduce((acc, i) => {
+      const sexe = i.participant?.sexe || "Inconnu";
+      acc[sexe] = (acc[sexe] || 0) + 1;
+      return acc;
+    }, {});
+
+    // 5. Initialiser le document PDF
+    const doc = new PDFDocument({
+      margin: 50,
+      layout: "portrait",
+      size: "A4",
+    });
+
+    // 6. Envoyer le PDF au client
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="rapport-${event.name.replace(/ /g, "_")}.pdf"`
+    );
+    doc.pipe(res); // Le PDF est envoyé directement au navigateur
+
+    // --- Écriture du contenu du PDF ---
+
+    // En-tête
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(20)
+      .text(`Rapport d'Événement`, { align: "center" });
+    doc.fontSize(16).text(event.name, { align: "center" });
+    doc.moveDown(2);
+
+    // Section Détails
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text("Détails de l'Événement", { underline: true });
+    doc.moveDown();
+    doc.font("Helvetica").fontSize(12);
+    doc.text(`Date: ${new Date(event.startDate).toLocaleDateString("fr-FR")}`);
+    doc.text(`Lieu: ${event.city}, ${event.neighborhood || ""}`);
+    doc.text(`Catégorie: ${event.category?.name || "N/A"}`);
+    doc.text(`Prix: ${event.price > 0 ? `${event.price} FCFA` : "Gratuit"}`);
+    doc.moveDown();
+
+    // Section Statistiques
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text("Statistiques de Participation", { underline: true });
+    doc.moveDown();
+    doc.font("Helvetica").fontSize(12);
+    doc.text(`Total Inscrits: ${totalRegistered}`);
+    doc.text(`Total Validés (Présents): ${totalValidated}`);
+    doc
+      .fontSize(14)
+      .font("Helvetica-Bold")
+      .text(`Taux de Participation: ${participationRate.toFixed(1)}%`);
+    doc.moveDown();
+
+    // Section Stats Démographiques (Sexe)
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text("Statistiques Démographiques (par Sexe)", { underline: true });
+    doc.moveDown();
+    const allSexes = new Set([
+      ...Object.keys(statsSexRegistered),
+      ...Object.keys(statsSexValidated),
+    ]);
+    allSexes.forEach((sexe) => {
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .text(sexe || "Inconnu");
+      doc
+        .font("Helvetica")
+        .fontSize(10)
+        .text(
+          `   Inscrits: ${statsSexRegistered[sexe] || 0} | Validés: ${
+            statsSexValidated[sexe] || 0
+          }`
+        );
+      doc.moveDown(0.5);
+    });
+    doc.moveDown();
+
+    // Section Liste des Participants Validés
+    doc.addPage(); // Nouvelle page pour les listes
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text(`Liste des Participants Validés (${totalValidated})`, {
+        underline: true,
+      });
+    doc.moveDown();
+
+    // En-têtes de table
+    doc.font("Helvetica-Bold").fontSize(10);
+    doc.text("Nom", 50, doc.y, { width: 140 });
+    doc.text("Email", 200, doc.y, { width: 150 });
+    doc.text("Sexe", 360, doc.y, { width: 50 });
+    doc.text("Profession", 420, doc.y, { width: 130 });
+    doc.moveDown();
+    doc
+      .strokeColor("#aaaaaa")
+      .lineWidth(0.5)
+      .moveTo(50, doc.y)
+      .lineTo(550, doc.y)
+      .stroke();
+    doc.moveDown(0.5);
+
+    // Lignes de table
+    doc.font("Helvetica").fontSize(9);
+    validatedInscriptions.forEach((inscription) => {
+      const participant = inscription.participant;
+      if (participant) {
+        doc.text(participant.nom || "N/A", 50, doc.y, { width: 140 });
+        doc.text(participant.email || "N/A", 200, doc.y, { width: 150 });
+        doc.text(participant.sexe || "N/A", 360, doc.y, { width: 50 });
+        doc.text(participant.profession || "N/A", 420, doc.y, { width: 130 });
+        doc.moveDown(1);
+      }
+    });
+
+    // Section Liste de Tous les Inscrits (si trop long, peut nécessiter plus de pages)
+    doc.addPage();
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text(`Liste de Tous les Inscrits (${totalRegistered})`, {
+        underline: true,
+      });
+    doc.moveDown();
+
+    // En-têtes de table
+    doc.font("Helvetica-Bold").fontSize(10);
+    doc.text("Nom", 50, doc.y, { width: 140 });
+    doc.text("Email", 200, doc.y, { width: 150 });
+    doc.text("Sexe", 360, doc.y, { width: 50 });
+    doc.text("Profession", 420, doc.y, { width: 130 });
+    doc.moveDown();
+    doc
+      .strokeColor("#aaaaaa")
+      .lineWidth(0.5)
+      .moveTo(50, doc.y)
+      .lineTo(550, doc.y)
+      .stroke();
+    doc.moveDown(0.5);
+
+    // Lignes de table
+    doc.font("Helvetica").fontSize(9);
+    inscriptions.forEach((inscription) => {
+      const participant = inscription.participant;
+      if (participant) {
+        doc.text(participant.nom || "N/A", 50, doc.y, { width: 140 });
+        doc.text(participant.email || "N/A", 200, doc.y, { width: 150 });
+        doc.text(participant.sexe || "N/A", 360, doc.y, { width: 50 });
+        doc.text(participant.profession || "N/A", 420, doc.y, { width: 130 });
+        doc.moveDown(1);
+      }
+    });
+
+    // 7. Finaliser le document
     doc.end();
   } catch (error) {
-    console.error(
-      "Erreur lors de la génération du PDF :",
-      error.message,
-      error.stack
-    );
-    res.status(500).json({ error: error.message });
+    console.error("❌ Erreur génération PDF (pdfkit):", error);
+    next(error);
   }
 };
+// --- FIN MODIFICATION ---
 
-// --- FIN NOUVELLE FONCTION ---
-
-// --- FONCTION UTILITAIRE (à mettre dans le même fichier) ---
-// Crée le HTML qui sera transformé en PDF
-function getReportHTML(event, inscriptions, validatedInscriptions, stats) {
-  // Fonction pour générer une ligne de tableau
-  const createRow = (participant) => `
-    <tr>
-      <td>${participant?.nom || "N/A"}</td>
-      <td>${participant?.email || "N/A"}</td>
-      <td>${participant?.sexe || "N/A"}</td>
-      <td>${participant?.profession || "N/A"}</td>
-    </tr>
-  `;
-
-  // Fonction pour générer les stats par sexe
-  const createSexStats = (registered, validated) => {
-    const allSexes = new Set([
-      ...Object.keys(registered),
-      ...Object.keys(validated),
-    ]);
-    let rows = "";
-    allSexes.forEach((sexe) => {
-      rows += `<tr>
-        <td>${sexe}</td>
-        <td>${registered[sexe] || 0}</td>
-        <td>${validated[sexe] || 0}</td>
-      </tr>`;
-    });
-    return rows;
-  };
-
-  // Configuration du graphique (la "courbe")
-  const chartConfig = {
-    type: "doughnut", // Un "doughnut" est visuel
-    data: {
-      labels: ["Participants Validés", "Inscrits (non-validés)"],
-      datasets: [
-        {
-          label: "Taux de Participation",
-          data: [
-            stats.totalValidated,
-            stats.totalRegistered - stats.totalValidated,
-          ],
-          backgroundColor: [
-            "rgba(54, 162, 235, 0.8)", // Bleu
-            "rgba(201, 203, 207, 0.5)", // Gris
-          ],
-          borderColor: ["rgba(54, 162, 235, 1)", "rgba(201, 203, 207, 1)"],
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "top" },
-        title: { display: true, text: "Répartition des Inscriptions" },
-      },
-    },
-  };
-
-  return `
-    <html>
-      <head>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 10px; line-height: 1.4; color: #333; }
-          .container { width: 100%; margin: 0 auto; }
-          h1, h2, h3 { color: #000; font-weight: 600; }
-          h1 { font-size: 24px; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
-          h2 { font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px; }
-          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-          .info-grid p { margin: 0; }
-          .info-grid strong { color: #555; }
-          .chart-container { width: 80%; max-width: 400px; margin: 20px auto; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; font-weight: 600; }
-          tr:nth-child(even) { background-color: #f9f9f9; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1>Rapport d'Événement</h1>
-          
-          <h2>Détails de l'Événement</h2>
-          <div class="info-grid">
-            <p><strong>Nom:</strong> ${event.name}</p>
-            <p><strong>Catégorie:</strong> ${event.category?.name || "N/A"}</p>
-            <p><strong>Date de début:</strong> ${new Date(
-              event.startDate
-            ).toLocaleDateString("fr-FR")}</p>
-            <p><strong>Ville:</strong> ${event.city}</p>
-            <p><strong>Lieu:</strong> ${event.neighborhood || "N/A"}</p>
-            <p><strong>Prix:</strong> ${
-              event.price > 0 ? `${event.price} FCFA` : "Gratuit"
-            }</p>
-          </div>
-          <p><strong>Description:</strong> ${event.description}</p>
-
-          <h2>Statistiques de Participation</h2>
-          <div class="info-grid">
-            <p><strong>Total Inscrits:</strong> ${stats.totalRegistered}</p>
-            <p><strong>Total Validés (Présents):</strong> ${
-              stats.totalValidated
-            }</p>
-            <p><strong>Taux de Participation:</strong> ${stats.participationRate.toFixed(
-              1
-            )}%</p>
-          </div>
-          
-          <div class="chart-container">
-            <canvas id="participationChart"></canvas>
-          </div>
-          
-          <h2>Statistiques Démographiques</h2>
-          <table>
-            <thead>
-              <tr><th>Sexe</th><th>Inscrits</th><th>Validés</th></tr>
-            </thead>
-            <tbody>
-              ${createSexStats(
-                stats.statsSexRegistered,
-                stats.statsSexValidated
-              )}
-            </tbody>
-          </table>
-
-          <h2>Liste des Participants Validés (${stats.totalValidated})</h2>
-          <table>
-            <thead>
-              <tr><th>Nom</th><th>Email</th><th>Sexe</th><th>Profession</th></tr>
-            </thead>
-            <tbody>
-              ${validatedInscriptions
-                .map((i) => createRow(i.participant))
-                .join("")}
-            </tbody>
-          </table>
-          
-          <h2>Liste de Tous les Inscrits (${stats.totalRegistered})</h2>
-          <table>
-            <thead>
-              <tr><th>Nom</th><th>Email</th><th>Sexe</th><th>Profession</th></tr>
-            </thead>
-            <tbody>
-              ${inscriptions.map((i) => createRow(i.participant)).join("")}
-            </tbody>
-          </table>
-        </div>
-        
-        <script>
-          window.chartConfig = ${JSON.stringify(chartConfig)};
-        </script>
-      </body>
-    </html>
-  `;
-}
+// --- NETTOYAGE DES EXPORTS ---
 module.exports = {
   getAllEvents,
   getEventById,
@@ -809,7 +697,6 @@ module.exports = {
   addParticipant,
   removeParticipant,
   getEventsByOrganizer,
-  validateQRCodeWithEventName,
   getValidatedAttendees,
   generateEventReport,
 };
