@@ -29,6 +29,7 @@ import {
   Bell,
   ChevronRight,
   LogOut,
+  HelpCircle,
 } from "lucide-react";
 
 /**
@@ -79,6 +80,7 @@ const Navbar = () => {
       { label: "Mon Profil", icon: UserCircle, path: "/user-profile" },
       { label: "Paramètres", icon: Settings, path: "/account-settings" },
       { label: "Retour", icon: ArrowLeft, onClick: () => navigate(-1) },
+      { label: "Aide", icon: HelpCircle, path: "/qrevent_help" },
     ];
 
     const role = user?.role;

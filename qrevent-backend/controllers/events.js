@@ -6,8 +6,8 @@ const Event = require("../models/event");
 const User = require("../models/user");
 const Category = require("../models/category");
 const Inscription = require("../models/inscription");
-const qrCodeService = require("../services/qrCodeService"); // ✅ Vérifiez le chemin
-const PDFDocument = require("pdfkit"); // ✅ Assurez-vous d'avoir fait 'npm install pdfkit'
+const qrCodeService = require("../services/qrCodeService");
+const { generatePdfReport } = require("../utils/pdfReportGenerator");
 
 // --- Obtenir tous les événements ---
 const getAllEvents = async (req, res, next) => {
@@ -519,166 +519,34 @@ const generateEventReport = async (req, res, next) => {
       return acc;
     }, {});
 
-    // 5. Initialiser le document PDF
-    const doc = new PDFDocument({
-      margin: 50,
-      layout: "portrait",
-      size: "A4",
-    });
+    // Stats par Profession (non utilisé dans ce PDF, mais calculé)
+    const statsProfRegistered = inscriptions.reduce((acc, i) => {
+      const prof = i.participant?.profession || "Inconnu";
+      acc[prof] = (acc[prof] || 0) + 1;
+      return acc;
+    }, {});
 
-    // 6. Envoyer le PDF au client
+    const stats = {
+      totalRegistered,
+      totalValidated,
+      participationRate,
+      statsSexRegistered,
+      statsSexValidated,
+      statsProfRegistered,
+    };
+
+    // 5. Définir les en-têtes de la réponse
+    // (Le nom de fichier sera géré par le service de téléchargement frontend)
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="rapport-${event.name.replace(/ /g, "_")}.pdf"`
     );
-    doc.pipe(res); // Le PDF est envoyé directement au navigateur
 
-    // --- Écriture du contenu du PDF ---
-
-    // En-tête
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(20)
-      .text(`Rapport d'Événement`, { align: "center" });
-    doc.fontSize(16).text(event.name, { align: "center" });
-    doc.moveDown(2);
-
-    // Section Détails
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text("Détails de l'Événement", { underline: true });
-    doc.moveDown();
-    doc.font("Helvetica").fontSize(12);
-    doc.text(`Date: ${new Date(event.startDate).toLocaleDateString("fr-FR")}`);
-    doc.text(`Lieu: ${event.city}, ${event.neighborhood || ""}`);
-    doc.text(`Catégorie: ${event.category?.name || "N/A"}`);
-    doc.text(`Prix: ${event.price > 0 ? `${event.price} FCFA` : "Gratuit"}`);
-    doc.moveDown();
-
-    // Section Statistiques
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text("Statistiques de Participation", { underline: true });
-    doc.moveDown();
-    doc.font("Helvetica").fontSize(12);
-    doc.text(`Total Inscrits: ${totalRegistered}`);
-    doc.text(`Total Validés (Présents): ${totalValidated}`);
-    doc
-      .fontSize(14)
-      .font("Helvetica-Bold")
-      .text(`Taux de Participation: ${participationRate.toFixed(1)}%`);
-    doc.moveDown();
-
-    // Section Stats Démographiques (Sexe)
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text("Statistiques Démographiques (par Sexe)", { underline: true });
-    doc.moveDown();
-    const allSexes = new Set([
-      ...Object.keys(statsSexRegistered),
-      ...Object.keys(statsSexValidated),
-    ]);
-    allSexes.forEach((sexe) => {
-      doc
-        .font("Helvetica-Bold")
-        .fontSize(10)
-        .text(sexe || "Inconnu");
-      doc
-        .font("Helvetica")
-        .fontSize(10)
-        .text(
-          `   Inscrits: ${statsSexRegistered[sexe] || 0} | Validés: ${
-            statsSexValidated[sexe] || 0
-          }`
-        );
-      doc.moveDown(0.5);
-    });
-    doc.moveDown();
-
-    // Section Liste des Participants Validés
-    doc.addPage(); // Nouvelle page pour les listes
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text(`Liste des Participants Validés (${totalValidated})`, {
-        underline: true,
-      });
-    doc.moveDown();
-
-    // En-têtes de table
-    doc.font("Helvetica-Bold").fontSize(10);
-    doc.text("Nom", 50, doc.y, { width: 140 });
-    doc.text("Email", 200, doc.y, { width: 150 });
-    doc.text("Sexe", 360, doc.y, { width: 50 });
-    doc.text("Profession", 420, doc.y, { width: 130 });
-    doc.moveDown();
-    doc
-      .strokeColor("#aaaaaa")
-      .lineWidth(0.5)
-      .moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .stroke();
-    doc.moveDown(0.5);
-
-    // Lignes de table
-    doc.font("Helvetica").fontSize(9);
-    validatedInscriptions.forEach((inscription) => {
-      const participant = inscription.participant;
-      if (participant) {
-        doc.text(participant.nom || "N/A", 50, doc.y, { width: 140 });
-        doc.text(participant.email || "N/A", 200, doc.y, { width: 150 });
-        doc.text(participant.sexe || "N/A", 360, doc.y, { width: 50 });
-        doc.text(participant.profession || "N/A", 420, doc.y, { width: 130 });
-        doc.moveDown(1);
-      }
-    });
-
-    // Section Liste de Tous les Inscrits (si trop long, peut nécessiter plus de pages)
-    doc.addPage();
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text(`Liste de Tous les Inscrits (${totalRegistered})`, {
-        underline: true,
-      });
-    doc.moveDown();
-
-    // En-têtes de table
-    doc.font("Helvetica-Bold").fontSize(10);
-    doc.text("Nom", 50, doc.y, { width: 140 });
-    doc.text("Email", 200, doc.y, { width: 150 });
-    doc.text("Sexe", 360, doc.y, { width: 50 });
-    doc.text("Profession", 420, doc.y, { width: 130 });
-    doc.moveDown();
-    doc
-      .strokeColor("#aaaaaa")
-      .lineWidth(0.5)
-      .moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .stroke();
-    doc.moveDown(0.5);
-
-    // Lignes de table
-    doc.font("Helvetica").fontSize(9);
-    inscriptions.forEach((inscription) => {
-      const participant = inscription.participant;
-      if (participant) {
-        doc.text(participant.nom || "N/A", 50, doc.y, { width: 140 });
-        doc.text(participant.email || "N/A", 200, doc.y, { width: 150 });
-        doc.text(participant.sexe || "N/A", 360, doc.y, { width: 50 });
-        doc.text(participant.profession || "N/A", 420, doc.y, { width: 130 });
-        doc.moveDown(1);
-      }
-    });
-
-    // 7. Finaliser le document
-    doc.end();
+    // 6. Appeler le générateur de PDF et lui passer la réponse (res) pour le 'pipe'
+    await generatePdfReport(event, inscriptions, stats, res);
   } catch (error) {
-    console.error("❌ Erreur génération PDF (pdfkit):", error);
+    console.error("❌ Erreur (controller) génération PDF:", error);
     next(error);
   }
 };

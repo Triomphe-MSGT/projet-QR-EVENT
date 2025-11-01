@@ -2,6 +2,7 @@ const Event = require("../models/event");
 const Inscription = require("../models/inscription");
 const mongoose = require("mongoose");
 const User = require("../models/user");
+const { Parser } = require("json2csv"); // Assurez-vous d'avoir fait 'npm install json2csv'
 
 const getOrganizerStats = async (req, res, next) => {
   try {
@@ -69,9 +70,10 @@ const getAdminStats = async (req, res, next) => {
   }
 };
 
+// --- MODIFIÉ : Génération du rapport CSV complet ---
 const generateAdminReport = async (req, res, next) => {
   try {
-    // 2. Récupérer les mêmes données
+    // --- 1. Récupérer les données statistiques ---
     const totalUsers = await User.countDocuments();
     const participantCount = await User.countDocuments({ role: "Participant" });
     const organizerCount = await User.countDocuments({ role: "Organisateur" });
@@ -82,7 +84,6 @@ const generateAdminReport = async (req, res, next) => {
     const avgPerEvent =
       totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : 0;
 
-    // 3. Formater les données pour le CSV
     const statsData = [
       { Statistique: "Total Utilisateurs", Valeur: totalUsers },
       { Statistique: "Participants", Valeur: participantCount },
@@ -94,20 +95,47 @@ const generateAdminReport = async (req, res, next) => {
       { Statistique: "Moy. Inscriptions/Événement", Valeur: avgPerEvent },
     ];
 
-    // 4. Définir les colonnes du CSV
-    const fields = ["Statistique", "Valeur"];
-    const json2csvParser = new Parser({ fields, delimiter: ";" });
-    const csv = json2csvParser.parse(statsData);
+    // --- 2. Récupérer la liste des utilisateurs ---
+    // On utilise .lean() pour de meilleures performances (objets JS simples)
+    const allUsers = await User.find({})
+      .select("nom email role sexe profession")
+      .lean();
 
-    // 5. Envoyer le fichier CSV
+    // --- 3. Créer le CSV pour les statistiques ---
+    const statsFields = ["Statistique", "Valeur"];
+    const statsParser = new Parser({ fields: statsFields, delimiter: ";" });
+    const statsCsv = statsParser.parse(statsData);
+
+    // --- 4. Créer le CSV pour la liste des utilisateurs ---
+    const userFields = [
+      { label: "Nom", value: "nom" },
+      { label: "Email", value: "email" },
+      { label: "Rôle", value: "role" },
+      { label: "Sexe", value: "sexe" },
+      { label: "Profession", value: "profession" },
+    ];
+    const userParser = new Parser({ fields: userFields, delimiter: ";" });
+    const usersCsv = userParser.parse(allUsers);
+
+    // --- 5. Combiner les deux CSV en un seul fichier texte ---
+    const combinedCsv = `RAPPORT DE STATISTIQUES GLOBAL
+${statsCsv}
+
+\n\n
+LISTE DE TOUS LES UTILISATEURS
+${usersCsv}
+`;
+
+    // --- 6. Envoyer le fichier CSV combiné ---
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="rapport_admin_${
+      `attachment; filename="rapport_admin_complet_${
         new Date().toISOString().split("T")[0]
       }.csv"`
     );
-    res.status(200).send(csv);
+    // Envoyer la chaîne de caractères combinée
+    res.status(200).send(combinedCsv);
   } catch (error) {
     console.error("❌ Erreur génération rapport admin:", error);
     next(error);

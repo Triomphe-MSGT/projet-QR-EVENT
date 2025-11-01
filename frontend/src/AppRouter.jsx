@@ -31,6 +31,7 @@ import AuthFormRegisterConnection from "./components/ui/AuthFormRegisterConnecti
 import AdminDashboard from "./components/admin/AdminDashboard";
 import ScanQrPage from "./pages/organizer/ScanQrPage";
 import SettingsPage from "./pages/SettingsPage";
+import HelpPage from "./pages/HelpPage";
 
 const AppRouter = () => {
   return (
@@ -43,6 +44,7 @@ const AppRouter = () => {
         <Route path="/user-profile" element={<ProfilePage />} />
         <Route path="/events" element={<EventListPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/qrevent_help" element={<HelpPage />} />
 
         {/* Routes protégées */}
         <Route
