@@ -1,0 +1,28 @@
+<svg width="220" height="50" viewBox="0 0 220 50" xmlns="http://www.w3.org/2000/svg">
+  <title>Logo Qr-Event</title>
+  
+  <g id="icon">
+    <rect x="5" y="5" width="12" height="12" rx="2" fill="#0866FF"/>
+    <rect x="19" y="5" width="12" height="12" rx="2" fill="#333333"/>
+    <rect x="33" y="5" width="12" height="12" rx="2" fill="#0866FF"/>
+    
+    <rect x="5" y="19" width="12" height="12" rx="2" fill="#333333"/>
+    <rect x="19" y="19" width="12" height="12" rx="2" fill="#0866FF"/>
+    <rect x="33" y="19" width="12" height="12" rx="2" fill="#333333"/>
+    
+    <rect x="5" y="33" width="12" height="12" rx="2" fill="#0866FF"/>
+    <rect x="19" y="33" width="12" height="12" rx="2" fill="#333333"/>
+    <rect x="33" y="33" width="12" height="12" rx="2" fill="#0866FF"/>
+  </g>
+  
+  <text 
+    x="55" 
+    y="33" 
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" 
+    font-size="28" 
+    font-weight="bold" 
+    fill="#333333"
+  >
+    <tspan fill="#0866FF">Qr</tspan>Event
+  </text>
+</svg>
