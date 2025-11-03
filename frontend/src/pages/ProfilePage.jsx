@@ -13,6 +13,7 @@ import {
 } from "../hooks/useUserProfile";
 import { useUserEvents } from "../hooks/useUserProfile";
 import { API_BASE_URL } from "../slices/axiosInstance";
+const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
 // --- Fonctions utilitaires pour le style des événements ---
 const getHash = (str) => {
@@ -98,8 +99,11 @@ const ProfilePage = () => {
 
   const getAvatarUrl = (imagePath) => {
     if (!imagePath) return "/assets/default-avatar.png";
+    // Si c'est déjà une URL complète (Cloudinary, Google), on la retourne
     if (imagePath.startsWith("http")) return imagePath;
-    return API_BASE_URL / `${imagePath}`;
+
+    // Sinon, on construit l'URL complète
+    return `${STATIC_BASE_URL}/${imagePath}`;
   };
 
   const formatDate = (dateString) =>
