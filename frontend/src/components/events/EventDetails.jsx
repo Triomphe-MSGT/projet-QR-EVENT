@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // For geocoding via proxy
+import api from "../../slices/axiosInstance";
 import Button from "../ui/Button";
 import ParticipationFormModal from "../../pages/participant/ParticipationFormModal";
 import QrCodeDisplay from "../ui/QrCodeDisplay";
@@ -15,6 +15,9 @@ import {
   Tag,
   CheckCircle,
 } from "lucide-react";
+
+import { API_BASE_URL } from "../../slices/axiosInstance";
+const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
 const EventDetails = ({ event }) => {
   const [coords, setCoords] = useState(null);
@@ -51,7 +54,7 @@ const EventDetails = ({ event }) => {
       }
 
       try {
-        const proxyRes = await axios.get("http://localhost:3001/api/geocode", {
+        const proxyRes = await api.get("/geocode", {
           params: { q: fullAddress },
         });
 
@@ -109,7 +112,7 @@ const EventDetails = ({ event }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith("http")) return imagePath;
-    return `http://localhost:3001/${imagePath}`;
+    return `${STATIC_BASE_URL}/${imagePath}`;
   };
   const imageUrl = getImageUrl(event.imageUrl);
 

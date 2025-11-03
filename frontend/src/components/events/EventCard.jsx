@@ -1,6 +1,8 @@
 // src/components/events/EventCard.jsx
 import React from "react";
 import Button from "../ui/Button"; // ✅ Vérifiez ce chemin
+import { API_BASE_URL } from "../../slices/axiosInstance";
+const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
 const EventCard = ({ event, handleDetails }) => {
   const formatDate = (dateString) => {
@@ -18,7 +20,7 @@ const EventCard = ({ event, handleDetails }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith("http")) return imagePath;
-    return `http://localhost:3001/${imagePath}`; // URL vers votre backend
+    return `${STATIC_BASE_URL}/${imagePath}`; // URL vers votre backend
   };
 
   const imageUrl = getImageUrl(event.imageUrl);

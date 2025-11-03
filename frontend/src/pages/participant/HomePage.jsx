@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { API_BASE_URL } from "../../slices/axiosInstance";
+
 import MainLayout from "../../components/layouts/MainLayout";
 import ListCategorie from "../../components/categories/CategoryList"; // ✅ Vérifiez chemin
 import {
@@ -44,6 +46,7 @@ const fetchMockAds = () => {
   });
 };
 
+const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 // --- Composant EventPreviewCard (Stylisé) ---
 const EventPreviewCard = ({ event }) => {
   const getImageUrl = (imagePath) => {
@@ -54,7 +57,7 @@ const EventPreviewCard = ({ event }) => {
         event.name.charAt(0)
       )}&font=lora`;
     if (imagePath.startsWith("http")) return imagePath;
-    return `http://localhost:3001/${imagePath}`;
+    return `${STATIC_BASE_URL}/${imagePath}`;
   };
 
   const formatPrice = (price) => {
