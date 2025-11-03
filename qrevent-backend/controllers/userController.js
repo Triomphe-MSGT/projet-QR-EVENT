@@ -3,10 +3,14 @@
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const fs = require("fs");
 const Event = require("../models/event");
-const path = require("path");
 const Inscription = require("../models/inscription");
+
+// --- SUPPRIMÉ ---
+// Nous n'utilisons plus 'fs' ou 'path' pour gérer les images
+// const fs = require("fs");
+// const path = require("path");
+// --- FIN SUPPRESSION ---
 
 const getAllUsers = async (req, res, next) => {
   try {
@@ -46,7 +50,10 @@ const createUser = async (req, res, next) => {
       sexe,
       profession,
       phone,
-      image: req.file ? req.file.path.replace(/\\/g, "/") : null,
+      // --- CORRECTION ---
+      // req.file.path est maintenant une URL https://... de Cloudinary
+      image: req.file ? req.file.path : null,
+      // --- FIN CORRECTION ---
     });
 
     const savedUser = await newUser.save();
@@ -69,7 +76,9 @@ const updateUser = async (req, res, next) => {
 
       const updateData = {
         nom: req.body.nom || targetUser.nom,
-        image: req.file ? req.file.path.replace(/\\/g, "/") : targetUser.image,
+        // --- CORRECTION ---
+        image: req.file ? req.file.path : targetUser.image,
+        // --- FIN CORRECTION ---
       };
 
       const updatedUser = await User.findByIdAndUpdate(
@@ -91,7 +100,9 @@ const updateUser = async (req, res, next) => {
         sexe,
         profession,
         phone,
-        image: req.file ? req.file.path.replace(/\\/g, "/") : targetUser.image,
+        // --- CORRECTION ---
+        image: req.file ? req.file.path : targetUser.image,
+        // --- FIN CORRECTION ---
       },
       { new: true, runValidators: true }
     );
@@ -114,9 +125,11 @@ const deleteUser = async (req, res, next) => {
     if (!deletedUser)
       return res.status(404).json({ error: "Utilisateur non trouvé" });
 
-    if (deletedUser.image && fs.existsSync(deletedUser.image)) {
-      fs.unlinkSync(path.resolve(deletedUser.image));
-    }
+    // --- SUPPRESSION ---
+    // La logique 'fs.unlinkSync' est supprimée.
+    // TODO (Optionnel) : Appeler l'API Cloudinary pour supprimer l'image
+    // si 'deletedUser.image' existe.
+    // --- FIN SUPPRESSION ---
 
     res.status(204).end();
   } catch (error) {
@@ -179,18 +192,19 @@ const uploadUserAvatar = async (req, res, next) => {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
 
-    if (user.image && fs.existsSync(path.resolve(user.image))) {
-      fs.unlinkSync(path.resolve(user.image));
-    }
+    // --- SUPPRESSION ---
+    // La logique 'fs.unlinkSync' est supprimée.
+    // TODO (Optionnel) : Supprimer l'ancienne image de Cloudinary
+    // --- FIN SUPPRESSION ---
 
-    const relativePath = path
-      .join("uploads", "users", req.file.filename)
-      .replace(/\\/g, "/");
-    user.image = relativePath;
+    // --- CORRECTION ---
+    // On sauvegarde la nouvelle URL complète de Cloudinary
+    user.image = req.file.path;
+    // --- FIN CORRECTION ---
 
     const savedUser = await user.save();
 
-    res.json({ image: savedUser.image });
+    res.json({ image: savedUser.image }); // Renvoie la nouvelle URL
   } catch (error) {
     next(error);
   }
@@ -203,6 +217,7 @@ const getMyEvents = async (req, res, next) => {
     // Récupère les événements que l'utilisateur organise
     const organizedEvents = await Event.find({ organizer: userId })
       .populate("category", "name emoji")
+      .populate("participants", "nom email role sexe profession") // ✅ Important pour le dashboard
       .sort({ startDate: -1 });
 
     // Récupère les inscriptions (billets) de l'utilisateur
@@ -219,6 +234,7 @@ const getMyEvents = async (req, res, next) => {
       });
 
     // On transforme les inscriptions en une liste d'événements
+    // Votre code ici est déjà correct (il crée un 'id' et passe 'imageUrl')
     const participatedEvents = inscriptions
       .map((inscription) => {
         if (!inscription.event) return null;
@@ -232,6 +248,8 @@ const getMyEvents = async (req, res, next) => {
           city: event.city,
           imageUrl: event.imageUrl,
           category: event.category,
+          // ... (ajoutez 'location' si nécessaire)
+          location: event.location,
 
           qrCodeToken: inscription.qrCodeToken,
           qrCodeImage: inscription.qrCodeImage,

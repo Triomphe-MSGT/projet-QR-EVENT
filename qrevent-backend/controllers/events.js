@@ -2,12 +2,14 @@
 const mongoose = require("mongoose");
 const path = require("path");
 const fs = require("fs");
+const axios = require("axios"); // Pour la géolocalisation
 const Event = require("../models/event");
 const User = require("../models/user");
 const Category = require("../models/category");
 const Inscription = require("../models/inscription");
 const qrCodeService = require("../services/qrCodeService");
 const { generatePdfReport } = require("../utils/pdfReportGenerator");
+const PDFDocument = require("pdfkit"); // Pour les rapports PDF
 
 // --- Obtenir tous les événements ---
 const getAllEvents = async (req, res, next) => {
@@ -31,7 +33,7 @@ const getEventById = async (req, res, next) => {
     const event = await Event.findById(req.params.id)
       .populate("organizer", "nom email")
       .populate("category", "name emoji")
-      .populate("participants", "nom email role sexe profession"); // Peuple avec sexe/profession
+      .populate("participants", "nom email role sexe profession");
 
     if (!event) return res.status(404).json({ error: "Événement non trouvé" });
     res.json(event);
@@ -40,20 +42,54 @@ const getEventById = async (req, res, next) => {
   }
 };
 
-// --- Créer un nouvel événement ---
+// --- Créer un nouvel événement (Optimisé pour Render/Cloudinary) ---
 const createEvent = async (req, res, next) => {
   try {
-    const { body, user } = req; // user vient de userExtractor { id, role }
+    const { body, user } = req;
 
     const category = await Category.findById(body.category);
     if (!category) return res.status(400).json({ error: "Catégorie invalide" });
 
+    let eventLocation = undefined;
+
+    // --- 1. Logique de Géolocalisation (Faite une seule fois) ---
+    if (body.city) {
+      try {
+        const fullAddress = [body.neighborhood, body.city, "Cameroun"]
+          .filter(Boolean)
+          .join(", ");
+        const geoRes = await axios.get(
+          "https://api.geoapify.com/v1/geocode/search",
+          {
+            params: {
+              text: fullAddress,
+              apiKey:
+                process.env.GEOAPIFY_KEY || "9c75ef48a4494d958fbbb9e241db7bfc",
+            },
+          }
+        );
+
+        if (geoRes.data && geoRes.data.features[0]?.geometry) {
+          const [lng, lat] = geoRes.data.features[0].geometry.coordinates;
+          eventLocation = { type: "Point", coordinates: [lng, lat] };
+        }
+      } catch (geoError) {
+        console.error("Erreur Geoapify (non bloquante) :", geoError.message);
+      }
+    }
+    // --- Fin de la logique Géolocalisation ---
+
+    // --- 2. Logique d'image (Cloudinary) ---
+    // multer-storage-cloudinary a déjà uploadé l'image.
+    // req.file.path contient l'URL HTTPS de l'image sur Cloudinary.
+    const imageUrl = req.file ? req.file.path : null;
+    // --- Fin de la logique Image ---
+
     const newEvent = new Event({
       ...body,
       organizer: user.id,
-      imageUrl: req.file
-        ? path.join("uploads", "events", req.file.filename).replace(/\\/g, "/")
-        : null,
+      imageUrl: imageUrl, // Sauvegarde l'URL de Cloudinary
+      location: eventLocation, // Sauvegarde les coordonnées
     });
 
     const savedEvent = await newEvent.save();
@@ -69,7 +105,7 @@ const createEvent = async (req, res, next) => {
   }
 };
 
-// --- Mettre à jour un événement ---
+// --- Mettre à jour un événement (Optimisé pour Render/Cloudinary) ---
 const updateEvent = async (req, res, next) => {
   try {
     const { body, user } = req;
@@ -100,14 +136,21 @@ const updateEvent = async (req, res, next) => {
       });
     }
 
-    // Gestion de l'image (votre code est correct)
+    // --- Logique d'image (Cloudinary) ---
     if (req.file) {
-      // ... (logique de suppression/remplacement d'image)
+      // Une nouvelle image a été uploadée, on sauvegarde sa nouvelle URL
+      body.imageUrl = req.file.path;
+      // TODO (Optionnel) : Supprimer l'ANCIENNE image de Cloudinary
+      // (Nécessite une logique pour extraire l'ID public de eventToUpdate.imageUrl et appeler cloudinary.uploader.destroy)
     } else if (body.image === null || body.image === "") {
-      // ... (logique de suppression d'image)
+      // L'utilisateur veut supprimer l'image
+      body.imageUrl = null;
+      // TODO (Optionnel) : Supprimer l'ANCIENNE image de Cloudinary
     } else {
+      // L'utilisateur ne change pas l'image, on retire la clé du body
       delete body.imageUrl;
     }
+    // --- Fin de la logique Image ---
 
     const updatedEvent = await Event.findByIdAndUpdate(eventId, body, {
       new: true,
@@ -150,7 +193,7 @@ const deleteEvent = async (req, res, next) => {
       return res.status(403).json({ error: "Action non autorisée." });
     }
 
-    // ... (logique de suppression d'image)
+    // TODO (Optionnel) : Supprimer l'image de Cloudinary ici
 
     // Supprime les inscriptions, retire l'événement des participants et de la catégorie
     await Inscription.deleteMany({ event: eventId });
@@ -366,9 +409,9 @@ const addParticipant = async (req, res, next) => {
     }
 
     const populatedEvent = await Event.findById(eventId)
-      .populate("participants", "nom email role sexe profession") // Peuple avec les nouveaux champs
+      .populate("participants", "nom email role sexe profession")
       .populate("organizer", "nom email")
-      .populate("category", "name emoji"); // Ne pas oublier la catégorie
+      .populate("category", "name emoji");
 
     res.json(populatedEvent);
   } catch (error) {
@@ -519,34 +562,166 @@ const generateEventReport = async (req, res, next) => {
       return acc;
     }, {});
 
-    // Stats par Profession (non utilisé dans ce PDF, mais calculé)
-    const statsProfRegistered = inscriptions.reduce((acc, i) => {
-      const prof = i.participant?.profession || "Inconnu";
-      acc[prof] = (acc[prof] || 0) + 1;
-      return acc;
-    }, {});
+    // 5. Initialiser le document PDF
+    const doc = new PDFDocument({
+      margin: 50,
+      layout: "portrait",
+      size: "A4",
+    });
 
-    const stats = {
-      totalRegistered,
-      totalValidated,
-      participationRate,
-      statsSexRegistered,
-      statsSexValidated,
-      statsProfRegistered,
-    };
-
-    // 5. Définir les en-têtes de la réponse
-    // (Le nom de fichier sera géré par le service de téléchargement frontend)
+    // 6. Envoyer le PDF au client
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="rapport-${event.name.replace(/ /g, "_")}.pdf"`
     );
+    doc.pipe(res);
 
-    // 6. Appeler le générateur de PDF et lui passer la réponse (res) pour le 'pipe'
-    await generatePdfReport(event, inscriptions, stats, res);
+    // --- Écriture du contenu du PDF ---
+
+    // En-tête
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(20)
+      .text(`Rapport d'Événement`, { align: "center" });
+    doc.fontSize(16).text(event.name, { align: "center" });
+    doc.moveDown(2);
+
+    // Section Détails
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text("Détails de l'Événement", { underline: true });
+    doc.moveDown();
+    doc.font("Helvetica").fontSize(12);
+    doc.text(`Date: ${new Date(event.startDate).toLocaleDateString("fr-FR")}`);
+    doc.text(`Lieu: ${event.city}, ${event.neighborhood || ""}`);
+    doc.text(`Catégorie: ${event.category?.name || "N/A"}`);
+    doc.text(`Prix: ${event.price > 0 ? `${event.price} FCFA` : "Gratuit"}`);
+    doc.moveDown();
+
+    // Section Statistiques
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text("Statistiques de Participation", { underline: true });
+    doc.moveDown();
+    doc.font("Helvetica").fontSize(12);
+    doc.text(`Total Inscrits: ${totalRegistered}`);
+    doc.text(`Total Validés (Présents): ${totalValidated}`);
+    doc
+      .fontSize(14)
+      .font("Helvetica-Bold")
+      .text(`Taux de Participation: ${participationRate.toFixed(1)}%`);
+    doc.moveDown();
+
+    // Section Stats Démographiques (Sexe)
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text("Statistiques Démographiques (par Sexe)", { underline: true });
+    doc.moveDown();
+    const allSexes = new Set([
+      ...Object.keys(statsSexRegistered),
+      ...Object.keys(statsSexValidated),
+    ]);
+    allSexes.forEach((sexe) => {
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .text(sexe || "Inconnu");
+      doc
+        .font("Helvetica")
+        .fontSize(10)
+        .text(
+          `   Inscrits: ${statsSexRegistered[sexe] || 0} | Validés: ${
+            statsSexValidated[sexe] || 0
+          }`
+        );
+      doc.moveDown(0.5);
+    });
+    doc.moveDown();
+
+    // Section Liste des Participants Validés
+    doc.addPage();
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text(`Liste des Participants Validés (${totalValidated})`, {
+        underline: true,
+      });
+    doc.moveDown();
+
+    // En-têtes de table
+    doc.font("Helvetica-Bold").fontSize(10);
+    doc.text("Nom", 50, doc.y, { width: 140 });
+    doc.text("Email", 200, doc.y, { width: 150 });
+    doc.text("Sexe", 360, doc.y, { width: 50 });
+    doc.text("Profession", 420, doc.y, { width: 130 });
+    doc.moveDown();
+    doc
+      .strokeColor("#aaaaaa")
+      .lineWidth(0.5)
+      .moveTo(50, doc.y)
+      .lineTo(550, doc.y)
+      .stroke();
+    doc.moveDown(0.5);
+
+    // Lignes de table
+    doc.font("Helvetica").fontSize(9);
+    validatedInscriptions.forEach((inscription) => {
+      const participant = inscription.participant;
+      if (participant) {
+        doc.text(participant.nom || "N/A", 50, doc.y, { width: 140 });
+        doc.text(participant.email || "N/A", 200, doc.y, { width: 150 });
+        doc.text(participant.sexe || "N/A", 360, doc.y, { width: 50 });
+        doc.text(participant.profession || "N/A", 420, doc.y, { width: 130 });
+        doc.moveDown(1);
+      }
+    });
+
+    // Section Liste de Tous les Inscrits
+    doc.addPage();
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text(`Liste de Tous les Inscrits (${totalRegistered})`, {
+        underline: true,
+      });
+    doc.moveDown();
+
+    // En-têtes de table
+    doc.font("Helvetica-Bold").fontSize(10);
+    doc.text("Nom", 50, doc.y, { width: 140 });
+    doc.text("Email", 200, doc.y, { width: 150 });
+    doc.text("Sexe", 360, doc.y, { width: 50 });
+    doc.text("Profession", 420, doc.y, { width: 130 });
+    doc.moveDown();
+    doc
+      .strokeColor("#aaaaaa")
+      .lineWidth(0.5)
+      .moveTo(50, doc.y)
+      .lineTo(550, doc.y)
+      .stroke();
+    doc.moveDown(0.5);
+
+    // Lignes de table
+    doc.font("Helvetica").fontSize(9);
+    inscriptions.forEach((inscription) => {
+      const participant = inscription.participant;
+      if (participant) {
+        doc.text(participant.nom || "N/A", 50, doc.y, { width: 140 });
+        doc.text(participant.email || "N/A", 200, doc.y, { width: 150 });
+        doc.text(participant.sexe || "N/A", 360, doc.y, { width: 50 });
+        doc.text(participant.profession || "N/A", 420, doc.y, { width: 130 });
+        doc.moveDown(1);
+      }
+    });
+
+    // 7. Finaliser le document
+    doc.end();
   } catch (error) {
-    console.error("❌ Erreur (controller) génération PDF:", error);
+    console.error("❌ Erreur génération PDF (pdfkit):", error);
     next(error);
   }
 };

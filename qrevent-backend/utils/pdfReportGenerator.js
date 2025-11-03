@@ -12,13 +12,6 @@ const COLOR_HEADER_BG = "#F0F2F5"; // Fond de tableau
 const COLOR_BORDER = "#DDDDDD";
 const LOGO_PATH = path.join(__dirname, "..", "assets", "logo.png"); // Chemin vers votre logo
 
-/**
- * Fonction principale pour générer et envoyer le rapport
- * @param {object} event - L'objet événement (populé)
- * @param {Array} inscriptions - Tableau de toutes les inscriptions (populé)
- * @param {object} stats - Objet contenant les statistiques calculées
- * @param {object} res - L'objet Réponse d'Express pour y 'piper' le PDF
- */
 async function generatePdfReport(event, inscriptions, stats, res) {
   const doc = new PDFDocument({
     size: "A4",

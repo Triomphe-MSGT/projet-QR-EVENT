@@ -1,14 +1,11 @@
-import axios from "axios";
+import api from "../slices/axiosInstance";
 
 // const API_BASE = "http://localhost:3001/api";
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  "https://projet-qr-event-uzrp.onrender.com/api";
 
 const authService = {
   login: async (email, password) => {
     try {
-      const res = await axios.post(`${API_BASE}/auth/login`, {
+      const res = await api.post(`/auth/login`, {
         email,
         password,
       });
@@ -44,7 +41,7 @@ const authService = {
         payload.profession = userData.profession || "Non renseigné";
       }
 
-      await axios.post(`${API_BASE}/auth/register`, payload);
+      await api.post(`/auth/register`, payload);
 
       return authService.login(payload.email, payload.password);
     } catch (err) {
@@ -65,7 +62,7 @@ const authService = {
   // ------------------------
   googleLogin: async (googleToken) => {
     try {
-      const res = await axios.post(`${API_BASE}/auth/google`, {
+      const res = await api.post(`/auth/google`, {
         token: googleToken,
       });
       const { token, user } = res.data;

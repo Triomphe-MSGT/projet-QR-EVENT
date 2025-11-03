@@ -32,6 +32,14 @@ import {
   HelpCircle,
 } from "lucide-react";
 
+// --- CORRECTION 1: Import de l'URL de base ---
+// Nous importons l'URL de base de l'API (ex: http://localhost:3001/api)
+import { API_BASE_URL } from "../../slices/axiosInstance";
+
+// Nous créons une URL statique pour les fichiers (ex: http://localhost:3001)
+const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
+// --- FIN CORRECTION ---
+
 /**
  * Navbar principale gérant :
  * - L'affichage adaptatif selon l'état d'authentification
@@ -47,6 +55,7 @@ const Navbar = () => {
 
   // Récupère le token (auth) et l'utilisateur depuis Redux + React Query
   const { token, user: reduxUser } = useSelector((state) => state.auth);
+  // C'est excellent d'utiliser `enabled: !!token`
   const { data: queryUser, isLoading } = useUserProfile({ enabled: !!token });
   const user = queryUser || reduxUser; // Source prioritaire : données les plus récentes
 
@@ -62,6 +71,7 @@ const Navbar = () => {
     setProfileMenuOpen(false);
   };
 
+  // C'est la bonne façon de gérer le logout
   const handleLogout = () => {
     dispatch(logout());
     queryClient.clear();
@@ -75,10 +85,12 @@ const Navbar = () => {
   const menuItems = useMemo(() => {
     const baseItems = [
       { label: "Accueil", icon: Home, path: "/home" },
-      { label: "Catégories", icon: Grid, path: "/home" },
+      // --- CORRECTION: Lien Catégories ---
+      // Il pointait vers /home, je le redirige vers /events (ou /categories si vous l'avez)
+      { label: "Explorer les Événements", icon: Grid, path: "/events" },
       { label: "Mes QR Codes", icon: QrCode, path: "/my-qrcodes" },
       { label: "Mon Profil", icon: UserCircle, path: "/user-profile" },
-      { label: "Paramètres", icon: Settings, path: "/account-settings" },
+      // { label: "Paramètres", icon: Settings, path: "/account-settings" }, // Optionnel
       { label: "Retour", icon: ArrowLeft, onClick: () => navigate(-1) },
       { label: "Aide", icon: HelpCircle, path: "/qrevent_help" },
     ];
@@ -89,9 +101,8 @@ const Navbar = () => {
     if (role === "Organisateur" || role === "administrateur") {
       baseItems.splice(
         1,
-        0,
-
-        { label: "Scanner un Ticket", icon: ScanLine, path: "/scan-qrcode" }
+        0, // Insère à la 2e position
+        { label: "Scanner un Ticket", icon: ScanLine, path: "/scan" } // Chemin /scan est plus court
       );
     }
 
@@ -105,7 +116,7 @@ const Navbar = () => {
     }
     if (role === "Organisateur") {
       baseItems.splice(1, 0, {
-        label: "Dashboard",
+        label: "Mon Dashboard",
         icon: LayoutDashboard,
         path: "/dashboard",
       });
@@ -114,12 +125,21 @@ const Navbar = () => {
     return baseItems;
   }, [user, navigate]);
 
+  // --- CORRECTION 2: Fonction `getAvatarUrl` ---
   // Retourne l’URL de l’avatar avec gestion des chemins relatifs
   const getAvatarUrl = (imagePath) => {
-    if (!imagePath) return "/assets/default-avatar.png";
-    if (imagePath.startsWith("http")) return imagePath;
-    return `http://localhost:3001/${imagePath}`;
+    // Si l'image n'existe pas ou est vide
+    if (!imagePath) {
+      return "/assets/default-avatar.png"; // Chemin vers votre avatar par défaut
+    }
+    // Si c'est déjà une URL complète (ex: Cloudinary ou Google)
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+    // Sinon, c'est un chemin local (uploads/users/...), on le construit
+    return `${STATIC_BASE_URL}/${imagePath}`;
   };
+  // --- FIN CORRECTION ---
 
   // --- Rendus conditionnels selon l’état d’authentification ---
 
@@ -127,13 +147,14 @@ const Navbar = () => {
   if (!token) {
     return (
       <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md">
-        <div className="w-10"></div>
+        <div className="w-10"></div> {/* Espaceur */}
         <Link to="/" className="flex-shrink-0">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent">
             Qr-Event
           </h1>
         </Link>
-        <div className="w-10 flex justify-end">
+        {/* Bouton Connexion à droite */}
+        <div className="w-auto flex justify-end">
           <Link
             to="/login"
             className="px-3 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
@@ -159,6 +180,7 @@ const Navbar = () => {
     );
   }
 
+  // S'il y a un token mais pas d'utilisateur (erreur de chargement), ne rien afficher ou afficher une erreur
   if (!user) return null;
 
   // --- Navbar principale pour utilisateur connecté ---
@@ -184,10 +206,15 @@ const Navbar = () => {
         {/* Notifications et profil */}
         <div className="flex items-center gap-2 relative">
           <button
+            onClick={handleThemeToggle} // Ajout du toggle thème ici
             className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
-            aria-label="Notifications"
+            aria-label="Changer de thème"
           >
-            <Bell className="w-6 h-6" />
+            {theme === "dark" ? (
+              <Sun className="w-6 h-6" />
+            ) : (
+              <Moon className="w-6 h-6" />
+            )}
           </button>
 
           {/* Avatar utilisateur */}
@@ -245,11 +272,13 @@ const Navbar = () => {
       {/* --- Menu latéral (drawer) --- */}
       {menuOpen && (
         <>
+          {/* Fond sombre */}
           <div
             onClick={closeMenus}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in"
           ></div>
 
+          {/* Contenu du menu */}
           <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-white dark:bg-gray-800 shadow-2xl animate-slide-in-left flex flex-col">
             {/* En-tête du tiroir avec infos utilisateur */}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
@@ -333,7 +362,7 @@ const Navbar = () => {
         </>
       )}
 
-      {/* --- Animations locales --- */}
+      {/* --- Animations locales (Suggestion: à déplacer dans tailwind.config.js) --- */}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }

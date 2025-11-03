@@ -12,6 +12,7 @@ import {
   useUploadAvatar,
 } from "../hooks/useUserProfile";
 import { useUserEvents } from "../hooks/useUserProfile";
+import { API_BASE_URL } from "../slices/axiosInstance";
 
 // --- Fonctions utilitaires pour le style des événements ---
 const getHash = (str) => {
@@ -98,7 +99,7 @@ const ProfilePage = () => {
   const getAvatarUrl = (imagePath) => {
     if (!imagePath) return "/assets/default-avatar.png";
     if (imagePath.startsWith("http")) return imagePath;
-    return `http://localhost:3001/${imagePath}`;
+    return API_BASE_URL / `${imagePath}`;
   };
 
   const formatDate = (dateString) =>

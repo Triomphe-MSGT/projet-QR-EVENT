@@ -41,14 +41,16 @@ const userExtractor = async (req, res, next) => {
 };
 
 const authorize = (roles = []) => {
-  const allowedRoles = Array.isArray(roles) ? roles : [roles];
+  const allowedRoles = Array.isArray(roles)
+    ? roles.map((r) => r.toLowerCase())
+    : [roles.toLowerCase()];
 
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ error: "Utilisateur non authentifié" });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!allowedRoles.includes(req.user.role.toLowerCase())) {
       logger.error(`Accès refusé à ${req.user.email}, rôle : ${req.user.role}`);
       return res
         .status(403)
@@ -64,7 +66,7 @@ const unknownEndpoint = (req, res) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  logger.error("Erreur attrapée :", err.message);
+  logger.error("Erreur attrapée :", err?.message || err);
 
   if (err.name === "CastError") {
     return res.status(400).json({ error: "ID mal formaté" });
