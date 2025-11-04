@@ -17,7 +17,7 @@ import {
   PlayCircle,
   Phone,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+
 import Button from "../../components/ui/Button";
 import { useEvents } from "../../hooks/useEvents";
 import { useUserProfile } from "../../hooks/useUserProfile";
@@ -25,31 +25,10 @@ import { useUserProfile } from "../../hooks/useUserProfile";
 // --- AJOUT ---
 // Import de la modale pour la mise à niveau
 import UpgradeToOrganizerModal from "../../components/dashboard/UpgradeToOrganizerModal";
+import NewsFeed from "../../components/NewsFeed";
 // --- FIN AJOUT ---
 
 // --- Service "factice" avec des liens vidéo réels ---
-const fetchMockAds = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: 1,
-          title: "Vibrez au son de nos DJs Professionnels",
-          sponsor: "EventSound Pro",
-          link: "https://www.youtube.com/watch?v=K2K2J4SsAO8",
-          videoUrl: "https://www.youtube.com/watch?v=zuCriEMBlg4",
-        },
-        {
-          id: 2,
-          title: "Service Traiteur d'Exception pour vos Événements",
-          sponsor: "Gourmet Créations",
-          link: "https://www.youtube.com/watch?v=K2K2J4SsAO8",
-          videoUrl: "https://www.youtube.com/watch?v=zuCriEMBlg4",
-        },
-      ]);
-    }, 1500);
-  });
-};
 
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
@@ -261,12 +240,6 @@ const HomePage = () => {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   // --- FIN AJOUT ---
 
-  const { data: ads, isLoading: isLoadingAds } = useQuery({
-    queryKey: ["homeAds"],
-    queryFn: fetchMockAds,
-    staleTime: 1000 * 60 * 60,
-  });
-
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const searchQuery = query.trim();
@@ -336,26 +309,8 @@ const HomePage = () => {
           </section>
 
           {/* --- SECTION 4: ESPACE PUBLICITAIRE (MISE À JOUR) --- */}
-          <section className="max-w-4xl mx-auto px-4 md:px-0">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold dark:text-white">Sponsorisé</h2>
-              <a
-                href="#"
-                className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
-              >
-                Pourquoi cette pub ?
-              </a>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {isLoadingAds ? (
-                <>
-                  <AdCardSkeleton />
-                  <AdCardSkeleton />
-                </>
-              ) : (
-                ads?.map((ad) => <AdCard key={ad.id} ad={ad} />)
-              )}
-            </div>
+          <section>
+            <NewsFeed />
           </section>
 
           {/* --- SECTION 5: ACTUALITÉS --- */}
