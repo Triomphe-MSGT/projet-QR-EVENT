@@ -15,7 +15,7 @@ const createStorage = (folderName) => {
     cloudinary: cloudinary,
     params: {
       // 3. Le dossier dans Cloudinary où les images seront sauvegardées
-      folder: `qrevent/${folderName}`, // ex: "qrevent/events" ou "qrevent/users"
+      folder: `qrevent/${folderName}`,
 
       // 4. Formats autorisés
       allowed_formats: ["jpeg", "jpg", "png", "webp"],

@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const {
-  register,
   login,
   googleLogin,
+  register,
 } = require("../controllers/auth/authController");
 const createUpload = require("../utils/multerConfig");
 

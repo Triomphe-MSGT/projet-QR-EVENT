@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import userProfileService from "../services/userProfileService";
+import { useDispatch } from "react-redux";
+import { login } from "../slices/authSlice";
 
 // 🔹 Récupérer le profil utilisateur
 export const useUserProfile = () => {
@@ -52,5 +54,35 @@ export const useUserEvents = () => {
   return useQuery({
     queryKey: ["userEvents"],
     queryFn: userProfileService.getUserEvents,
+  });
+};
+
+export const useUpgradeToOrganizer = () => {
+  const queryClient = useQueryClient();
+  const dispatch = useDispatch(); // 1. Obtenir la fonction dispatch
+
+  return useMutation({
+    mutationFn: userProfileService.upgradeToOrganizer,
+    onSuccess: (data) => {
+      // 'data' est { message, user }
+      console.log("Mise à niveau réussie:", data.message);
+
+      // 2. Mettre à jour le cache de React Query (ce que vous faisiez déjà)
+      queryClient.setQueryData(["userProfile"], data.user);
+      queryClient.invalidateQueries({ queryKey: ["userEvents"] });
+
+      // --- 3. LA CORRECTION : Mettre à jour le state de Redux ---
+      // Nous devons récupérer le token actuel pour le repasser à l'action 'login'
+      const currentToken = localStorage.getItem("token");
+
+      if (currentToken) {
+        // En dispatchant 'login', Redux ET localStorage sont mis à jour
+        // avec le nouvel objet 'user' (qui a role: "Organisateur")
+        dispatch(login({ user: data.user, token: currentToken }));
+      }
+    },
+    onError: (error) => {
+      console.error("Échec de la mise à niveau :", error);
+    },
   });
 };

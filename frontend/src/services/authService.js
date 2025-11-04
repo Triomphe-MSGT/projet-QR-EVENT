@@ -66,14 +66,23 @@ const authService = {
         token: googleToken,
       });
       const { token, user } = res.data;
-      return { user, token };
+      // Renvoie un objet simple pour Redux
+      return {
+        user: {
+          nom: user.nom,
+          email: user.email,
+          role: user.role,
+          id: user.id,
+        },
+        token,
+      };
     } catch (err) {
       console.error(
         "Erreur complète du serveur :",
         err.response?.data || err.message
       );
       throw new Error(
-        err.response?.data?.error ||
+        err.response?.data?.error || // Le backend renvoie { error: "..." }
           err.message ||
           "Erreur lors de l'inscription"
       );

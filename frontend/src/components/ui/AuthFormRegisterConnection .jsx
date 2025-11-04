@@ -28,10 +28,10 @@ const AuthFormRegisterConnection = () => {
   const [registerUsername, setRegisterUsername] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("visiteur");
-  const [sexe, setSexe] = useState("");
-  const [phone, setPhone] = useState("");
-  const [profession, setProfession] = useState("");
+  // const [role, setRole] = useState("visiteur");
+  // const [sexe, setSexe] = useState("");
+  // const [phone, setPhone] = useState("");
+  // const [profession, setProfession] = useState("");
 
   // ------------------------
   // Gestion Connexion
@@ -73,10 +73,10 @@ const AuthFormRegisterConnection = () => {
         nom: registerUsername,
         email: registerEmail,
         password: registerPassword,
-        role,
-        sexe,
-        phone: role === "Organisateur" ? phone : undefined,
-        profession: role === "Organisateur" ? profession : undefined,
+        //   role,
+        //   sexe,
+        //   phone: role === "Organisateur" ? phone : undefined,
+        //   profession: role === "Organisateur" ? profession : undefined,
       };
       const data = await authService.register(payload);
       dispatch(login(data));
@@ -107,8 +107,7 @@ const AuthFormRegisterConnection = () => {
       localStorage.setItem("token", data.token);
 
       const roleUser = data.user.role;
-      if (roleUser === "Organisateur") navigate("/createevent");
-      else navigate("/home");
+      if (roleUser) navigate("/home");
     } catch (err) {
       console.error(err);
       setError(
@@ -158,15 +157,15 @@ const AuthFormRegisterConnection = () => {
               required
               className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
             />
-            <select
+            {/* <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
               className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
             >
               <option value="Participant">Participant</option>
               <option value="Organisateur">Organisateur</option>
-            </select>
-            <select
+            </select> */}
+            {/* <select
               value={sexe}
               onChange={(e) => setSexe(e.target.value)}
               required
@@ -176,8 +175,8 @@ const AuthFormRegisterConnection = () => {
               <option value="Homme">Homme</option>
               <option value="Femme">Femme</option>
               <option value="Autre">Autre</option>
-            </select>
-            {role === "Organisateur" && (
+            </select> */}
+            {/* {role === "Organisateur" && (
               <>
                 <input
                   type="tel"
@@ -196,7 +195,7 @@ const AuthFormRegisterConnection = () => {
                   className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
                 />
               </>
-            )}
+            )} */}
             <input
               type="password"
               value={registerPassword}
@@ -226,7 +225,6 @@ const AuthFormRegisterConnection = () => {
               <GoogleLogin
                 onSuccess={handleGoogle}
                 onError={() => setError("Échec de l'inscription Google")}
-                useOneTap
                 text="signup_with"
               />
             </div>

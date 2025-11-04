@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { API_BASE_URL } from "../../slices/axiosInstance";
 
 import MainLayout from "../../components/layouts/MainLayout";
-import ListCategorie from "../../components/categories/CategoryList"; // ✅ Vérifiez chemin
+import ListCategorie from "../../components/categories/CategoryList";
 import {
   Search,
   MapPin,
@@ -21,6 +21,11 @@ import { useQuery } from "@tanstack/react-query";
 import Button from "../../components/ui/Button";
 import { useEvents } from "../../hooks/useEvents";
 import { useUserProfile } from "../../hooks/useUserProfile";
+
+// --- AJOUT ---
+// Import de la modale pour la mise à niveau
+import UpgradeToOrganizerModal from "../../components/dashboard/UpgradeToOrganizerModal";
+// --- FIN AJOUT ---
 
 // --- Service "factice" avec des liens vidéo réels ---
 const fetchMockAds = () => {
@@ -47,6 +52,7 @@ const fetchMockAds = () => {
 };
 
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
+
 // --- Composant EventPreviewCard (Stylisé) ---
 const EventPreviewCard = ({ event }) => {
   const getImageUrl = (imagePath) => {
@@ -57,6 +63,7 @@ const EventPreviewCard = ({ event }) => {
         event.name.charAt(0)
       )}&font=lora`;
     if (imagePath.startsWith("http")) return imagePath;
+    // Utilise la base statique corrigée
     return `${STATIC_BASE_URL}/${imagePath}`;
   };
 
@@ -194,7 +201,6 @@ const AdCard = ({ ad }) => {
     }
   };
 
-  // Fonction pour arrêter la vidéo à la sortie
   const handleMouseLeave = () => {
     if (videoRef.current) {
       videoRef.current.pause();
@@ -222,7 +228,6 @@ const AdCard = ({ ad }) => {
           preload="metadata" // Charge juste assez pour démarrer
           className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
         />
-        {/* Superposition avec icône Play (disparaît au survol) */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all duration-300">
           <div
             className="p-3 bg-white/20 rounded-full backdrop-blur-sm 
@@ -251,6 +256,11 @@ const HomePage = () => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
+  // --- AJOUT ---
+  // État pour contrôler l'ouverture de la modale
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  // --- FIN AJOUT ---
+
   const { data: ads, isLoading: isLoadingAds } = useQuery({
     queryKey: ["homeAds"],
     queryFn: fetchMockAds,
@@ -268,217 +278,241 @@ const HomePage = () => {
   };
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 p-4 md:p-8 space-y-16 md:space-y-24">
-        <section className="max-w-4xl mx-auto text-center pt-8 pb-12 px-6 rounded-b-3xl md:rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-700 dark:to-indigo-800 shadow-2xl">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white leading-tight">
-            Trouvez votre prochain événement
-          </h1>
-          <p className="text-lg text-blue-100 dark:text-blue-200 mb-8">
-            Recherchez parmi des milliers de concerts, conférences, et plus
-            encore.
-          </p>
-          <form
-            onSubmit={handleSearchSubmit}
-            className="relative flex items-center shadow-lg rounded-full bg-white/90 dark:bg-gray-800/90 overflow-hidden border border-transparent max-w-xl mx-auto backdrop-blur-sm"
-          >
-            <Search className="absolute left-5 w-5 h-5 text-gray-500 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Rechercher un événement..."
-              className="w-full h-16 py-4 pl-14 pr-20 bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-lg"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition duration-150"
-              aria-label="Rechercher"
+    <>
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 p-4 md:p-8 space-y-16 md:space-y-24">
+          <section className="max-w-4xl mx-auto text-center pt-8 pb-12 px-6 rounded-b-3xl md:rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-700 dark:to-indigo-800 shadow-2xl">
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white leading-tight">
+              Trouvez votre prochain événement
+            </h1>
+            <p className="text-lg text-blue-100 dark:text-blue-200 mb-8">
+              Recherchez parmi des milliers de concerts, conférences, et plus
+              encore.
+            </p>
+            <form
+              onSubmit={handleSearchSubmit}
+              className="relative flex items-center shadow-lg rounded-full bg-white/90 dark:bg-gray-800/90 overflow-hidden border border-transparent max-w-xl mx-auto backdrop-blur-sm"
             >
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          </form>
-        </section>
+              <Search className="absolute left-5 w-5 h-5 text-gray-500 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Rechercher un événement..."
+                className="w-full h-16 py-4 pl-14 pr-20 bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-lg"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition duration-150"
+                aria-label="Rechercher"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </form>
+          </section>
 
-        {/* --- SECTION 2: EXPLORER PAR CATÉGORIE --- */}
-        <section className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-6 text-center sm:text-left">
-            Catégories
-          </h2>
-          <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-4 md:p-6 border dark:border-gray-700">
-            <ListCategorie />
-          </div>
-        </section>
-
-        {/* --- SECTION 3: ÉVÉNEMENTS À LA UNE --- */}
-        <section className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-6 px-4 md:px-0">
-            <h2 className="text-3xl font-bold dark:text-white">À la une</h2>
-            <Link
-              to="/events"
-              className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold"
-            >
-              Tout voir <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <EventCarousel />
-        </section>
-
-        {/* --- SECTION 4: ESPACE PUBLICITAIRE (MISE À JOUR) --- */}
-        <section className="max-w-4xl mx-auto px-4 md:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold dark:text-white">Sponsorisé</h2>
-            <a
-              href="#"
-              className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
-            >
-              Pourquoi cette pub ?
-            </a>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {isLoadingAds ? (
-              <>
-                <AdCardSkeleton />
-                <AdCardSkeleton />
-              </>
-            ) : (
-              // Utilisation du nouveau composant AdCard
-              ads?.map((ad) => <AdCard key={ad.id} ad={ad} />)
-            )}
-          </div>
-        </section>
-
-        {/* --- SECTION 5: ACTUALITÉS --- */}
-        <section className="max-w-4xl mx-auto px-4 md:px-0">
-          <h2 className="text-3xl font-bold mb-6 text-center sm:text-left">
-            Actualités
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4">
-              <div className="flex-shrink-0 p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                <Newspaper className="w-6 h-6 text-blue-600 dark:text-blue-300" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-1 dark:text-white">
-                  Lancement de Qr-Event
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Notre plateforme est désormais ouverte ! Créez votre premier
-                  événement dès aujourd'hui.
-                </p>
-                <a
-                  href="#"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
-                >
-                  Lire la suite...
-                </a>
-              </div>
+          {/* --- SECTION 2: EXPLORER PAR CATÉGORIE --- */}
+          <section className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-6 text-center sm:text-left">
+              Catégories
+            </h2>
+            <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-4 md:p-6 border dark:border-gray-700">
+              <ListCategorie />
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4">
-              <div className="flex-shrink-0 p-3 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                <Calendar className="w-6 h-6 text-green-600 dark:text-green-300" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-1 dark:text-white">
-                  Partenariat avec les Villes
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Nous collaborons avec Douala et Yaoundé pour les événements
-                  culturels.
-                </p>
-                <a
-                  href="#"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
-                >
-                  Lire la suite...
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        {/* --- SECTION 6: APPEL À L'ACTION (CONTACT) --- */}
-        <section className="max-w-4xl mx-auto px-4 md:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 text-white p-8 md:p-12 rounded-2xl shadow-2xl">
-            <div>
-              <MessageSquare className="w-12 h-12 opacity-80 mb-4" />
-              <h2 className="text-3xl font-bold mb-3">
-                Vous êtes organisateur ?
-              </h2>
-              <p className="text-indigo-200 leading-relaxed">
-                Utilisez nos outils pour créer, gérer, et sécuriser vos
-                événements. De la billetterie à la validation par QR code, nous
-                avons ce qu'il vous faut.
-              </p>
+          {/* --- SECTION 3: ÉVÉNEMENTS À LA UNE --- */}
+          <section className="max-w-6xl mx-auto">
+            <div className="flex justify-between items-center mb-6 px-4 md:px-0">
+              <h2 className="text-3xl font-bold dark:text-white">À la une</h2>
+              <Link
+                to="/events"
+                className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+              >
+                Tout voir <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
-            <div className="text-center">
-              {user?.role === "Participant" ? (
-                <Link to="/user-profile">
-                  <Button
-                    variant="light"
-                    size="lg"
-                    className="w-full md:w-auto"
-                  >
-                    Devenir Organisateur
-                  </Button>
-                </Link>
+            <EventCarousel />
+          </section>
+
+          {/* --- SECTION 4: ESPACE PUBLICITAIRE (MISE À JOUR) --- */}
+          <section className="max-w-4xl mx-auto px-4 md:px-0">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold dark:text-white">Sponsorisé</h2>
+              <a
+                href="#"
+                className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+              >
+                Pourquoi cette pub ?
+              </a>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {isLoadingAds ? (
+                <>
+                  <AdCardSkeleton />
+                  <AdCardSkeleton />
+                </>
               ) : (
-                <Link to="/createevent">
-                  <Button
-                    variant="light"
-                    size="lg"
-                    className="w-full md:w-auto"
-                  >
-                    Créer un Événement
-                  </Button>
-                </Link>
+                ads?.map((ad) => <AdCard key={ad.id} ad={ad} />)
               )}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* --- SECTION 7: À PROPOS DE NOUS --- */}
-        <section className="max-w-3xl mx-auto text-center px-4 md:px-0">
-          <Briefcase className="w-10 h-10 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold mb-4">À Propos de Qr-Event</h2>
-          <p className="text-md text-gray-600 dark:text-gray-400 leading-relaxed">
-            Qr-Event est votre plateforme centralisée pour découvrir et gérer
-            des événements au Cameroun et au-delà. Notre mission est de
-            simplifier l'accès à l'événementiel grâce à une technologie de QR
-            code rapide et sécurisée, connectant organisateurs et participants.
-          </p>
-        </section>
+          {/* --- SECTION 5: ACTUALITÉS --- */}
+          <section className="max-w-4xl mx-auto px-4 md:px-0">
+            <h2 className="text-3xl font-bold mb-6 text-center sm:text-left">
+              Actualités
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4">
+                <div className="flex-shrink-0 p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                  <Newspaper className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1 dark:text-white">
+                    Lancement de Qr-Event
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Notre plateforme est désormais ouverte ! Créez votre premier
+                    événement dès aujourd'hui.
+                  </p>
+                  <a
+                    href="#"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
+                  >
+                    Lire la suite...
+                  </a>
+                </div>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4">
+                <div className="flex-shrink-0 p-3 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                  <Calendar className="w-6 h-6 text-green-600 dark:text-green-300" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1 dark:text-white">
+                    Partenariat avec les Villes
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Nous collaborons avec Douala et Yaoundé pour les événements
+                    culturels.
+                  </p>
+                  <a
+                    href="#"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
+                  >
+                    Lire la suite...
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
 
-        {/* --- SECTION 8: FOOTER --- */}
-        <footer className="max-w-3xl mx-auto text-center border-t border-gray-200 dark:border-gray-700 pt-8 mt-16 px-4 md:px-0">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            © {new Date().getFullYear()} Qr-Event. Tous droits réservés.
-          </p>
-          <div className="mt-3 space-x-4">
-            <Link
-              to="/privacy"
-              className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-            >
-              Politique de Confidentialité
-            </Link>
-            <span className="text-gray-400 dark:text-gray-600">|</span>
-            <Link
-              to="/terms"
-              className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-            >
-              Conditions d'Utilisation
-            </Link>
+          {/* --- SECTION 6: APPEL À L'ACTION (CONTACT) --- */}
+          {/* Cette section ne s'affiche que si l'utilisateur est chargé */}
+          {user && (
+            <section className="max-w-4xl mx-auto px-4 md:px-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 text-white p-8 md:p-12 rounded-2xl shadow-2xl">
+                <div>
+                  <MessageSquare className="w-12 h-12 opacity-80 mb-4" />
+                  <h2 className="text-3xl font-bold mb-3">
+                    Vous êtes organisateur ?
+                  </h2>
+                  <p className="text-indigo-200 leading-relaxed">
+                    Utilisez nos outils pour créer, gérer, et sécuriser vos
+                    événements. De la billetterie à la validation par QR code,
+                    nous avons ce qu'il vous faut.
+                  </p>
+                </div>
+                <div className="text-center">
+                  {/* --- CORRECTION LOGIQUE --- */}
 
-            <a
-              href="tel:+237657785435"
-              className="text-sm text-blue-600 hover:underline dark:text-blue-400 flex items-center gap-1"
-            >
-              <Phone size={14} /> Contacter l'Admin (+237 657785435)
-            </a>
-          </div>
-        </footer>
-      </div>
-    </MainLayout>
+                  {user?.role === "Participant" ? (
+                    // 1. Bouton qui OUVRE LA MODALE
+                    <Button
+                      variant="light"
+                      size="lg"
+                      className="w-full md:w-auto"
+                      onClick={() => setIsUpgradeModalOpen(true)}
+                    >
+                      Devenir Organisateur
+                    </Button>
+                  ) : user?.role === "Organisateur" ||
+                    user?.role === "administrateur" ? (
+                    // 2. Bouton qui MÈNE AU DASHBOARD
+                    <Button
+                      variant="light"
+                      size="lg"
+                      className="w-full md:w-auto"
+                      onClick={() =>
+                        navigate(
+                          user.role === "administrateur"
+                            ? "/admin"
+                            : "/dashboard"
+                        )
+                      }
+                    >
+                      Mon Tableau de Bord
+                    </Button>
+                  ) : null}
+                  {/* --- FIN CORRECTION --- */}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* --- SECTION 7: À PROPOS DE NOUS --- */}
+          <section className="max-w-3xl mx-auto text-center px-4 md:px-0">
+            <Briefcase className="w-10 h-10 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold mb-4">À Propos de Qr-Event</h2>
+            <p className="text-md text-gray-600 dark:text-gray-400 leading-relaxed">
+              Qr-Event est votre plateforme centralisée pour découvrir et gérer
+              des événements au Cameroun et au-delà. Notre mission est de
+              simplifier l'accès à l'événementiel grâce à une technologie de QR
+              code rapide et sécurisée, connectant organisateurs et
+              participants.
+            </p>
+          </section>
+
+          {/* --- SECTION 8: FOOTER --- */}
+          <footer className="max-w-3xl mx-auto text-center border-t border-gray-200 dark:border-gray-700 pt-8 mt-16 px-4 md:px-0">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              © {new Date().getFullYear()} Qr-Event. Tous droits réservés.
+            </p>
+            <div className="mt-3 space-x-4 flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
+              <Link
+                to="/privacy"
+                className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Politique de Confidentialité
+              </Link>
+              <span className="text-gray-400 dark:text-gray-600 hidden sm:inline">
+                |
+              </span>
+              <Link
+                to="/terms"
+                className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Conditions d'Utilisation
+              </Link>
+              <span className="text-gray-400 dark:text-gray-600 hidden sm:inline">
+                |
+              </span>
+              <a
+                href="tel:+237657785435"
+                className="text-sm text-blue-600 hover:underline dark:text-blue-400 flex items-center gap-1"
+              >
+                <Phone size={14} /> Contacter l'Admin (+237 657785435)
+              </a>
+            </div>
+          </footer>
+        </div>
+      </MainLayout>
+
+      {/* --- AJOUT : Rendu de la modale --- */}
+      {isUpgradeModalOpen && (
+        <UpgradeToOrganizerModal onClose={() => setIsUpgradeModalOpen(false)} />
+      )}
+    </>
   );
 };
 

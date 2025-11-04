@@ -16,13 +16,11 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    required: true,
     enum: ["Participant", "visiteur", "Organisateur", "administrateur"],
-    default: "visiteur",
+    default: "Participant",
   },
   sexe: {
     type: String,
-    required: true,
     enum: ["Homme", "Femme", "Autre"],
   },
   profession: {

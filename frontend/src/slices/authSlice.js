@@ -13,17 +13,15 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action) => {
+      // 2. Ce reducer met à jour le state ET le localStorage
       state.user = action.payload.user;
       state.token = action.payload.token;
-
       localStorage.setItem("user", JSON.stringify(action.payload.user));
       localStorage.setItem("token", action.payload.token);
     },
-
     logout: (state) => {
       state.user = null;
       state.token = null;
-
       localStorage.removeItem("user");
       localStorage.removeItem("token");
     },

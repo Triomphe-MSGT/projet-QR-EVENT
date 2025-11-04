@@ -50,10 +50,7 @@ const createUser = async (req, res, next) => {
       sexe,
       profession,
       phone,
-      // --- CORRECTION ---
-      // req.file.path est maintenant une URL https://... de Cloudinary
       image: req.file ? req.file.path : null,
-      // --- FIN CORRECTION ---
     });
 
     const savedUser = await newUser.save();
@@ -76,9 +73,7 @@ const updateUser = async (req, res, next) => {
 
       const updateData = {
         nom: req.body.nom || targetUser.nom,
-        // --- CORRECTION ---
         image: req.file ? req.file.path : targetUser.image,
-        // --- FIN CORRECTION ---
       };
 
       const updatedUser = await User.findByIdAndUpdate(
@@ -100,9 +95,8 @@ const updateUser = async (req, res, next) => {
         sexe,
         profession,
         phone,
-        // --- CORRECTION ---
+
         image: req.file ? req.file.path : targetUser.image,
-        // --- FIN CORRECTION ---
       },
       { new: true, runValidators: true }
     );
@@ -266,6 +260,47 @@ const getMyEvents = async (req, res, next) => {
   }
 };
 
+const upgradeToOrganizer = async (req, res, next) => {
+  try {
+    const userId = req.user.id; // Vient du token (middleware userExtractor)
+    const { profession, sexe, phone } = req.body;
+
+    if (!profession || !sexe || !phone) {
+      return res.status(400).json({
+        error:
+          "La profession et le sexe et le numero de telephone sont requis.",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé." });
+    }
+
+    if (user.role !== "Participant") {
+      return res
+        .status(400)
+        .json({ error: "Seul un Participant peut devenir organisateur." });
+    }
+
+    // Mise à jour des informations
+    user.role = "Organisateur";
+    user.profession = profession;
+    user.sexe = sexe;
+    user.phone = phone;
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      message: "Félicitations, vous êtes maintenant un organisateur!",
+      user: updatedUser.toJSON(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -276,4 +311,5 @@ module.exports = {
   updateMe,
   uploadUserAvatar,
   getMyEvents,
+  upgradeToOrganizer,
 };

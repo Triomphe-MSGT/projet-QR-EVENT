@@ -32,38 +32,45 @@ import {
   HelpCircle,
 } from "lucide-react";
 
-// --- CORRECTION 1: Import de l'URL de base ---
-// Nous importons l'URL de base de l'API (ex: http://localhost:3001/api)
+// --- Import de l'URL de base ---
 import { API_BASE_URL } from "../../slices/axiosInstance";
 
-// Nous créons une URL statique pour les fichiers (ex: http://localhost:3001)
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
-// --- FIN CORRECTION ---
 
-/**
- * Navbar principale gérant :
- * - L'affichage adaptatif selon l'état d'authentification
- * - Le menu latéral (drawer)
- * - Le menu du profil utilisateur
- * - Le changement de thème
- */
+// --- NOUVEAU: Composant SVG pour l'avatar par défaut ---
+// J'utilise le SVG gris que je vous ai proposé.
+// Il accepte 'className' pour s'adapter (ex: w-9 h-9, w-16 h-16)
+const DefaultAvatarIcon = ({ className = "", strokeWidth = 1.5 }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none" // Important : pas de remplissage ici
+    stroke="currentColor" // Important : hérite la couleur du texte (text-blue-600, etc.)
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className} // Applique les classes (taille, etc.)
+  >
+    {/* Silhouette de la personne */}
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
+  </svg>
+);
+// --- FIN NOUVEAU ---
+
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
 
-  // Récupère le token (auth) et l'utilisateur depuis Redux + React Query
   const { token, user: reduxUser } = useSelector((state) => state.auth);
-  // C'est excellent d'utiliser `enabled: !!token`
   const { data: queryUser, isLoading } = useUserProfile({ enabled: !!token });
-  const user = queryUser || reduxUser; // Source prioritaire : données les plus récentes
+  const user = queryUser || reduxUser;
 
-  // États d'ouverture des menus
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  // --- Gestion des interactions utilisateur ---
   const handleThemeToggle = () => setTheme(theme === "dark" ? "light" : "dark");
 
   const closeMenus = () => {
@@ -71,42 +78,32 @@ const Navbar = () => {
     setProfileMenuOpen(false);
   };
 
-  // C'est la bonne façon de gérer le logout
   const handleLogout = () => {
     dispatch(logout());
     queryClient.clear();
     navigate("/login");
   };
 
-  /**
-   * Détermine les liens du menu principal selon le rôle utilisateur.
-   * - Utilise useMemo pour éviter un recalcul inutile à chaque rendu.
-   */
   const menuItems = useMemo(() => {
+    // ... (Logique du menu, inchangée)
     const baseItems = [
       { label: "Accueil", icon: Home, path: "/home" },
-      // --- CORRECTION: Lien Catégories ---
-      // Il pointait vers /home, je le redirige vers /events (ou /categories si vous l'avez)
       { label: "Explorer les Événements", icon: Grid, path: "/events" },
       { label: "Mes QR Codes", icon: QrCode, path: "/my-qrcodes" },
       { label: "Mon Profil", icon: UserCircle, path: "/user-profile" },
-      // { label: "Paramètres", icon: Settings, path: "/account-settings" }, // Optionnel
       { label: "Retour", icon: ArrowLeft, onClick: () => navigate(-1) },
       { label: "Aide", icon: HelpCircle, path: "/qrevent_help" },
     ];
 
     const role = user?.role;
 
-    // Enrichit la navigation pour Organisateurs & Admins
     if (role === "Organisateur" || role === "administrateur") {
-      baseItems.splice(
-        1,
-        0, // Insère à la 2e position
-        { label: "Scanner un Ticket", icon: ScanLine, path: "/scan" } // Chemin /scan est plus court
-      );
+      baseItems.splice(1, 0, {
+        label: "Scanner un Ticket",
+        icon: ScanLine,
+        path: "/scan",
+      });
     }
-
-    // Liens supplémentaires pour les administrateurs
     if (role === "administrateur") {
       baseItems.splice(1, 0, {
         label: "Admin Dashboard",
@@ -121,39 +118,36 @@ const Navbar = () => {
         path: "/dashboard",
       });
     }
-
     return baseItems;
   }, [user, navigate]);
 
-  // --- CORRECTION 2: Fonction `getAvatarUrl` ---
-  // Retourne l’URL de l’avatar avec gestion des chemins relatifs
+  // --- MODIFICATION: Fonction `getAvatarUrl` ---
+  // Retourne l’URL ou 'null' si pas d'image
   const getAvatarUrl = (imagePath) => {
-    // Si l'image n'existe pas ou est vide
     if (!imagePath) {
-      return "/assets/default-avatar.png"; // Chemin vers votre avatar par défaut
+      return null; // Renvoie null si pas d'image
     }
-    // Si c'est déjà une URL complète (ex: Cloudinary ou Google)
     if (imagePath.startsWith("http")) {
       return imagePath;
     }
-    // Sinon, c'est un chemin local (uploads/users/...), on le construit
     return `${STATIC_BASE_URL}/${imagePath}`;
   };
-  // --- FIN CORRECTION ---
+  // --- FIN MODIFICATION ---
 
-  // --- Rendus conditionnels selon l’état d’authentification ---
+  // On calcule l'URL de l'avatar une seule fois
+  const avatarUrl = user ? getAvatarUrl(user.image) : null;
 
   // Utilisateur non connecté
   if (!token) {
     return (
       <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md">
-        <div className="w-10"></div> {/* Espaceur */}
+        {/* ... (Code inchangé) */}
+        <div className="w-10"></div>
         <Link to="/" className="flex-shrink-0">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent">
             Qr-Event
           </h1>
         </Link>
-        {/* Bouton Connexion à droite */}
         <div className="w-auto flex justify-end">
           <Link
             to="/login"
@@ -166,10 +160,11 @@ const Navbar = () => {
     );
   }
 
-  // Chargement temporaire de l’utilisateur après connexion
+  // Chargement temporaire
   if (isLoading && token && !queryUser) {
     return (
       <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md animate-pulse">
+        {/* ... (Code inchangé) */}
         <div className="h-8 w-8 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
         <div className="h-7 w-24 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
         <div className="flex items-center gap-3">
@@ -180,7 +175,6 @@ const Navbar = () => {
     );
   }
 
-  // S'il y a un token mais pas d'utilisateur (erreur de chargement), ne rien afficher ou afficher une erreur
   if (!user) return null;
 
   // --- Navbar principale pour utilisateur connecté ---
@@ -206,7 +200,7 @@ const Navbar = () => {
         {/* Notifications et profil */}
         <div className="flex items-center gap-2 relative">
           <button
-            onClick={handleThemeToggle} // Ajout du toggle thème ici
+            onClick={handleThemeToggle}
             className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
             aria-label="Changer de thème"
           >
@@ -217,18 +211,22 @@ const Navbar = () => {
             )}
           </button>
 
-          {/* Avatar utilisateur */}
+          {/* Avatar utilisateur (MODIFIÉ) */}
           <button
             onClick={() => setProfileMenuOpen(true)}
             className="flex items-center"
             title="Profil utilisateur"
             aria-label="Ouvrir le menu du profil"
           >
-            <img
-              src={getAvatarUrl(user.image)}
-              alt="avatar"
-              className="w-9 h-9 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
-            />
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="avatar"
+                className="w-9 h-9 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+              />
+            ) : (
+              <DefaultAvatarIcon className="w-9 h-9 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+            )}
           </button>
 
           {/* Menu du profil */}
@@ -237,11 +235,16 @@ const Navbar = () => {
               <div onClick={closeMenus} className="fixed inset-0 z-40"></div>
               <div className="absolute top-14 right-0 w-64 z-50 p-3 flex flex-col gap-1 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-lg animate-fade-in-down">
                 <div className="flex flex-col items-center border-b dark:border-gray-600 pb-3 mb-2">
-                  <img
-                    src={getAvatarUrl(user.image)}
-                    alt="avatar"
-                    className="w-16 h-16 rounded-full object-cover mb-2"
-                  />
+                  {/* Avatar du menu profil (MODIFIÉ) */}
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="avatar"
+                      className="w-16 h-16 rounded-full object-cover mb-2"
+                    />
+                  ) : (
+                    <DefaultAvatarIcon className="w-16 h-16 rounded-full object-cover mb-2" />
+                  )}
                   <p className="font-semibold text-gray-800 dark:text-gray-100">
                     {user.nom}
                   </p>
@@ -282,11 +285,16 @@ const Navbar = () => {
           <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-white dark:bg-gray-800 shadow-2xl animate-slide-in-left flex flex-col">
             {/* En-tête du tiroir avec infos utilisateur */}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-              <img
-                src={getAvatarUrl(user.image)}
-                alt="avatar"
-                className="w-12 h-12 rounded-full object-cover"
-              />
+              {/* Avatar du tiroir (MODIFIÉ) */}
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="avatar"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+              ) : (
+                <DefaultAvatarIcon className="w-12 h-12 rounded-full object-cover" />
+              )}
               <div>
                 <p className="font-semibold text-gray-800 dark:text-gray-100">
                   {user.nom}
@@ -306,6 +314,7 @@ const Navbar = () => {
             {/* Liste dynamique des liens */}
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
               {menuItems.map((item) => {
+                // ... (Code inchangé)
                 const Icon = item.icon;
                 const shared =
                   "flex items-center gap-4 p-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-full font-medium";
@@ -339,6 +348,7 @@ const Navbar = () => {
 
             {/* Pied de menu : thème + déconnexion */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+              {/* ... (Code inchangé) */}
               <button
                 onClick={handleThemeToggle}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 w-full"
@@ -362,7 +372,7 @@ const Navbar = () => {
         </>
       )}
 
-      {/* --- Animations locales (Suggestion: à déplacer dans tailwind.config.js) --- */}
+      {/* --- Animations locales --- */}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }

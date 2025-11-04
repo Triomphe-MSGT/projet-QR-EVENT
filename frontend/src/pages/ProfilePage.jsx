@@ -98,7 +98,8 @@ const ProfilePage = () => {
   const handleUploadPhoto = (file) => uploadAvatar(file);
 
   const getAvatarUrl = (imagePath) => {
-    if (!imagePath) return "/assets/default-avatar.png";
+    if (!imagePath)
+      return "/home/triomphe/Bureau/projet-QR-EVENT/frontend/src/assets/default-avatar.png";
     // Si c'est déjà une URL complète (Cloudinary, Google), on la retourne
     if (imagePath.startsWith("http")) return imagePath;
 

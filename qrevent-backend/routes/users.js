@@ -11,6 +11,7 @@ const {
   updateMe,
   uploadUserAvatar,
   getMyEvents,
+  upgradeToOrganizer,
 } = require("../controllers/userController");
 
 const { userExtractor, authorize } = require("../utils/middleware");
@@ -80,7 +81,12 @@ router.post(
   upload.single("image"),
   createUser
 );
-
+router.post(
+  "/me/upgrade-organizer",
+  userExtractor,
+  authorize(["Participant"]),
+  upgradeToOrganizer
+);
 // PUT /api/users/:id
 router.put(
   "/:id",

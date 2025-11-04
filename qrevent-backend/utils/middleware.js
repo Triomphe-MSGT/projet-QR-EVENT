@@ -1,28 +1,39 @@
+// qrevent-backend/utils/middleware.js
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-
-const logger = {
-  info: (...params) => console.log("[INFO]", ...params),
-  error: (...params) => console.error("[ERROR]", ...params),
-};
+const config = require("../utils/config.js");
+const logger = require("../utils/logger.js"); // ✅ 2. Assurez-vous que logger.js est au bon endroit
 
 const userExtractor = async (req, res, next) => {
   try {
-    const authHeader = req.headers["authorization"];
+    const authHeader = req.headers["authorization"]; // Standardisé
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       req.user = null;
       return next();
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id).select("-password");
-    if (!user) {
-      return res.status(401).json({ error: "Utilisateur non trouvé" });
+    // ✅ 3. Utiliser config.JWT_SECRET
+    const decoded = jwt.verify(token, config.JWT_SECRET);
+
+    // ✅ 4. S'assurer que le token contient 'id' et 'role' (comme vos contrôleurs le font)
+    if (!decoded.id) {
+      return res.status(401).json({ error: "Token invalide (ID manquant)" });
     }
 
-    req.user = user;
+    // Attache l'ID et le Rôle. Inutile de refaire un appel DB ici
+    // si le token est fiable et que vos contrôleurs n'ont besoin que de l'ID/rôle.
+    // req.user = { id: decoded.id, role: decoded.role };
+
+    // --- OU ---
+    // Si vous voulez VRAIMENT l'objet User complet (plus lourd pour la DB) :
+    const user = await User.findById(decoded.id).select("-passwordHash");
+    if (!user) {
+      return res.status(401).json({ error: "Utilisateur du token non trouvé" });
+    }
+    req.user = user; // Attache l'objet User complet
+
     next();
   } catch (err) {
     logger.error("Erreur lors de la vérification du token :", err.message);

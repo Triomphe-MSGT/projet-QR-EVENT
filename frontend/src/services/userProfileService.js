@@ -34,6 +34,12 @@ const userProfileService = {
     const { data } = await api.get("/users/me/events");
     return data; // Le backend renverra { organized: [...], participated: [...] }
   },
+
+  upgradeToOrganizer: async (upgradeData) => {
+    const { data } = await api.post("/users/me/upgrade-organizer", upgradeData);
+    // Le backend est censé renvoyer { message, user }
+    return data;
+  },
 };
 
 export default userProfileService;
