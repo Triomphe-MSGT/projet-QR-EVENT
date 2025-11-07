@@ -31,7 +31,7 @@ router.get(
       return res.json({
         message: "aucun utililisateur n'est connecté",
         user: null,
-        role: "visiteur",
+        role: null,
       });
     }
 

@@ -1,8 +1,7 @@
 import axios from "axios";
-import { queryClient } from "../main";
 export const API_BASE_URL =
-  // import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
-  "https://projet-qr-event-uzrp.onrender.com/api";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+// "https://projet-qr-event-uzrp.onrender.com/api";
 const api = axios.create({
   baseURL: API_BASE_URL,
 
@@ -29,7 +28,6 @@ api.interceptors.response.use(
     if (error.response && [401, 403].includes(error.response.status)) {
       console.log("Session expirée ou invalide. Déconnexion...");
       localStorage.removeItem("token");
-      queryClient.clear();
       window.location.href = "/login";
     }
     return Promise.reject(error);
