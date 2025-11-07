@@ -5,10 +5,9 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { API_BASE_URL } from "../slices/axiosInstance";
 
-const SOCKET_URL = (API_BASE_URL || "http://localhost:3001/api").replace(
-  "/api",
-  ""
-);
+const SOCKET_URL = (
+  API_BASE_URL || "https://projet-qr-event-uzrp.onrender.com"
+).replace("/api", "");
 
 // Créer le contexte
 const SocketContext = createContext(null);
