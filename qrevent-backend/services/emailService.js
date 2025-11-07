@@ -9,13 +9,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-/**
- * Fonction asynchrone pour envoyer un e-mail
- * @param {string} to - Le destinataire (ex: 'participant@gmail.com')
- * @param {string} subject - Le sujet de l'e-mail
- * @param {string} text - Le corps de l'e-mail en texte simple
- * @param {string} html - (Optionnel) Le corps de l'e-mail en HTML pour un meilleur style
- */
 const sendEmail = async (to, subject, text, html) => {
   if (!process.env.EMAIL_USER) {
     logger.warn("EMAIL_USER non défini. E-mail non envoyé (logué en console).");

@@ -1,7 +1,5 @@
 import api from "../slices/axiosInstance";
 
-// const API_BASE = "http://localhost:3001/api";
-
 const authService = {
   login: async (email, password) => {
     try {
