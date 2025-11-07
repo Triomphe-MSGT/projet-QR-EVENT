@@ -1,15 +1,21 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Button from "./Button/";
-import Togglable from "./Togglable";
+import Button from "./Button/"; // Assurez-vous que le chemin vers Button est correct
+import Togglable from "./Togglable"; // Assurez-vous que le chemin vers Togglable est correct
 import authService from "../../services/authService";
 import { login } from "../../slices/authSlice";
 import { GoogleLogin } from "@react-oauth/google";
 
+// 1. Importer le hook de React Query
+import { useQueryClient } from "@tanstack/react-query";
+
 const AuthFormRegisterConnection = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // 2. Initialiser le client de query
+  const queryClient = useQueryClient();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,16 +28,12 @@ const AuthFormRegisterConnection = () => {
   const [loginPassword, setLoginPassword] = useState("");
 
   // ------------------------
-  // États pour inscription
+  // États pour inscription (simplifié)
   // ------------------------
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerUsername, setRegisterUsername] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  // const [role, setRole] = useState("visiteur");
-  // const [sexe, setSexe] = useState("");
-  // const [phone, setPhone] = useState("");
-  // const [profession, setProfession] = useState("");
 
   // ------------------------
   // Gestion Connexion
@@ -42,12 +44,23 @@ const AuthFormRegisterConnection = () => {
     setLoading(true);
     try {
       const data = await authService.login(loginEmail, loginPassword);
+
+      // Mettre à jour Redux (et localStorage)
       dispatch(login(data));
-      localStorage.setItem("token", data.token);
+
+      // --- FORCER LE NETTOYAGE DU CACHE ---
+      // Dit à React Query que les données "visiteur" sont périmées
+      await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      await queryClient.invalidateQueries({ queryKey: ["userEvents"] });
+      // --- FIN CORRECTION ---
 
       const role = data.user.role;
-      if (role === "Organisateur") navigate("/createevent");
-      else navigate("/home");
+      // Redirige en fonction du rôle
+      if (role === "Organisateur")
+        navigate("/dashboard"); // Vers le dashboard Orga
+      else if (role === "administrateur")
+        navigate("/admin"); // Vers le dashboard Admin
+      else navigate("/home"); // Pour les Participants
     } catch (err) {
       setError(err.message || "Erreur lors de la connexion");
     } finally {
@@ -69,22 +82,25 @@ const AuthFormRegisterConnection = () => {
 
     setLoading(true);
     try {
+      // Le payload est simplifié (pas de rôle, sexe, etc.)
       const payload = {
         nom: registerUsername,
         email: registerEmail,
         password: registerPassword,
-        //   role,
-        //   sexe,
-        //   phone: role === "Organisateur" ? phone : undefined,
-        //   profession: role === "Organisateur" ? profession : undefined,
       };
-      const data = await authService.register(payload);
-      dispatch(login(data));
-      localStorage.setItem("token", data.token);
 
-      const roleUser = data.user.role;
-      if (roleUser === "Organisateur") navigate("/createevent");
-      else navigate("/home");
+      const data = await authService.register(payload);
+
+      // Mettre à jour Redux (et localStorage)
+      dispatch(login(data));
+
+      // --- FORCER LE NETTOYAGE DU CACHE ---
+      await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      await queryClient.invalidateQueries({ queryKey: ["userEvents"] });
+      // --- FIN CORRECTION ---
+
+      // Redirige le nouveau participant vers la page d'accueil connectée
+      navigate("/home");
     } catch (err) {
       setError(err.message || "Erreur lors de l'inscription");
     } finally {
@@ -103,11 +119,20 @@ const AuthFormRegisterConnection = () => {
     setLoading(true);
     try {
       const data = await authService.googleLogin(credentialResponse.credential);
+
+      // Mettre à jour Redux (et localStorage)
       dispatch(login(data));
-      localStorage.setItem("token", data.token);
+
+      // --- FORCER LE NETTOYAGE DU CACHE ---
+      await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      await queryClient.invalidateQueries({ queryKey: ["userEvents"] });
+      // --- FIN CORRECTION ---
 
       const roleUser = data.user.role;
-      if (roleUser) navigate("/home");
+      // Redirige en fonction du rôle
+      if (roleUser === "Organisateur") navigate("/dashboard");
+      else if (roleUser === "administrateur") navigate("/admin");
+      else navigate("/home");
     } catch (err) {
       console.error(err);
       setError(
@@ -120,6 +145,7 @@ const AuthFormRegisterConnection = () => {
     }
   };
 
+  // --- Le JSX complet ---
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-[#18191A] p-4 transition-colors duration-500">
       <Togglable
@@ -157,50 +183,14 @@ const AuthFormRegisterConnection = () => {
               required
               className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
             />
-            {/* <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
-            >
-              <option value="Participant">Participant</option>
-              <option value="Organisateur">Organisateur</option>
-            </select> */}
-            {/* <select
-              value={sexe}
-              onChange={(e) => setSexe(e.target.value)}
-              required
-              className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
-            >
-              <option value="">Sélectionnez votre sexe</option>
-              <option value="Homme">Homme</option>
-              <option value="Femme">Femme</option>
-              <option value="Autre">Autre</option>
-            </select> */}
-            {/* {role === "Organisateur" && (
-              <>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Numéro de téléphone"
-                  required
-                  className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
-                />
-                <input
-                  type="text"
-                  value={profession}
-                  onChange={(e) => setProfession(e.target.value)}
-                  placeholder="Métier ou domaine d'étude"
-                  required
-                  className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
-                />
-              </>
-            )} */}
+
+            {/* Les champs 'role', 'sexe', etc. sont retirés pour l'inscription simplifiée */}
+
             <input
               type="password"
               value={registerPassword}
               onChange={(e) => setRegisterPassword(e.target.value)}
-              placeholder="Mot de passe"
+              placeholder="Mot de passe (min. 6 caractères)"
               required
               className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
             />
@@ -225,7 +215,7 @@ const AuthFormRegisterConnection = () => {
               <GoogleLogin
                 onSuccess={handleGoogle}
                 onError={() => setError("Échec de l'inscription Google")}
-                text="signup_with"
+                text="signup_with" // Texte pour s'inscrire
               />
             </div>
           </form>
