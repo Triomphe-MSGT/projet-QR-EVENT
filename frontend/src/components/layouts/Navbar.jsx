@@ -1,5 +1,3 @@
-// src/components/layouts/Navbar.jsx
-
 import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
@@ -34,29 +32,31 @@ import {
 
 // --- Import de l'URL de base ---
 import { API_BASE_URL } from "../../slices/axiosInstance";
+import { useMarkAsRead, useNotifications } from "../../hooks/useNotifications"; // Assurez-vous que le chemin est correct
 
+// --- CORRECTION : URL statique pour les images ---
+// Votre API_BASE_URL est '.../api', mais les images sont à la racine '/uploads'
+// Nous créons donc une URL de base SANS '/api'
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
+// --- FIN CORRECTION ---
 
-// --- NOUVEAU: Composant SVG pour l'avatar par défaut ---
-// J'utilise le SVG gris que je vous ai proposé.
-// Il accepte 'className' pour s'adapter (ex: w-9 h-9, w-16 h-16)
-const DefaultAvatarIcon = ({ className = "", strokeWidth = 1.5 }) => (
+// --- Composant SVG pour l'avatar par défaut ---
+// (Au lieu d'un fichier, pour un meilleur contrôle)
+const DefaultAvatarIcon = ({ className = "" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    fill="none" // Important : pas de remplissage ici
-    stroke="currentColor" // Important : hérite la couleur du texte (text-blue-600, etc.)
-    strokeWidth={strokeWidth}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.5}
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={className} // Applique les classes (taille, etc.)
+    className={`bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 ${className}`} // Style de base
   >
-    {/* Silhouette de la personne */}
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
     <circle cx="12" cy="7" r="4"></circle>
   </svg>
 );
-// --- FIN NOUVEAU ---
 
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
@@ -68,14 +68,23 @@ const Navbar = () => {
   const { data: queryUser, isLoading } = useUserProfile({ enabled: !!token });
   const user = queryUser || reduxUser;
 
+  // États des menus
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [notifMenuOpen, setNotifMenuOpen] = useState(false);
 
+  // Hooks de notification
+  const { data: notifications, isLoading: isLoadingNotifs } =
+    useNotifications();
+  const markAsReadMutation = useMarkAsRead();
+
+  // --- Gestion des interactions utilisateur ---
   const handleThemeToggle = () => setTheme(theme === "dark" ? "light" : "dark");
 
   const closeMenus = () => {
     setMenuOpen(false);
     setProfileMenuOpen(false);
+    setNotifMenuOpen(false); // Assurez-vous de fermer tous les menus
   };
 
   const handleLogout = () => {
@@ -84,15 +93,33 @@ const Navbar = () => {
     navigate("/login");
   };
 
+  // 4. Marquer comme lues quand on ouvre la cloche
+  const handleNotifClick = () => {
+    setProfileMenuOpen(false); // Ferme le menu profil
+    setNotifMenuOpen(!notifMenuOpen); // Ouvre/ferme la cloche
+    if (!notifMenuOpen && hasUnread) {
+      markAsReadMutation.mutate();
+    }
+  };
+
+  // 3. Vérifier s'il y a des notifications non lues
+  const hasUnread = useMemo(() => {
+    return notifications?.some((n) => !n.isRead);
+  }, [notifications]);
+
+  /**
+   * Détermine les liens du menu principal selon le rôle utilisateur.
+   */
   const menuItems = useMemo(() => {
-    // ... (Logique du menu, inchangée)
     const baseItems = [
       { label: "Accueil", icon: Home, path: "/home" },
+      // CORRIGÉ: /categories pointe vers /events
       { label: "Explorer les Événements", icon: Grid, path: "/events" },
       { label: "Mes QR Codes", icon: QrCode, path: "/my-qrcodes" },
       { label: "Mon Profil", icon: UserCircle, path: "/user-profile" },
       { label: "Retour", icon: ArrowLeft, onClick: () => navigate(-1) },
       { label: "Aide", icon: HelpCircle, path: "/qrevent_help" },
+      { label: "Paramètres", icon: Settings, path: "/account-settings" },
     ];
 
     const role = user?.role;
@@ -101,7 +128,7 @@ const Navbar = () => {
       baseItems.splice(1, 0, {
         label: "Scanner un Ticket",
         icon: ScanLine,
-        path: "/scan",
+        path: "/scan", // Chemin plus court
       });
     }
     if (role === "administrateur") {
@@ -121,18 +148,19 @@ const Navbar = () => {
     return baseItems;
   }, [user, navigate]);
 
-  // --- MODIFICATION: Fonction `getAvatarUrl` ---
+  // --- CORRECTION 2: Fonction `getAvatarUrl` ---
   // Retourne l’URL ou 'null' si pas d'image
   const getAvatarUrl = (imagePath) => {
     if (!imagePath) {
-      return null; // Renvoie null si pas d'image
+      return null; // Renvoie null pour utiliser l'icône par défaut
     }
     if (imagePath.startsWith("http")) {
-      return imagePath;
+      return imagePath; // Pour Cloudinary / Google
     }
+    // Construit l'URL avec la base STATIQUE
     return `${STATIC_BASE_URL}/${imagePath}`;
   };
-  // --- FIN MODIFICATION ---
+  // --- FIN CORRECTION ---
 
   // On calcule l'URL de l'avatar une seule fois
   const avatarUrl = user ? getAvatarUrl(user.image) : null;
@@ -141,7 +169,6 @@ const Navbar = () => {
   if (!token) {
     return (
       <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md">
-        {/* ... (Code inchangé) */}
         <div className="w-10"></div>
         <Link to="/" className="flex-shrink-0">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent">
@@ -164,7 +191,6 @@ const Navbar = () => {
   if (isLoading && token && !queryUser) {
     return (
       <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md animate-pulse">
-        {/* ... (Code inchangé) */}
         <div className="h-8 w-8 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
         <div className="h-7 w-24 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
         <div className="flex items-center gap-3">
@@ -183,7 +209,10 @@ const Navbar = () => {
       <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md">
         {/* Bouton hamburger */}
         <button
-          onClick={() => setMenuOpen(true)}
+          onClick={() => {
+            closeMenus();
+            setMenuOpen(true);
+          }}
           className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
           aria-label="Ouvrir le menu"
         >
@@ -197,8 +226,10 @@ const Navbar = () => {
           </h1>
         </Link>
 
-        {/* Notifications et profil */}
+        {/* --- CORRECTION 3: Structure JSX --- */}
+        {/* Tous les boutons sont maintenant au même niveau (siblings) */}
         <div className="flex items-center gap-2 relative">
+          {/* Bouton Thème */}
           <button
             onClick={handleThemeToggle}
             className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
@@ -211,9 +242,64 @@ const Navbar = () => {
             )}
           </button>
 
-          {/* Avatar utilisateur (MODIFIÉ) */}
+          {/* Bouton Notifications */}
           <button
-            onClick={() => setProfileMenuOpen(true)}
+            onClick={handleNotifClick}
+            className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition relative"
+            aria-label="Notifications"
+          >
+            <Bell className="w-6 h-6" />
+            {hasUnread && (
+              <span className="absolute top-1.5 right-1.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            )}
+          </button>
+
+          {/* Menu déroulant des notifications */}
+          {notifMenuOpen && (
+            <div className="absolute top-14 right-0 w-80 max-w-sm z-50 p-3 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-lg animate-fade-in-down">
+              <h3 className="font-semibold p-2 dark:text-white">
+                Notifications
+              </h3>
+              <div className="max-h-96 overflow-y-auto">
+                {isLoadingNotifs && (
+                  <p className="p-4 text-center text-sm dark:text-gray-400">
+                    Chargement...
+                  </p>
+                )}
+                {!isLoadingNotifs && notifications?.length === 0 && (
+                  <p className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                    Vous n'avez aucune notification.
+                  </p>
+                )}
+                {notifications?.map((notif) => (
+                  <Link
+                    key={notif.id}
+                    to={notif.link || "#"}
+                    onClick={closeMenus}
+                    className={`block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                      !notif.isRead
+                        ? "font-medium"
+                        : "font-normal text-gray-600 dark:text-gray-400"
+                    }`}
+                  >
+                    <p className="text-sm dark:text-gray-200">
+                      {notif.message}
+                    </p>
+                    <span className="text-xs text-blue-500">
+                      {new Date(notif.createdAt).toLocaleString("fr-FR")}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Avatar utilisateur */}
+          <button
+            onClick={() => {
+              closeMenus();
+              setProfileMenuOpen(true);
+            }}
             className="flex items-center"
             title="Profil utilisateur"
             aria-label="Ouvrir le menu du profil"
@@ -225,7 +311,7 @@ const Navbar = () => {
                 className="w-9 h-9 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
               />
             ) : (
-              <DefaultAvatarIcon className="w-9 h-9 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+              <DefaultAvatarIcon className="w-9 h-9 rounded-full border-2 border-gray-300 dark:border-gray-600 p-1" />
             )}
           </button>
 
@@ -235,7 +321,6 @@ const Navbar = () => {
               <div onClick={closeMenus} className="fixed inset-0 z-40"></div>
               <div className="absolute top-14 right-0 w-64 z-50 p-3 flex flex-col gap-1 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-lg animate-fade-in-down">
                 <div className="flex flex-col items-center border-b dark:border-gray-600 pb-3 mb-2">
-                  {/* Avatar du menu profil (MODIFIÉ) */}
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
@@ -243,7 +328,7 @@ const Navbar = () => {
                       className="w-16 h-16 rounded-full object-cover mb-2"
                     />
                   ) : (
-                    <DefaultAvatarIcon className="w-16 h-16 rounded-full object-cover mb-2" />
+                    <DefaultAvatarIcon className="w-16 h-16 rounded-full mb-2 p-2" />
                   )}
                   <p className="font-semibold text-gray-800 dark:text-gray-100">
                     {user.nom}
@@ -270,22 +355,19 @@ const Navbar = () => {
             </>
           )}
         </div>
+        {/* --- FIN CORRECTION 3 --- */}
       </nav>
 
       {/* --- Menu latéral (drawer) --- */}
       {menuOpen && (
         <>
-          {/* Fond sombre */}
           <div
             onClick={closeMenus}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in"
           ></div>
 
-          {/* Contenu du menu */}
           <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-white dark:bg-gray-800 shadow-2xl animate-slide-in-left flex flex-col">
-            {/* En-tête du tiroir avec infos utilisateur */}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-              {/* Avatar du tiroir (MODIFIÉ) */}
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
@@ -293,7 +375,7 @@ const Navbar = () => {
                   className="w-12 h-12 rounded-full object-cover"
                 />
               ) : (
-                <DefaultAvatarIcon className="w-12 h-12 rounded-full object-cover" />
+                <DefaultAvatarIcon className="w-12 h-12 rounded-full p-1.5" />
               )}
               <div>
                 <p className="font-semibold text-gray-800 dark:text-gray-100">
@@ -311,10 +393,8 @@ const Navbar = () => {
               </button>
             </div>
 
-            {/* Liste dynamique des liens */}
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
               {menuItems.map((item) => {
-                // ... (Code inchangé)
                 const Icon = item.icon;
                 const shared =
                   "flex items-center gap-4 p-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-full font-medium";
@@ -346,9 +426,7 @@ const Navbar = () => {
               })}
             </nav>
 
-            {/* Pied de menu : thème + déconnexion */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-              {/* ... (Code inchangé) */}
               <button
                 onClick={handleThemeToggle}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 w-full"
@@ -372,7 +450,7 @@ const Navbar = () => {
         </>
       )}
 
-      {/* --- Animations locales --- */}
+      {/* --- Animations (Suggestion: Déplacez ceci dans tailwind.config.js) --- */}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }

@@ -82,7 +82,7 @@ const authService = {
         err.response?.data || err.message
       );
       throw new Error(
-        err.response?.data?.error || // Le backend renvoie { error: "..." }
+        err.response?.data?.error ||
           err.message ||
           "Erreur lors de l'inscription"
       );

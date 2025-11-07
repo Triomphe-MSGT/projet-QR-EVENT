@@ -10,11 +10,11 @@ import { ThemeProvider } from "./context/ThemeContext";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { LanguageProvider } from "./context/LanguageContext";
+import { SocketProvider } from "./context/SocketContext";
 
 const clientId =
   "282777767077-5b5qposkepee839oirk2jvrcp7si14v7.apps.googleusercontent.com";
-
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -23,7 +23,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <LanguageProvider>
           <ThemeProvider>
             <GoogleOAuthProvider clientId={clientId}>
-              <App />
+              <SocketProvider>
+                <App />
+              </SocketProvider>
             </GoogleOAuthProvider>
           </ThemeProvider>
         </LanguageProvider>

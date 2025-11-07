@@ -11,6 +11,10 @@ const qrCodeService = require("../services/qrCodeService");
 const { generatePdfReport } = require("../utils/pdfReportGenerator");
 const PDFDocument = require("pdfkit"); // Pour les rapports PDF
 
+const Notification = require("../models/Notification");
+const { emitToUser } = require("../socket/socketHandler"); // 1. Importer l'émetteur
+const { io } = require("../index");
+
 // --- Obtenir tous les événements ---
 const getAllEvents = async (req, res, next) => {
   try {
@@ -231,14 +235,21 @@ const registerToEvent = async (req, res, next) => {
     if (event.participants.includes(participantUser._id))
       return res.status(400).json({ error: "Vous êtes déjà inscrit" });
 
-    const { nom, email, profession } = req.body;
-
+    // 5. Sauvegarder la participation (se fait en premier)
     event.participants.push(participantUser._id);
     participantUser.participatedEvents.push(event._id);
     await event.save();
     await participantUser.save();
 
+    // 6. Préparer les variables pour les notifications et l'e-mail
+    let qrCodeUrl = null;
+    let userNotificationLink = `/events/${event.id}`;
+    let userNotificationMessage = `Vous êtes bien inscrit à l'événement "${event.name}". Félicitations !`;
+    let orgNotificationMessage = `${participantUser.nom} s'est inscrit à votre événement "${event.name}".`;
+
+    // 7. Si l'option QR est activée, on génère le QR et on met à jour les variables
     if (event.qrOption) {
+      const { nom, email, profession } = req.body; // Ces données ne sont utiles que pour le QR
       const qrFormData = {
         nom: nom || participantUser.nom,
         email: email || participantUser.email,
@@ -251,6 +262,9 @@ const registerToEvent = async (req, res, next) => {
           event,
           participantUser
         );
+
+      qrCodeUrl = qrCodeImage; // On stocke l'URL de l'image
+
       const inscription = new Inscription({
         event: event._id,
         participant: participantUser._id,
@@ -259,18 +273,122 @@ const registerToEvent = async (req, res, next) => {
       });
       await inscription.save();
 
-      return res.status(201).json({
-        message: "Inscription réussie avec QR code",
-        qrCode: qrCodeImage,
-      });
+      // On met à jour les messages/liens pour le participant
+      userNotificationLink = `/my-qrcodes`;
+      userNotificationMessage = `Vous êtes bien inscrit à l'événement "${event.name}". Votre QR code est disponible.`;
+      orgNotificationMessage = `${participantUser.nom} s'est inscrit à votre événement "${event.name}" (QR activé).`;
     }
 
-    res.status(201).json({ message: "Inscription réussie" });
+    // 8. Envoyer la réponse au client IMMÉDIATEMENT
+    // L'utilisateur ne doit pas attendre l'envoi de l'e-mail
+    res.status(201).json({
+      message: "Inscription réussie",
+      qrCode: qrCodeUrl, // Renvoie l'URL du QR (ou null)
+    });
+
+    // 9. Lancer les tâches de fond (E-mail et Notifications)
+    // Celles-ci s'exécutent après l'envoi de la réponse
+
+    // A. Préparer et envoyer l'e-mail
+    const subject = `Confirmation d'inscription: ${event.name}`;
+    const textBody =
+      `Bonjour ${
+        participantUser.nom
+      },\n\nFélicitations ! Vous êtes officiellement inscrit(e) à l'événement "${
+        event.name
+      }" qui aura lieu le ${new Date(event.startDate).toLocaleDateString(
+        "fr-FR"
+      )}.\n\n` +
+      (qrCodeUrl
+        ? "Votre QR code d'entrée est disponible dans votre profil Qr-Event."
+        : "Nous avons hâte de vous y voir !") +
+      `\n\nMerci,\nL'équipe Qr-Event`;
+
+    // E-mail HTML (avec ou sans QR code)
+    const htmlBody = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2>Bonjour ${participantUser.nom},</h2>
+        <p>Félicitations ! Vous êtes officiellement inscrit(e) à l'événement <strong>${
+          event.name
+        }</strong>.</p>
+        <p>Il aura lieu le : <strong>${new Date(
+          event.startDate
+        ).toLocaleDateString("fr-FR")}</strong>.</p>
+        
+        ${
+          qrCodeUrl
+            ? `
+            <p>Voici votre ticket QR code unique. Conservez-le précieusement (il est aussi disponible dans votre profil Qr-Event) :</p>
+            <div style="padding: 10px; background: white; display: inline-block;">
+              <img src="${qrCodeUrl}" alt="Votre QR Code" style="width: 200px; height: 200px;"/>
+            </div>
+            `
+            : `
+            <p>Cet événement n'utilise pas de QR code pour l'entrée. Nous avons hâte de vous y voir !</p>
+            `
+        }
+        
+        <p>Merci,<br>L'équipe Qr-Event</p>
+      </div>
+    `;
+
+    // "Fire-and-forget" : On lance l'envoi sans attendre la fin
+    sendEmail(participantUser.email, subject, textBody, htmlBody)
+      .then(() => {
+        logger.info(
+          `E-mail de confirmation envoyé à ${participantUser.email} (Événement: ${event.name})`
+        );
+      })
+      .catch((emailError) => {
+        logger.error(
+          `ÉCHEC de l'envoi d'e-mail (après réponse) à ${participantUser.email}:`,
+          emailError
+        );
+      });
+
+    // B. Préparer et envoyer les notifications Socket.IO
+    try {
+      // Notifier le participant
+      const userNotification = new Notification({
+        user: participantUser._id,
+        sender: event.organizer,
+        message: userNotificationMessage,
+        link: userNotificationLink,
+      });
+      const savedUserNotif = await userNotification.save();
+      emitToUser(
+        req.app.get("io"),
+        participantUser._id.toString(),
+        "new_notification",
+        savedUserNotif
+      );
+
+      // Notifier l'organisateur (sauf s'il s'inscrit à son propre événement)
+      if (event.organizer.toString() !== participantUser._id.toString()) {
+        const orgNotification = new Notification({
+          user: event.organizer,
+          sender: participantUser._id,
+          message: orgNotificationMessage,
+          link: `/dashboard`, // Lien vers le dashboard de l'orga
+        });
+        const savedOrgNotif = await orgNotification.save();
+        emitToUser(
+          req.app.get("io"),
+          event.organizer.toString(),
+          "new_notification",
+          savedOrgNotif
+        );
+      }
+    } catch (notifError) {
+      logger.error(
+        "Erreur lors de la sauvegarde/émission de la notification:",
+        notifError
+      );
+    }
   } catch (error) {
     next(error);
   }
 };
-
 // --- Désinscription d'un participant ---
 const unregisterFromEvent = async (req, res, next) => {
   try {

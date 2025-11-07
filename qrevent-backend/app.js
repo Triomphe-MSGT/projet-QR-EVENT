@@ -13,6 +13,7 @@ const eventsRouter = require("./routes/events");
 const categoriesRouter = require("./routes/categories");
 const dashboardRouter = require("./routes/dashboard");
 const geocodeRoutes = require("./routes/geocode");
+const notificationsRouter = require("./routes/notifications");
 
 logger.info("connecting to", config.MONGODB_URI);
 mongoose.set("strictQuery", false);
@@ -32,6 +33,7 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/geocode", geocodeRoutes);
+app.use("/api/notifications", notificationsRouter);
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);

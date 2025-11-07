@@ -30,8 +30,9 @@ import ProfilePage from "./pages/ProfilePage";
 import AuthFormRegisterConnection from "./components/ui/AuthFormRegisterConnection ";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import ScanQrPage from "./pages/organizer/ScanQrPage";
-import SettingsPage from "./pages/SettingsPage";
+import SettingsPage from "./pages/AccountSettingsPage";
 import HelpPage from "./pages/HelpPage";
+import AccountSettingsPage from "./pages/AccountSettingsPage";
 
 const AppRouter = () => {
   return (
@@ -108,9 +109,9 @@ const AppRouter = () => {
           path="/account-settings"
           element={
             <PrivateRoute
-              allowedRoles={["administrateur", "Organisateur", "Participant"]}
+              allowedRoles={["Participant", "Organisateur", "administrateur"]}
             >
-              <SettingsPage />
+              <AccountSettingsPage />
             </PrivateRoute>
           }
         />

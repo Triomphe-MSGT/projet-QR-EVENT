@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import userProfileService from "../services/userProfileService";
 import { useDispatch } from "react-redux";
-import { login } from "../slices/authSlice";
+import { login, logout } from "../slices/authSlice";
 
 // 🔹 Récupérer le profil utilisateur
 export const useUserProfile = () => {
@@ -28,6 +28,32 @@ export const useUpdateProfile = () => {
     // Gérer les erreurs pour faciliter le débogage.
     onError: (error) => {
       console.error("Échec de la mise à jour du profil :", error);
+    },
+  });
+};
+
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: userProfileService.changeMyPassword,
+    // (onSuccess/onError sont gérés dans le composant)
+  });
+};
+
+// --- NOUVEAU HOOK ---
+export const useDeleteMyAccount = () => {
+  const queryClient = useQueryClient();
+  const dispatch = useDispatch(); // 3. Préparer le dispatch
+
+  return useMutation({
+    mutationFn: userProfileService.deleteMyAccount,
+    onSuccess: () => {
+      // 4. Déconnexion complète de l'utilisateur
+      dispatch(logout()); // Vide Redux et localStorage
+      queryClient.clear(); // Vide le cache React Query
+      // La redirection se fera dans le composant
+    },
+    onError: (error) => {
+      console.error("Échec de la suppression du compte:", error);
     },
   });
 };

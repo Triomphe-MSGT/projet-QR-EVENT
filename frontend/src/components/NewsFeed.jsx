@@ -178,10 +178,8 @@ const FeaturedNewsCarousel = () => {
           onTouchStart={handleInteractionStart} // Doigt sur écran
           onTouchEnd={handleInteractionEnd}
           // Style pour cacher la barre de défilement
-          style={{
-            scrollbarWidth: "none" /* Firefox */,
-            "-ms-overflow-style": "none" /* IE */,
-          }}
+
+          style={{ msOverflowStyle: "none" }} /* IE */
         >
           {/* Webkit (Chrome, Safari) - nécessite un pseudo-élément CSS 
               ou l'installation de 'tailwind-scrollbar-hide' */}

@@ -12,6 +12,8 @@ const {
   uploadUserAvatar,
   getMyEvents,
   upgradeToOrganizer,
+  changeMyPassword,
+  deleteMe,
 } = require("../controllers/userController");
 
 const { userExtractor, authorize } = require("../utils/middleware");
@@ -96,6 +98,10 @@ router.put(
   updateUser
 );
 
+router.post("/me/change-password", userExtractor, changeMyPassword);
+
+// DELETE /api/users/me
+router.delete("/me", userExtractor, deleteMe);
 // DELETE /api/users/:id
 router.delete("/:id", userExtractor, authorize(["administrateur"]), deleteUser);
 

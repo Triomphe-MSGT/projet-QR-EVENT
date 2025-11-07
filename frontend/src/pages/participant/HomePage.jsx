@@ -28,11 +28,9 @@ import UpgradeToOrganizerModal from "../../components/dashboard/UpgradeToOrganiz
 import NewsFeed from "../../components/NewsFeed";
 // --- FIN AJOUT ---
 
-// --- Service "factice" avec des liens vidéo réels ---
-
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
-// --- Composant EventPreviewCard (Stylisé) ---
+// --- Composant EventPreviewCard
 const EventPreviewCard = ({ event }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath)
@@ -42,7 +40,6 @@ const EventPreviewCard = ({ event }) => {
         event.name.charAt(0)
       )}&font=lora`;
     if (imagePath.startsWith("http")) return imagePath;
-    // Utilise la base statique corrigée
     return `${STATIC_BASE_URL}/${imagePath}`;
   };
 
@@ -199,12 +196,12 @@ const AdCard = ({ ad }) => {
     >
       <div className="w-full h-40 bg-black overflow-hidden relative">
         <video
-          ref={videoRef} // Référence attachée
+          ref={videoRef}
           src={ad.videoUrl}
           loop
           muted
           playsInline
-          preload="metadata" // Charge juste assez pour démarrer
+          preload="metadata"
           className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all duration-300">
@@ -235,10 +232,7 @@ const HomePage = () => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
-  // --- AJOUT ---
-  // État pour contrôler l'ouverture de la modale
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  // --- FIN AJOUT ---
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -363,7 +357,6 @@ const HomePage = () => {
           </section>
 
           {/* --- SECTION 6: APPEL À L'ACTION (CONTACT) --- */}
-          {/* Cette section ne s'affiche que si l'utilisateur est chargé */}
           {user && (
             <section className="max-w-4xl mx-auto px-4 md:px-0">
               <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 text-white p-8 md:p-12 rounded-2xl shadow-2xl">

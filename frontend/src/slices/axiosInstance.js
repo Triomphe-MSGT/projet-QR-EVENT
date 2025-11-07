@@ -1,6 +1,8 @@
 import axios from "axios";
+import { queryClient } from "../main";
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://projet-qr-event-uzrp.onrender.com/api";
 const api = axios.create({
   baseURL: API_BASE_URL,
 
@@ -20,16 +22,14 @@ api.interceptors.request.use((config) => {
 // Intercepteur de RÉPONSE (pour gérer les erreurs)
 api.interceptors.response.use(
   (response) => {
-    // Si la réponse est OK (2xx), on la retourne
     return response;
   },
   (error) => {
     // Si on reçoit une erreur 401 ou 403
     if (error.response && [401, 403].includes(error.response.status)) {
       console.log("Session expirée ou invalide. Déconnexion...");
-      // 1. Supprimer le token
       localStorage.removeItem("token");
-
+      queryClient.clear();
       window.location.href = "/login";
     }
     return Promise.reject(error);

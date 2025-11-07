@@ -24,11 +24,12 @@
     "mongoose": "^7.8.7",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^7.0.9",
+    "nodemailer": "^7.0.10",
     "pdfkit": "^0.17.2",
     "puppeteer": "^24.27.0",
     "qrcode": "^1.5.4",
-    "sharp": "^0.34.4"
+    "sharp": "^0.34.4",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",

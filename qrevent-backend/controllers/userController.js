@@ -42,6 +42,9 @@ const createUser = async (req, res, next) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // ✅ CORRECT : Utilise l'URL de Cloudinary
+    const imageUrl = req.file ? req.file.path : null;
+
     const newUser = new User({
       nom,
       email,
@@ -50,7 +53,7 @@ const createUser = async (req, res, next) => {
       sexe,
       profession,
       phone,
-      image: req.file ? req.file.path : null,
+      image: imageUrl,
     });
 
     const savedUser = await newUser.save();
@@ -301,6 +304,82 @@ const upgradeToOrganizer = async (req, res, next) => {
   }
 };
 
+const changeMyPassword = async (req, res, next) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id; // Vient de userExtractor
+
+    if (!oldPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ error: "L'ancien et le nouveau mot de passe sont requis." });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        error: "Le nouveau mot de passe doit faire au moins 6 caractères.",
+      });
+    }
+
+    const user = await User.findById(userId); // Récupère l'utilisateur complet
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé." });
+    }
+
+    // 1. Vérifier l'ancien mot de passe
+    const isMatch = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ error: "L'ancien mot de passe est incorrect." });
+    }
+
+    // 2. Hasher et sauvegarder le nouveau
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    user.passwordHash = passwordHash;
+    await user.save();
+
+    // 3. (Optionnel mais recommandé) Révoquer tous les autres tokens/sessions
+    // ... (Logique à ajouter si vous avez un service de tokens)
+
+    res.status(200).json({ message: "Mot de passe mis à jour avec succès." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// --- NOUVELLE FONCTION : SUPPRIMER MON COMPTE ---
+const deleteMe = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // 1. (Optionnel mais propre) Anonymiser ou supprimer les données liées
+    // Par ex, supprimer les inscriptions
+    await Inscription.deleteMany({ participant: userId });
+
+    // Par ex, retirer des listes de participants
+    await Event.updateMany(
+      { participants: userId },
+      { $pull: { participants: userId } }
+    );
+
+    // (Note: La suppression des événements organisés est plus complexe,
+    // on pourrait les anonymiser ou les supprimer en cascade.
+    // Pour l'instant, nous supprimons juste l'utilisateur.)
+
+    // 2. Supprimer l'utilisateur
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.status(404).json({ error: "Utilisateur non trouvé." });
+    }
+
+    // (TODO: Supprimer l'avatar de Cloudinary)
+
+    res.status(204).end(); // Succès, pas de contenu
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -312,4 +391,6 @@ module.exports = {
   uploadUserAvatar,
   getMyEvents,
   upgradeToOrganizer,
+  changeMyPassword, // <- Exporter la nouvelle fonction
+  deleteMe, // <- Exporter la nouvelle fonction
 };

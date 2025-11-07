@@ -1,47 +1,52 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useMemo,
+} from "react";
 
-// Création du contexte
-const LanguageContext = createContext();
-
-// Liste des langues supportées
-export const SUPPORTED_LANGUAGES = [
+// 1. Définir les langues que vous supportez
+const supportedLanguages = [
   { code: "fr", name: "Français" },
   { code: "en", name: "English" },
-  { code: "it", name: "Italiano" },
 ];
 
-// Fournisseur du contexte
+// 2. Tenter de récupérer la langue sauvegardée, sinon utiliser 'fr' par défaut
+const getDefaultLanguage = () => {
+  if (typeof window === "undefined") return "fr";
+  const savedLang = localStorage.getItem("appLanguage");
+  return savedLang || "fr";
+};
+
+// 3. Créer le Contexte
+const LanguageContext = createContext(null);
+LanguageContext.displayName = "LanguageContext"; // Pour le débogage
+
+// 4. Créer le Fournisseur (Provider)
 export const LanguageProvider = ({ children }) => {
-  // Fonction pour obtenir la langue initiale
-  const getInitialLanguage = () => {
-    try {
-      const storedLang = localStorage.getItem("appLanguage");
-      return SUPPORTED_LANGUAGES.some((lang) => lang.code === storedLang)
-        ? storedLang
-        : "fr";
-    } catch {
-      // En cas d’erreur d’accès à localStorage (ex: SSR)
-      return "fr";
-    }
-  };
+  const [language, setLanguageState] = useState(getDefaultLanguage());
 
-  const [language, setLanguage] = useState(getInitialLanguage);
-
-  // Met à jour localStorage et <html lang="">
+  // 5. Mettre à jour l'attribut HTML (bon pour l'accessibilité)
   useEffect(() => {
-    try {
-      localStorage.setItem("appLanguage", language);
-    } catch {
-      console.warn("Impossible d'enregistrer la langue dans localStorage");
-    }
     document.documentElement.lang = language;
   }, [language]);
 
-  const value = {
-    language,
-    setLanguage,
-    supportedLanguages: SUPPORTED_LANGUAGES,
+  // 6. Créer la fonction pour changer la langue
+  const setLanguage = (newLang) => {
+    setLanguageState(newLang);
+    localStorage.setItem("appLanguage", newLang);
   };
+
+  // 7. Mémoriser la valeur pour éviter les re-rendus inutiles
+  const value = useMemo(
+    () => ({
+      language,
+      setLanguage,
+      supportedLanguages,
+    }),
+    [language]
+  );
 
   return (
     <LanguageContext.Provider value={value}>
@@ -50,11 +55,13 @@ export const LanguageProvider = ({ children }) => {
   );
 };
 
-// Hook personnalisé pour consommer le contexte
+// 8. Créer le Hook (que votre page de paramètres utilise)
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
+    throw new Error(
+      "useLanguage doit être utilisé à l'intérieur d'un LanguageProvider"
+    );
   }
   return context;
 };
