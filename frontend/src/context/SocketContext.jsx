@@ -3,10 +3,9 @@ import { useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import { useQueryClient } from "@tanstack/react-query";
 
-const SOCKET_URL = "https://projet-qr-event-uzrp.onrender.com".replace(
-  "/api",
-  ""
-);
+import { API_BASE_URL } from "../slices/axiosInstance";
+
+const SOCKET_URL = API_BASE_URL.replace("/api", "");
 
 // Créer le contexte
 const SocketContext = createContext(null);
