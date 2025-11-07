@@ -6,7 +6,7 @@ const getMyNotifications = async (req, res, next) => {
   try {
     // userExtractor doit avoir été exécuté avant
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ error: "Authentification requise" });
+      return res.json([]);
     }
 
     const notifications = await Notification.find({ user: req.user.id })
@@ -18,8 +18,6 @@ const getMyNotifications = async (req, res, next) => {
   }
 };
 
-// POST /api/notifications/read
-// Marque toutes les notifications comme lues
 const markAllAsRead = async (req, res, next) => {
   try {
     if (!req.user || !req.user.id) {

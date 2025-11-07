@@ -29,7 +29,7 @@ router.get(
     // 🚫 Si pas de token → on renvoie une réponse "visiteur"
     if (!authHeader) {
       return res.json({
-        message: "Visiteur non connecté",
+        message: "aucun utililisateur n'est connecté",
         user: null,
         role: "visiteur",
       });

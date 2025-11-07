@@ -144,6 +144,7 @@ const getMe = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
+
     res.json(user);
   } catch (error) {
     next(error);

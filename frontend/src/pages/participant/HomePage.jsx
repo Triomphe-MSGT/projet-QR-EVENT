@@ -180,7 +180,7 @@ const AdCard = ({ ad }) => {
   const handleMouseLeave = () => {
     if (videoRef.current) {
       videoRef.current.pause();
-      videoRef.current.currentTime = 0; // Rembobine au début
+      videoRef.current.currentTime = 0;
     }
   };
 
