@@ -128,7 +128,7 @@ const Navbar = () => {
       baseItems.splice(1, 0, {
         label: "Scanner un Ticket",
         icon: ScanLine,
-        path: "/scan", // Chemin plus court
+        path: "/scan",
       });
     }
     if (role === "administrateur") {

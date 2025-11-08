@@ -60,7 +60,7 @@ const AppRouter = () => {
         />
 
         <Route
-          path="/scan-qrcode"
+          path="/scan"
           element={
             <PrivateRoute allowedRoles={["Organisateur", "administrateur"]}>
               <ScanQrPage />
