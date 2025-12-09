@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import MainLayout from "../components/layouts/MainLayout";
 import { useTheme } from "../context/ThemeContext";
-import { useLanguage } from "../context/LanguageContext"; // (Vous l'aviez)
-import { useChangePassword, useDeleteMyAccount } from "../hooks/useUserProfile"; // (Hooks du backend)
+// import { useLanguage } from "../context/LanguageContext";
+import { useChangePassword, useDeleteMyAccount } from "../hooks/useUserProfile";
 import { useNavigate } from "react-router-dom";
-import Button from "../components/ui/Button"; // (Votre composant bouton)
+import Button from "../components/ui/Button";
 import { Sun, Moon, Bell, Globe, Key, Trash2, Loader2 } from "lucide-react";
 
 // --- Section 1: Formulaire de Changement de Mot de Passe ---
@@ -168,7 +168,7 @@ const DeleteAccountSection = () => {
 // (Fusionne votre 'SettingsPage' et 'AccountSettingsPage')
 const AccountSettingsPage = () => {
   const { theme, setTheme } = useTheme();
-  const { language, setLanguage, supportedLanguages } = useLanguage();
+  // const { language, setLanguage, supportedLanguages } = useLanguage();
 
   const handleThemeChange = (newTheme) => {
     if (theme !== newTheme) setTheme(newTheme);
@@ -220,7 +220,7 @@ const AccountSettingsPage = () => {
           </section>
 
           {/* --- Section Langue (Votre code) --- */}
-          <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700">
+          {/* <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700">
             <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100 flex items-center">
               <Globe className="w-5 h-5 mr-2 text-green-600" />
               Langue
@@ -238,7 +238,7 @@ const AccountSettingsPage = () => {
                 ))}
               </select>
             </div>
-          </section>
+          </section> */}
 
           {/* --- Section Sécurité (Nouvelle) --- */}
           <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700">

@@ -3,7 +3,7 @@ import React, { useState, useMemo } from "react";
 import MainLayout from "../components/layouts/MainLayout";
 import ProfileEditModal from "../components/ProfileEditModal";
 import { Edit, QrCode } from "lucide-react";
-import { Link } from "react-router-dom"; // ✅ Ajout de l'import pour Link
+import { Link } from "react-router-dom";
 
 // Les hooks sont importés depuis leurs fichiers respectifs
 import {

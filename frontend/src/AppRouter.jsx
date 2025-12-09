@@ -52,7 +52,7 @@ const AppRouter = () => {
           path="/my-qrcodes"
           element={
             <PrivateRoute
-              allowedRoles={["Participant", "Organisateur", "administrateur"]}
+              allowedRoles={["Participant", "Organisateur", "Administrateur"]}
             >
               <UserQrCodesPage />
             </PrivateRoute>
@@ -62,7 +62,7 @@ const AppRouter = () => {
         <Route
           path="/scan"
           element={
-            <PrivateRoute allowedRoles={["Organisateur", "administrateur"]}>
+            <PrivateRoute allowedRoles={["Organisateur", "Administrateur"]}>
               <ScanQrPage />
             </PrivateRoute>
           }
@@ -71,7 +71,7 @@ const AppRouter = () => {
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute allowedRoles={["Organisateur", "administrateur"]}>
+            <PrivateRoute allowedRoles={["Organisateur", "Administrateur"]}>
               <DashboardPage />
             </PrivateRoute>
           }
@@ -83,7 +83,7 @@ const AppRouter = () => {
         <Route
           path="/createevent"
           element={
-            <PrivateRoute allowedRoles={["Organisateur", "administrateur"]}>
+            <PrivateRoute allowedRoles={["Organisateur", "Administrateur"]}>
               <EventForm />
             </PrivateRoute>
           }
@@ -100,7 +100,7 @@ const AppRouter = () => {
         <Route
           path="/admin"
           element={
-            <PrivateRoute allowedRoles={["administrateur"]}>
+            <PrivateRoute allowedRoles={["Administrateur"]}>
               <AdminDashboard />
             </PrivateRoute>
           }
@@ -109,7 +109,7 @@ const AppRouter = () => {
           path="/account-settings"
           element={
             <PrivateRoute
-              allowedRoles={["Participant", "Organisateur", "administrateur"]}
+              allowedRoles={["Participant", "Organisateur", "Administrateur"]}
             >
               <AccountSettingsPage />
             </PrivateRoute>

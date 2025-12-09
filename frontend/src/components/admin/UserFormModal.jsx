@@ -11,7 +11,7 @@ const UserFormModal = ({
   isSubmitting,
 }) => {
   // Rôles possibles (correspondant à votre backend)
-  const ROLES = ["Participant", "Organisateur", "administrateur"];
+  const ROLES = ["Participant", "Organisateur", "Administrateur"];
   const SEXES = ["Homme", "Femme", "Autre"];
 
   const [formData, setFormData] = useState({

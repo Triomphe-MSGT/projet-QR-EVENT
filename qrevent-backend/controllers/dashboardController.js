@@ -2,16 +2,14 @@ const Event = require("../models/event");
 const Inscription = require("../models/inscription");
 const mongoose = require("mongoose");
 const User = require("../models/user");
-const { Parser } = require("json2csv"); // Assurez-vous d'avoir fait 'npm install json2csv'
+const { Parser } = require("json2csv");
 
 const getOrganizerStats = async (req, res, next) => {
   try {
     const organizerId = req.user.id;
 
-    const organizerEvents = await Event.find({ organizer: organizerId }).select(
-      "_id"
-    );
-    const eventIds = organizerEvents.map((event) => event._id);
+    const organizerEvents = await Event.find({ organizer: organizerId }).select("_id");
+    const eventIds = organizerEvents.map((e) => e._id);
 
     const totalEvents = eventIds.length;
 
@@ -37,22 +35,16 @@ const getOrganizerStats = async (req, res, next) => {
 
 const getAdminStats = async (req, res, next) => {
   try {
-    // Statistiques sur les utilisateurs
     const totalUsers = await User.countDocuments();
     const participantCount = await User.countDocuments({ role: "Participant" });
     const organizerCount = await User.countDocuments({ role: "Organisateur" });
-    const adminCount = await User.countDocuments({ role: "administrateur" });
+    const adminCount = await User.countDocuments({ role: "Administrateur" });
 
-    // Statistiques sur les événements (global)
     const totalEvents = await Event.countDocuments();
-
-    // Statistiques sur les inscriptions (global)
     const totalRegistrations = await Inscription.countDocuments();
     const qrValidated = await Inscription.countDocuments({ isValidated: true });
 
-    // Calcul de la moyenne (évite division par zéro)
-    const avgPerEvent =
-      totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : 0;
+    const avgPerEvent = totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : 0;
 
     res.json({
       totalUsers,
@@ -70,17 +62,22 @@ const getAdminStats = async (req, res, next) => {
   }
 };
 
-// --- MODIFIÉ : Génération du rapport CSV complet ---
 const generateAdminReport = async (req, res, next) => {
   try {
-    // --- 1. Récupérer les données statistiques ---
+    // --- Vérification du rôle ---
+    if (req.user.role !== "Administrateur") {
+      return res.status(403).json({ error: "Accès refusé" });
+    }
+
+    // --- 1. Données statistiques ---
     const totalUsers = await User.countDocuments();
     const participantCount = await User.countDocuments({ role: "Participant" });
     const organizerCount = await User.countDocuments({ role: "Organisateur" });
-    const adminCount = await User.countDocuments({ role: "administrateur" });
+    const adminCount = await User.countDocuments({ role: "Administrateur" });
     const totalEvents = await Event.countDocuments();
     const totalRegistrations = await Inscription.countDocuments();
     const qrValidated = await Inscription.countDocuments({ isValidated: true });
+
     const avgPerEvent =
       totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : 0;
 
@@ -91,22 +88,18 @@ const generateAdminReport = async (req, res, next) => {
       { Statistique: "Administrateurs", Valeur: adminCount },
       { Statistique: "Total Événements", Valeur: totalEvents },
       { Statistique: "Total Inscriptions", Valeur: totalRegistrations },
-      { Statistique: "Tickets Validés (Scannés)", Valeur: qrValidated },
-      { Statistique: "Moy. Inscriptions/Événement", Valeur: avgPerEvent },
+      { Statistique: "Tickets Validés", Valeur: qrValidated },
+      { Statistique: "Moyenne inscriptions / événement", Valeur: avgPerEvent },
     ];
 
-    // --- 2. Récupérer la liste des utilisateurs ---
-    // On utilise .lean() pour de meilleures performances (objets JS simples)
+    const statsParser = new Parser({ fields: ["Statistique", "Valeur"], delimiter: ";" });
+    const statsCsv = statsParser.parse(statsData);
+
+    // --- 2. Utilisateurs ---
     const allUsers = await User.find({})
       .select("nom email role sexe profession")
       .lean();
 
-    // --- 3. Créer le CSV pour les statistiques ---
-    const statsFields = ["Statistique", "Valeur"];
-    const statsParser = new Parser({ fields: statsFields, delimiter: ";" });
-    const statsCsv = statsParser.parse(statsData);
-
-    // --- 4. Créer le CSV pour la liste des utilisateurs ---
     const userFields = [
       { label: "Nom", value: "nom" },
       { label: "Email", value: "email" },
@@ -114,27 +107,24 @@ const generateAdminReport = async (req, res, next) => {
       { label: "Sexe", value: "sexe" },
       { label: "Profession", value: "profession" },
     ];
+
     const userParser = new Parser({ fields: userFields, delimiter: ";" });
     const usersCsv = userParser.parse(allUsers);
 
-    // --- 5. Combiner les deux CSV en un seul fichier texte ---
-    const combinedCsv = `RAPPORT DE STATISTIQUES GLOBAL
-${statsCsv}
+    // --- 3. Combiner en un seul fichier ---
+    const combinedCsv =
+      `RAPPORT GLOBAL QR-EVENT\n\n` +
+      `${statsCsv}\n\n\n` +
+      `LISTE DE TOUS LES UTILISATEURS\n\n` +
+      `${usersCsv}\n`;
 
-\n\n
-LISTE DE TOUS LES UTILISATEURS
-${usersCsv}
-`;
-
-    // --- 6. Envoyer le fichier CSV combiné ---
+    // --- 4. Envoi du fichier ---
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="rapport_admin_complet_${
-        new Date().toISOString().split("T")[0]
-      }.csv"`
+      `attachment; filename="rapport_admin_${new Date().toISOString().split("T")[0]}.csv"`
     );
-    // Envoyer la chaîne de caractères combinée
+
     res.status(200).send(combinedCsv);
   } catch (error) {
     console.error("❌ Erreur génération rapport admin:", error);

@@ -9,7 +9,7 @@ import { store } from "./app/store";
 import { ThemeProvider } from "./context/ThemeContext";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { LanguageProvider } from "./context/LanguageContext";
+// import { LanguageProvider } from "./context/LanguageContext";
 import { SocketProvider } from "./context/SocketContext";
 
 const clientId =
@@ -20,15 +20,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <LanguageProvider>
-          <ThemeProvider>
-            <GoogleOAuthProvider clientId={clientId}>
-              <SocketProvider>
-                <App />
-              </SocketProvider>
-            </GoogleOAuthProvider>
-          </ThemeProvider>
-        </LanguageProvider>
+        {/* <LanguageProvider> */}
+        <ThemeProvider>
+          <GoogleOAuthProvider clientId={clientId}>
+            <SocketProvider>
+              <App />
+            </SocketProvider>
+          </GoogleOAuthProvider>
+        </ThemeProvider>
+        {/* </LanguageProvider> */}
       </QueryClientProvider>
     </Provider>
   </React.StrictMode>

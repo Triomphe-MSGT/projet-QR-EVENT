@@ -16,7 +16,7 @@ import {
 /**
  * Un composant réutilisable pour structurer chaque point d'aide.
  * Il crée une "carte" visuelle pour chaque explication.
- */
+ */ // Hook personnalisé pour récupérer les événements utilisateur
 const HelpCard = ({ icon, title, children }) => (
   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col sm:flex-row">
     <div className="flex-shrink-0 w-full sm:w-20 h-20 sm:h-auto flex items-center justify-center bg-blue-50 dark:bg-gray-700">

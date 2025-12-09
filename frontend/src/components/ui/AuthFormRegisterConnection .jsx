@@ -58,7 +58,7 @@ const AuthFormRegisterConnection = () => {
       // Redirige en fonction du rôle
       if (role === "Organisateur")
         navigate("/dashboard"); // Vers le dashboard Orga
-      else if (role === "administrateur")
+      else if (role === "Administrateur")
         navigate("/admin"); // Vers le dashboard Admin
       else navigate("/home"); // Pour les Participants
     } catch (err) {
@@ -131,7 +131,7 @@ const AuthFormRegisterConnection = () => {
       const roleUser = data.user.role;
       // Redirige en fonction du rôle
       if (roleUser === "Organisateur") navigate("/dashboard");
-      else if (roleUser === "administrateur") navigate("/admin");
+      else if (roleUser === "Administrateur") navigate("/admin");
       else navigate("/home");
     } catch (err) {
       console.error(err);

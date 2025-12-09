@@ -1,133 +1,195 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../../models/user"); // Assurez-vous que le chemin est bon
+const User = require("../../models/user");
 const { OAuth2Client } = require("google-auth-library");
-const config = require("../../utils/config"); // 1. Importer le fichier config
+const config = require("../../utils/config");
 
-// 2. Initialiser le client avec la variable du config
+// Client OAuth2 pour la connexion via Google
 const client = new OAuth2Client(config.GOOGLE_CLIENT_ID);
 
+/* =========================================================
+   REGISTER - Inscription d'un nouvel utilisateur
+   ========================================================= */
+
+/**
+ * Inscrit un nouvel utilisateur dans la base de données
+ * Hash le mot de passe et génère un token JWT
+ *
+ * @param {import("express").Request} req - Requête HTTP
+ * @param {import("express").Response} res - Réponse HTTP
+ * @param {import("express").NextFunction} next - Middleware de gestion des erreurs
+ */
 const register = async (req, res, next) => {
   try {
-    // 3. Logique d'inscription simplifiée (nom, email, password)
     const { nom, email, password } = req.body;
 
+    // Vérification des champs obligatoires
     if (!nom || !email || !password) {
       return res
         .status(400)
-        .json({ error: "Nom, email et mot de passe sont requis." });
+        .json({ message: "Nom, email et mot de passe sont requis." });
     }
 
+    // Vérifie si l'utilisateur existe déjà
     const existingUser = await User.findOne({ email });
     if (existingUser)
-      return res.status(400).json({ message: "Email déjà utilisé" });
+      return res.status(400).json({ message: "Email déjà utilisé." });
 
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    // Hash du mot de passe
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    // 4. Utiliser Cloudinary (req.file.path)
+    // Gestion de l'image (optionnelle)
     const image = req.file ? req.file.path : null;
 
+    // Création du nouvel utilisateur
     const user = new User({
       nom,
       email,
       passwordHash,
-      image: image,
-      // role, sexe, etc. sont 'default' ou 'required: false' dans le modèle
+      image,
     });
 
     const savedUser = await user.save();
 
-    // 5. Connecter l'utilisateur directement
+    // Génération du JWT
     const token = jwt.sign(
       { id: savedUser._id, role: savedUser.role },
-      config.JWT_SECRET, // Utiliser config.JWT_SECRET,
+      config.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    res.status(201).json({
+    // Supprime le passwordHash avant d'envoyer la réponse
+    const safeUser = savedUser.toObject();
+    delete safeUser.passwordHash;
+
+    return res.status(201).json({
       message: "Inscription réussie",
       token,
-      user: savedUser.toJSON(),
+      user: safeUser,
     });
   } catch (err) {
     next(err);
   }
 };
 
+/* =========================================================
+   LOGIN - Connexion d'un utilisateur
+   ========================================================= */
+
+/**
+ * Connecte un utilisateur existant avec email et mot de passe
+ * Vérifie le mot de passe et retourne un JWT
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password)
+      return res.status(400).json({ message: "Email et mot de passe requis." });
+
     const user = await User.findOne({ email });
     if (!user)
-      return res.status(401).json({ message: "Utilisateur introuvable" });
+      return res.status(401).json({ message: "Utilisateur introuvable." });
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid)
-      return res.status(401).json({ message: "Mot de passe incorrect" });
+    // Vérification du mot de passe
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid)
+      return res.status(401).json({ message: "Mot de passe incorrect." });
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      config.JWT_SECRET, // Utiliser config.JWT_SECRET,
+      config.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    res
-      .status(200)
-      .json({ message: "Connexion réussie", token, user: user.toJSON() });
+
+    const safeUser = user.toObject();
+    delete safeUser.passwordHash;
+
+    return res.status(200).json({
+      message: "Connexion réussie",
+      token,
+      user: safeUser,
+    });
   } catch (err) {
     next(err);
   }
 };
 
+/* =========================================================
+   GOOGLE LOGIN - Connexion via Google OAuth2
+   ========================================================= */
+
+/**
+ * Connecte un utilisateur via un token Google
+ * Crée l'utilisateur s'il n'existe pas encore
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 const googleLogin = async (req, res, next) => {
   try {
     const { token } = req.body;
+    if (!token)
+      return res.status(400).json({ message: "Token Google requis." });
 
-    // --- 6. CORRECTION DE LA FAUTE DE FRAPPE ---
-    // (et utilisation de config au lieu de process.env)
+    // Vérification du token Google
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: config.GOOGLE_CLIENT_ID, // Corrigé !
+      audience: config.GOOGLE_CLIENT_ID,
     });
-    // --- FIN CORRECTION ---
 
     const payload = ticket.getPayload();
     const { email, name, picture } = payload;
 
+    // Vérifie si l'utilisateur existe
     let user = await User.findOne({ email });
 
+    // Création de l'utilisateur si inexistant
     if (!user) {
-      // Si l'utilisateur n'existe pas, on le crée
       const randomPassword = Math.random().toString(36).slice(-8);
       const passwordHash = await bcrypt.hash(randomPassword, 10);
 
       user = new User({
         nom: name,
-        email: email,
-        passwordHash, // Requis par le schéma
-        image: picture, // Image de profil Google
-        role: "Participant", // Rôle par défaut (selon votre user.js)
+        email,
+        passwordHash,
+        image: picture,
+        role: "Participant",
       });
+
       await user.save();
     }
 
-    // Créer notre propre token JWT
+    // Génération du JWT
     const tokenJWT = jwt.sign(
       { id: user._id, role: user.role },
-      config.JWT_SECRET, // Utiliser config.JWT_SECRET,
+      config.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    res.status(200).json({ token: tokenJWT, user: user.toJSON() });
+    const safeUser = user.toObject();
+    delete safeUser.passwordHash;
+
+    return res.status(200).json({
+      message: "Connexion Google réussie",
+      token: tokenJWT,
+      user: safeUser,
+    });
   } catch (err) {
+    // Gestion des erreurs liées au token Google invalide
     if (err.message.includes("Invalid token")) {
-      return res.status(401).json({ message: "Token Google invalide" });
+      return res.status(401).json({ message: "Token Google invalide." });
     }
-    next(err); // Laisse le errorHandler gérer le reste
+    next(err);
   }
 };
 
+// Export des fonctions du controller
 module.exports = {
   register,
   login,

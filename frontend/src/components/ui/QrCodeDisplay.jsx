@@ -24,11 +24,11 @@ const QrCodeDisplay = ({ value, size = 150 }) => {
   return (
     <div className="p-2 bg-white rounded-md flex items-center justify-center">
       <img
-        src={value} // La prop 'value' est déjà une source d'image valide (Data URL)
+        src={value} 
         alt="QR Code de participation"
         width={size}
         height={size}
-        style={{ imageRendering: "pixelated" }} // Assure que le QR code est net
+        style={{ imageRendering: "pixelated" }} 
       />
     </div>
   );

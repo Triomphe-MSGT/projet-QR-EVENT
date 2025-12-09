@@ -1,4 +1,3 @@
-// qrevent-backend/models/Notification.js
 const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema(
@@ -9,7 +8,7 @@ const notificationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    // L'utilisateur qui a causé la notification (optionnel)
+    // L'utilisateur qui a causé la notification
     sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -18,7 +17,7 @@ const notificationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // Lien vers lequel la notif doit rediriger (ex: /events/123)
+    // Lien vers lequel la notif doit rediriger
     link: {
       type: String,
     },

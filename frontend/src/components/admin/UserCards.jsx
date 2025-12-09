@@ -10,7 +10,7 @@ const UserCards = () => {
   const totalUsers = users.length;
   const participantCount = users.filter((u) => u.role === "Participant").length;
   const organizerCount = users.filter((u) => u.role === "Organisateur").length;
-  const adminCount = users.filter((u) => u.role === "administrateur").length;
+  const adminCount = users.filter((u) => u.role === "Administrateur").length;
 
   if (isLoading) {
     return (

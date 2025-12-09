@@ -1,19 +1,7 @@
-// src/components/profile/UserEventsList.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { useUserEvents } from "../../hooks/userProfileHooks"; // Hook personnalisé pour récupérer les événements utilisateur
+import { useUserEvents } from "../../hooks/userProfileHooks";
 
-/**
- * ────────────────────────────────────────────────────────────────
- * Composant : UserEventsList
- * ────────────────────────────────────────────────────────────────
- * Affiche les événements auxquels l'utilisateur :
- *   - Participe
- *   - Ou qu'il organise
- *
- * Gère également l'affichage d'une modale pour visualiser un QR code
- * lié à un ticket d'entrée (pour les événements participés).
- */
 const UserEventsList = () => {
   const { data: eventsData, isLoading, isError, error } = useUserEvents();
 

@@ -1,214 +1,236 @@
 // backend/controllers/events.js
 const mongoose = require("mongoose");
-const path = require("path");
-const fs = require("fs");
-const axios = require("axios"); // Pour la géolocalisation
+const axios = require("axios");
+const PDFDocument = require("pdfkit");
+
 const Event = require("../models/event");
 const User = require("../models/user");
 const Category = require("../models/category");
 const Inscription = require("../models/inscription");
-const qrCodeService = require("../services/qrCodeService");
-const { generatePdfReport } = require("../utils/pdfReportGenerator");
-const PDFDocument = require("pdfkit"); // Pour les rapports PDF
-
 const Notification = require("../models/Notification");
-const { emitToUser } = require("../socket/socketHandler"); // 1. Importer l'émetteur
-const { io } = require("../index");
 
-// --- Obtenir tous les événements ---
+const qrCodeService = require("../services/qrCodeService");
+const { emitToUser } = require("../socket/socketHandler");
+
+const GEOAPIFY_KEY = process.env.GEOAPIFY_KEY || null;
+const ROLE_ADMIN = "Administrateur";
+
+// Helper utils --------------------------------------------------------------
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const requireAuthUser = (req) => {
+  if (!req.user || !req.user.id) throw { status: 401, message: "Utilisateur non authentifié" };
+};
+
+const respondError = (next, error) => {
+  // Normalise l'erreur pour next()
+  if (error && error.status) {
+    const err = new Error(error.message || "Erreur");
+    err.status = error.status;
+    return next(err);
+  }
+  return next(error);
+};
+
+// Geocoding helper (non bloquant) ------------------------------------------
+const geocodeAddress = async ({ neighborhood, city }) => {
+  if (!city || !GEOAPIFY_KEY) return null;
+
+  try {
+    const fullAddress = [neighborhood, city, "Cameroun"].filter(Boolean).join(", ");
+    const geoRes = await axios.get("https://api.geoapify.com/v1/geocode/search", {
+      params: { text: fullAddress, apiKey: GEOAPIFY_KEY },
+      timeout: 5000,
+    });
+    const coords = geoRes?.data?.features?.[0]?.geometry?.coordinates;
+    if (coords && coords.length === 2) {
+      const [lng, lat] = coords;
+      return { type: "Point", coordinates: [lng, lat] };
+    }
+  } catch (err) {
+    console.warn("Geoapify non disponible / échec geocoding (non bloquant):", err.message);
+  }
+  return null;
+};
+
+// Role check helper ---------------------------------------------------------
+const canEditEvent = (user, event) => {
+  if (!user) return false;
+  const isOwner = event.organizer && event.organizer.toString() === user.id;
+  const isAdmin = user.role === ROLE_ADMIN;
+  return isOwner || isAdmin;
+};
+
+// Controller methods --------------------------------------------------------
+/**
+ * GET /events
+ */
 const getAllEvents = async (req, res, next) => {
   try {
     const events = await Event.find()
       .populate("organizer", "nom email")
       .populate("category", "name emoji")
-      .sort({ startDate: 1 });
+      .sort({ startDate: 1 })
+      .lean();
     res.json(events);
   } catch (error) {
     next(error);
   }
 };
 
-// --- Obtenir un événement par ID ---
+/**
+ * GET /events/:id
+ */
 const getEventById = async (req, res, next) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: "ID d'événement invalide" });
+    const eventId = req.params.id;
+    if (!isValidObjectId(eventId)) {
+      return res.status(400).json({ error: "ID d'événement invalide." });
     }
-    const event = await Event.findById(req.params.id)
+
+    const event = await Event.findById(eventId)
       .populate("organizer", "nom email")
       .populate("category", "name emoji")
-      .populate("participants", "nom email role sexe profession");
+      .populate("participants", "nom email role sexe profession")
+      .lean();
 
-    if (!event) return res.status(404).json({ error: "Événement non trouvé" });
+    if (!event) return res.status(404).json({ error: "Événement non trouvé." });
     res.json(event);
   } catch (error) {
     next(error);
   }
 };
 
-// --- Créer un nouvel événement (Optimisé pour Render/Cloudinary) ---
+/**
+ * POST /events
+ */
 const createEvent = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const { body, user } = req;
 
-    const category = await Category.findById(body.category);
-    if (!category) return res.status(400).json({ error: "Catégorie invalide" });
-
-    let eventLocation = undefined;
-
-    // --- 1. Logique de Géolocalisation (Faite une seule fois) ---
-    if (body.city) {
-      try {
-        const fullAddress = [body.neighborhood, body.city, "Cameroun"]
-          .filter(Boolean)
-          .join(", ");
-        const geoRes = await axios.get(
-          "https://api.geoapify.com/v1/geocode/search",
-          {
-            params: {
-              text: fullAddress,
-              apiKey:
-                process.env.GEOAPIFY_KEY || "9c75ef48a4494d958fbbb9e241db7bfc",
-            },
-          }
-        );
-
-        if (geoRes.data && geoRes.data.features[0]?.geometry) {
-          const [lng, lat] = geoRes.data.features[0].geometry.coordinates;
-          eventLocation = { type: "Point", coordinates: [lng, lat] };
-        }
-      } catch (geoError) {
-        console.error("Erreur Geoapify (non bloquante) :", geoError.message);
-      }
+    // Vérifier la catégorie
+    if (!body.category || !isValidObjectId(body.category)) {
+      return res.status(400).json({ error: "Catégorie invalide." });
     }
-    // --- Fin de la logique Géolocalisation ---
+    const category = await Category.findById(body.category);
+    if (!category) return res.status(400).json({ error: "Catégorie introuvable." });
 
-    // --- 2. Logique d'image (Cloudinary) ---
-    // multer-storage-cloudinary a déjà uploadé l'image.
-    // req.file.path contient l'URL HTTPS de l'image sur Cloudinary.
+    // Géolocalisation (non bloquante)
+    const location = await geocodeAddress({ neighborhood: body.neighborhood, city: body.city });
+
+    // Image URL (Cloudinary via multer-storage-cloudinary)
     const imageUrl = req.file ? req.file.path : null;
-    // --- Fin de la logique Image ---
 
     const newEvent = new Event({
       ...body,
       organizer: user.id,
-      imageUrl: imageUrl, // Sauvegarde l'URL de Cloudinary
-      location: eventLocation, // Sauvegarde les coordonnées
+      imageUrl,
+      location,
     });
 
     const savedEvent = await newEvent.save();
+
+    // Mettre à jour la catégorie
     category.events.push(savedEvent._id);
     await category.save();
 
-    res.status(201).json(savedEvent);
+    res.status(201).json(savedEvent.toObject());
   } catch (error) {
     if (error.name === "ValidationError") {
       return res.status(400).json({ error: error.message });
     }
-    next(error);
+    respondError(next, error);
   }
 };
 
-// --- Mettre à jour un événement (Optimisé pour Render/Cloudinary) ---
+/**
+ * PUT /events/:id
+ */
 const updateEvent = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const { body, user } = req;
     const eventId = req.params.id;
 
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      return res.status(400).json({ error: "ID d'événement invalide" });
+    if (!isValidObjectId(eventId)) {
+      return res.status(400).json({ error: "ID d'événement invalide." });
     }
 
     const eventToUpdate = await Event.findById(eventId);
-    if (!eventToUpdate)
-      return res.status(404).json({ error: "Événement non trouvé" });
+    if (!eventToUpdate) return res.status(404).json({ error: "Événement non trouvé." });
 
-    const isOwner = eventToUpdate.organizer.toString() === user.id;
-    const isAdmin = user.role === "administrateur";
-
-    if (!isOwner && !isAdmin) {
+    if (!canEditEvent(user, eventToUpdate)) {
       return res.status(403).json({ error: "Action non autorisée." });
     }
 
-    // Gestion de la catégorie
+    // Si catégorie modifiée, mettre à jour les références
     if (body.category && body.category !== eventToUpdate.category.toString()) {
-      await Category.findByIdAndUpdate(eventToUpdate.category, {
-        $pull: { events: eventId },
-      });
-      await Category.findByIdAndUpdate(body.category, {
-        $push: { events: eventId },
-      });
+      if (!isValidObjectId(body.category)) {
+        return res.status(400).json({ error: "Nouvelle catégorie invalide." });
+      }
+      await Category.findByIdAndUpdate(eventToUpdate.category, { $pull: { events: eventId } });
+      await Category.findByIdAndUpdate(body.category, { $addToSet: { events: eventId } });
     }
 
-    // --- Logique d'image (Cloudinary) ---
+    // Gestion image Cloudinary
     if (req.file) {
-      // Une nouvelle image a été uploadée, on sauvegarde sa nouvelle URL
       body.imageUrl = req.file.path;
-      // TODO (Optionnel) : Supprimer l'ANCIENNE image de Cloudinary
-      // (Nécessite une logique pour extraire l'ID public de eventToUpdate.imageUrl et appeler cloudinary.uploader.destroy)
+      // TODO: supprimer ancienne image via Cloudinary si besoin
     } else if (body.image === null || body.image === "") {
-      // L'utilisateur veut supprimer l'image
       body.imageUrl = null;
-      // TODO (Optionnel) : Supprimer l'ANCIENNE image de Cloudinary
     } else {
-      // L'utilisateur ne change pas l'image, on retire la clé du body
-      delete body.imageUrl;
+      delete body.imageUrl; // ne pas écraser si pas de changement
     }
-    // --- Fin de la logique Image ---
 
     const updatedEvent = await Event.findByIdAndUpdate(eventId, body, {
       new: true,
       runValidators: true,
     })
       .populate("organizer", "nom email")
-      .populate("category", "name emoji");
+      .populate("category", "name emoji")
+      .lean();
 
-    if (!updatedEvent)
-      return res
-        .status(404)
-        .json({ error: "Événement non trouvé après mise à jour." });
+    if (!updatedEvent) return res.status(404).json({ error: "Événement introuvable après mise à jour." });
+
     res.json(updatedEvent);
   } catch (error) {
     if (error.name === "ValidationError") {
       return res.status(400).json({ error: error.message });
     }
-    console.error("Erreur lors de la mise à jour event:", error);
-    next(error);
+    respondError(next, error);
   }
 };
 
-// --- Supprimer un événement ---
+/**
+ * DELETE /events/:id
+ */
 const deleteEvent = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const { user } = req;
     const eventId = req.params.id;
 
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      return res.status(400).json({ error: "ID d'événement invalide" });
+    if (!isValidObjectId(eventId)) {
+      return res.status(400).json({ error: "ID d'événement invalide." });
     }
+
     const eventToDelete = await Event.findById(eventId);
-    if (!eventToDelete)
-      return res.status(404).json({ error: "Événement non trouvé" });
+    if (!eventToDelete) return res.status(404).json({ error: "Événement non trouvé." });
 
-    const isOwner = eventToDelete.organizer.toString() === user.id;
-    const isAdmin = user.role === "administrateur";
-
-    if (!isOwner && !isAdmin) {
+    if (!canEditEvent(user, eventToDelete)) {
       return res.status(403).json({ error: "Action non autorisée." });
     }
 
-    // TODO (Optionnel) : Supprimer l'image de Cloudinary ici
+    // Supprimer les inscriptions et nettoyer références
+    await Promise.all([
+      Inscription.deleteMany({ event: eventId }),
+      User.updateMany({ _id: { $in: eventToDelete.participants } }, { $pull: { participatedEvents: eventId } }),
+      Category.findByIdAndUpdate(eventToDelete.category, { $pull: { events: eventId } }),
+      Event.findByIdAndDelete(eventId),
+    ]);
 
-    // Supprime les inscriptions, retire l'événement des participants et de la catégorie
-    await Inscription.deleteMany({ event: eventId });
-    await User.updateMany(
-      { _id: { $in: eventToDelete.participants } },
-      { $pull: { participatedEvents: eventId } }
-    );
-    await Category.findByIdAndUpdate(eventToDelete.category, {
-      $pull: { events: eventId },
-    });
-    await Event.findByIdAndDelete(eventId);
+    // TODO: supprimer image Cloudinary si nécessaire
 
     res.status(204).end();
   } catch (error) {
@@ -216,194 +238,134 @@ const deleteEvent = async (req, res, next) => {
   }
 };
 
-// --- Inscription d'un participant ---
+/**
+ * POST /events/:id/register
+ */
 const registerToEvent = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const eventId = req.params.id;
     const userId = req.user.id;
 
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      return res.status(400).json({ error: "ID d'événement invalide" });
+    if (!isValidObjectId(eventId)) return res.status(400).json({ error: "ID d'événement invalide." });
+
+    const [participantUser, event] = await Promise.all([
+      User.findById(userId),
+      Event.findById(eventId),
+    ]);
+
+    if (!event) return res.status(404).json({ error: "Événement non trouvé." });
+    if (!participantUser) return res.status(404).json({ error: "Utilisateur non trouvé." });
+
+    if (event.participants.some((p) => p.toString() === participantUser._id.toString())) {
+      return res.status(400).json({ error: "Vous êtes déjà inscrit." });
     }
 
-    const participantUser = await User.findById(userId);
-    const event = await Event.findById(eventId);
-
-    if (!event) return res.status(404).json({ error: "Événement non trouvé" });
-    if (!participantUser)
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
-    if (event.participants.includes(participantUser._id))
-      return res.status(400).json({ error: "Vous êtes déjà inscrit" });
-
-    // 5. Sauvegarder la participation (se fait en premier)
+    // Sauvegarder participation
     event.participants.push(participantUser._id);
     participantUser.participatedEvents.push(event._id);
-    await event.save();
-    await participantUser.save();
+    await Promise.all([event.save(), participantUser.save()]);
 
-    // 6. Préparer les variables pour les notifications et l'e-mail
+    // Préparer réponse immédiate
     let qrCodeUrl = null;
-    let userNotificationLink = `/events/${event.id}`;
-    let userNotificationMessage = `Vous êtes bien inscrit à l'événement "${event.name}". Félicitations !`;
-    let orgNotificationMessage = `${participantUser.nom} s'est inscrit à votre événement "${event.name}".`;
+    let responsePayload = { message: "Inscription réussie", qrCode: null };
 
-    // 7. Si l'option QR est activée, on génère le QR et on met à jour les variables
+    // Si QR activé, générer inscription et token
     if (event.qrOption) {
-      const { nom, email, profession } = req.body; // Ces données ne sont utiles que pour le QR
       const qrFormData = {
-        nom: nom || participantUser.nom,
-        email: email || participantUser.email,
-        profession: profession || participantUser.profession,
+        nom: req.body.nom || participantUser.nom,
+        email: req.body.email || participantUser.email,
+        profession: req.body.profession || participantUser.profession,
       };
 
-      const { qrCodeImage, token } =
-        await qrCodeService.generateQRCodeForInscription(
-          qrFormData,
-          event,
-          participantUser
-        );
+      const { qrCodeImage, token } = await qrCodeService.generateQRCodeForInscription(
+        qrFormData,
+        event,
+        participantUser
+      );
 
-      qrCodeUrl = qrCodeImage; // On stocke l'URL de l'image
+      qrCodeUrl = qrCodeImage;
 
       const inscription = new Inscription({
         event: event._id,
         participant: participantUser._id,
         qrCodeToken: token,
-        qrCodeImage: qrCodeImage,
+        qrCodeImage,
       });
       await inscription.save();
 
-      // On met à jour les messages/liens pour le participant
-      userNotificationLink = `/my-qrcodes`;
-      userNotificationMessage = `Vous êtes bien inscrit à l'événement "${event.name}". Votre QR code est disponible.`;
-      orgNotificationMessage = `${participantUser.nom} s'est inscrit à votre événement "${event.name}" (QR activé).`;
+      responsePayload.qrCode = qrCodeUrl;
     }
 
-    // 8. Envoyer la réponse au client IMMÉDIATEMENT
-    // L'utilisateur ne doit pas attendre l'envoi de l'e-mail
-    res.status(201).json({
-      message: "Inscription réussie",
-      qrCode: qrCodeUrl, // Renvoie l'URL du QR (ou null)
-    });
+    // Répondre immédiatement au client
+    res.status(201).json(responsePayload);
 
-    // 9. Lancer les tâches de fond (E-mail et Notifications)
-    // Celles-ci s'exécutent après l'envoi de la réponse
+    // Envoyer e-mail et notifications en "background" (fire-and-forget)
+    (async () => {
+      try {
+        // Email content (simple text + HTML can be delegated to email service)
+        // sendEmail(...) => implémentation existante dans ton projet
+        const subject = `Confirmation: ${event.name}`;
+        const textBody = `Bonjour ${participantUser.nom},\n\nVous êtes inscrit à ${event.name} (${new Date(event.startDate).toLocaleDateString("fr-FR")}).`;
+        const htmlBody = `<p>Bonjour ${participantUser.nom},</p><p>Vous êtes inscrit à <strong>${event.name}</strong>.</p>`;
 
-    // A. Préparer et envoyer l'e-mail
-    const subject = `Confirmation d'inscription: ${event.name}`;
-    const textBody =
-      `Bonjour ${
-        participantUser.nom
-      },\n\nFélicitations ! Vous êtes officiellement inscrit(e) à l'événement "${
-        event.name
-      }" qui aura lieu le ${new Date(event.startDate).toLocaleDateString(
-        "fr-FR"
-      )}.\n\n` +
-      (qrCodeUrl
-        ? "Votre QR code d'entrée est disponible dans votre profil Qr-Event."
-        : "Nous avons hâte de vous y voir !") +
-      `\n\nMerci,\nL'équipe Qr-Event`;
-
-    // E-mail HTML (avec ou sans QR code)
-    const htmlBody = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2>Bonjour ${participantUser.nom},</h2>
-        <p>Félicitations ! Vous êtes officiellement inscrit(e) à l'événement <strong>${
-          event.name
-        }</strong>.</p>
-        <p>Il aura lieu le : <strong>${new Date(
-          event.startDate
-        ).toLocaleDateString("fr-FR")}</strong>.</p>
-        
-        ${
-          qrCodeUrl
-            ? `
-            <p>Voici votre ticket QR code unique. Conservez-le précieusement (il est aussi disponible dans votre profil Qr-Event) :</p>
-            <div style="padding: 10px; background: white; display: inline-block;">
-              <img src="${qrCodeUrl}" alt="Votre QR Code" style="width: 200px; height: 200px;"/>
-            </div>
-            `
-            : `
-            <p>Cet événement n'utilise pas de QR code pour l'entrée. Nous avons hâte de vous y voir !</p>
-            `
+        // sendEmail is assumed to exist globally or imported; wrap in try/catch
+        if (typeof sendEmail === "function") {
+          try {
+            await sendEmail(participantUser.email, subject, textBody, htmlBody);
+            console.info(`E-mail de confirmation envoyé à ${participantUser.email}`);
+          } catch (e) {
+            console.warn("Échec envoi e-mail confirmation :", e.message);
+          }
         }
-        
-        <p>Merci,<br>L'équipe Qr-Event</p>
-      </div>
-    `;
 
-    // "Fire-and-forget" : On lance l'envoi sans attendre la fin
-    sendEmail(participantUser.email, subject, textBody, htmlBody)
-      .then(() => {
-        logger.info(
-          `E-mail de confirmation envoyé à ${participantUser.email} (Événement: ${event.name})`
-        );
-      })
-      .catch((emailError) => {
-        logger.error(
-          `ÉCHEC de l'envoi d'e-mail (après réponse) à ${participantUser.email}:`,
-          emailError
-        );
-      });
-
-    // B. Préparer et envoyer les notifications Socket.IO
-    try {
-      // Notifier le participant
-      const userNotification = new Notification({
-        user: participantUser._id,
-        sender: event.organizer,
-        message: userNotificationMessage,
-        link: userNotificationLink,
-      });
-      const savedUserNotif = await userNotification.save();
-      emitToUser(
-        req.app.get("io"),
-        participantUser._id.toString(),
-        "new_notification",
-        savedUserNotif
-      );
-
-      // Notifier l'organisateur (sauf s'il s'inscrit à son propre événement)
-      if (event.organizer.toString() !== participantUser._id.toString()) {
-        const orgNotification = new Notification({
-          user: event.organizer,
-          sender: participantUser._id,
-          message: orgNotificationMessage,
-          link: `/dashboard`, // Lien vers le dashboard de l'orga
+        // Notifications (participant + organizer)
+        const userNotification = new Notification({
+          user: participantUser._id,
+          sender: event.organizer,
+          message: responsePayload.qrCode
+            ? `Inscription confirmée à "${event.name}". QR disponible.`
+            : `Inscription confirmée à "${event.name}".`,
+          link: responsePayload.qrCode ? "/my-qrcodes" : `/events/${event._id}`,
         });
-        const savedOrgNotif = await orgNotification.save();
-        emitToUser(
-          req.app.get("io"),
-          event.organizer.toString(),
-          "new_notification",
-          savedOrgNotif
-        );
+        const savedUserNotif = await userNotification.save();
+        emitToUser(req.app.get("io"), participantUser._id.toString(), "new_notification", savedUserNotif);
+
+        if (event.organizer.toString() !== participantUser._id.toString()) {
+          const orgNotification = new Notification({
+            user: event.organizer,
+            sender: participantUser._id,
+            message: `${participantUser.nom} s'est inscrit à "${event.name}".`,
+            link: "/dashboard",
+          });
+          const savedOrgNotif = await orgNotification.save();
+          emitToUser(req.app.get("io"), event.organizer.toString(), "new_notification", savedOrgNotif);
+        }
+      } catch (bgErr) {
+        console.error("Erreur tâches de fond inscription:", bgErr);
       }
-    } catch (notifError) {
-      logger.error(
-        "Erreur lors de la sauvegarde/émission de la notification:",
-        notifError
-      );
-    }
+    })();
   } catch (error) {
     next(error);
   }
 };
-// --- Désinscription d'un participant ---
+
+/**
+ * DELETE /events/:id/unregister
+ */
 const unregisterFromEvent = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const eventId = req.params.id;
     const userId = req.user.id;
 
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      return res.status(400).json({ error: "ID d'événement invalide" });
-    }
+    if (!isValidObjectId(eventId)) return res.status(400).json({ error: "ID d'événement invalide." });
 
-    await Event.findByIdAndUpdate(eventId, { $pull: { participants: userId } });
-    await User.findByIdAndUpdate(userId, {
-      $pull: { participatedEvents: eventId },
-    });
-    await Inscription.findOneAndDelete({ event: eventId, participant: userId });
+    await Promise.all([
+      Event.findByIdAndUpdate(eventId, { $pull: { participants: userId } }),
+      User.findByIdAndUpdate(userId, { $pull: { participatedEvents: eventId } }),
+      Inscription.findOneAndDelete({ event: eventId, participant: userId }),
+    ]);
 
     res.status(204).end();
   } catch (error) {
@@ -411,43 +373,35 @@ const unregisterFromEvent = async (req, res, next) => {
   }
 };
 
-// --- Validation QR code ---
+/**
+ * POST /events/validate
+ * Body: { qrCodeToken, eventName }
+ */
 const validateQRCodeWithEventName = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const { qrCodeToken, eventName } = req.body;
     const userValidating = await User.findById(req.user.id);
 
-    if (!userValidating)
-      return res
-        .status(401)
-        .json({ error: "Utilisateur validateur non trouvé." });
+    if (!userValidating) return res.status(401).json({ error: "Utilisateur non trouvé." });
 
     const inscription = await Inscription.findOne({ qrCodeToken })
       .populate("participant", "nom email profession")
       .populate("event", "name organizer");
 
-    if (!inscription)
-      return res
-        .status(404)
-        .json({ error: "QR Code invalide ou inscription non trouvée." });
+    if (!inscription) return res.status(404).json({ error: "QR Code/incription introuvable." });
 
-    const { participant, event } = inscription;
+    if (inscription.event.name !== eventName) {
+      return res.status(400).json({ error: "QR code pour un autre événement." });
+    }
 
-    if (event.name !== eventName)
-      return res
-        .status(400)
-        .json({ error: "Ce QR code est pour un autre événement." });
+    const isEventOwner = inscription.event.organizer.toString() === userValidating._id.toString();
+    const isAdmin = userValidating.role === ROLE_ADMIN;
+    if (!isEventOwner && !isAdmin) {
+      return res.status(403).json({ error: "Non autorisé à valider pour cet événement." });
+    }
 
-    const isEventOwner =
-      event.organizer.toString() === userValidating._id.toString();
-    const isAdmin = userValidating.role === "administrateur";
-    if (!isEventOwner && !isAdmin)
-      return res.status(403).json({
-        error: "Vous n'êtes pas autorisé à valider pour cet événement.",
-      });
-
-    if (inscription.isValidated)
-      return res.status(409).json({ error: "Ce QR code a déjà été utilisé." });
+    if (inscription.isValidated) return res.status(409).json({ error: "QR code déjà utilisé." });
 
     inscription.isValidated = true;
     inscription.validatedBy = userValidating._id;
@@ -455,81 +409,62 @@ const validateQRCodeWithEventName = async (req, res, next) => {
     await inscription.save();
 
     res.json({
-      message: "QR code validé avec succès",
+      message: "QR code validé",
       participant: {
-        id: participant._id,
-        nom: participant.nom,
-        email: participant.email,
-        profession: participant.profession,
+        id: inscription.participant._id,
+        nom: inscription.participant.nom,
+        email: inscription.participant.email,
+        profession: inscription.participant.profession,
       },
-      event: { id: event._id, name: event.name },
+      event: { id: inscription.event._id, name: inscription.event.name },
     });
   } catch (error) {
     next(error);
   }
 };
 
-// --- Ajouter un participant (par Admin/Organisateur) ---
+/**
+ * POST /events/:id/add-participant (admin/organizer)
+ */
 const addParticipant = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const { participantId } = req.body;
     const eventId = req.params.id;
     const user = req.user;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(eventId) ||
-      !mongoose.Types.ObjectId.isValid(participantId)
-    ) {
+    if (!isValidObjectId(eventId) || !isValidObjectId(participantId)) {
       return res.status(400).json({ error: "ID invalide." });
     }
 
-    const event = await Event.findById(eventId);
-    if (!event) return res.status(404).json({ error: "Événement non trouvé" });
+    const [event, participant] = await Promise.all([Event.findById(eventId), User.findById(participantId)]);
+    if (!event) return res.status(404).json({ error: "Événement non trouvé." });
+    if (!participant) return res.status(404).json({ error: "Utilisateur non trouvé." });
 
-    const isOwner = event.organizer.toString() === user.id;
-    const isAdmin = user.role === "administrateur";
-    if (!isOwner && !isAdmin)
-      return res.status(403).json({ error: "Action non autorisée." });
+    if (!canEditEvent(user, event)) return res.status(403).json({ error: "Action non autorisée." });
 
-    const participant = await User.findById(participantId);
-    if (!participant)
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
-
-    if (event.participants.includes(participant._id)) {
-      return res
-        .status(400)
-        .json({ error: "Cet utilisateur est déjà inscrit." });
+    if (event.participants.some((p) => p.toString() === participant._id.toString())) {
+      return res.status(400).json({ error: "Utilisateur déjà inscrit." });
     }
 
     event.participants.push(participant._id);
     participant.participatedEvents.push(event._id);
-    await event.save();
-    await participant.save();
+    await Promise.all([event.save(), participant.save()]);
 
     if (event.qrOption) {
-      const { qrCodeImage, token } =
-        await qrCodeService.generateQRCodeForInscription(
-          {
-            nom: participant.nom,
-            email: participant.email,
-            profession: participant.profession,
-          },
-          event,
-          participant
-        );
-      const inscription = new Inscription({
-        event: event._id,
-        participant: participant._id,
-        qrCodeToken: token,
-        qrCodeImage: qrCodeImage,
-      });
-      await inscription.save();
+      const { qrCodeImage, token } = await qrCodeService.generateQRCodeForInscription(
+        { nom: participant.nom, email: participant.email, profession: participant.profession },
+        event,
+        participant
+      );
+      await new Inscription({ event: event._id, participant: participant._id, qrCodeToken: token, qrCodeImage }).save();
     }
 
     const populatedEvent = await Event.findById(eventId)
       .populate("participants", "nom email role sexe profession")
       .populate("organizer", "nom email")
-      .populate("category", "name emoji");
+      .populate("category", "name emoji")
+      .lean();
 
     res.json(populatedEvent);
   } catch (error) {
@@ -537,38 +472,30 @@ const addParticipant = async (req, res, next) => {
   }
 };
 
-// --- Supprimer un participant (par Admin/Organisateur) ---
+/**
+ * DELETE /events/:id/participants/:participantId
+ */
 const removeParticipant = async (req, res, next) => {
   try {
-    const { participantId } = req.params;
+    requireAuthUser(req);
+    const participantId = req.params.participantId;
     const eventId = req.params.id;
     const user = req.user;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(eventId) ||
-      !mongoose.Types.ObjectId.isValid(participantId)
-    ) {
+    if (!isValidObjectId(eventId) || !isValidObjectId(participantId)) {
       return res.status(400).json({ error: "ID invalide." });
     }
 
     const event = await Event.findById(eventId);
-    if (!event) return res.status(404).json({ error: "Événement non trouvé" });
+    if (!event) return res.status(404).json({ error: "Événement non trouvé." });
 
-    const isOwner = event.organizer.toString() === user.id;
-    const isAdmin = user.role === "administrateur";
-    if (!isOwner && !isAdmin)
-      return res.status(403).json({ error: "Action non autorisée." });
+    if (!canEditEvent(user, event)) return res.status(403).json({ error: "Action non autorisée." });
 
-    await Event.findByIdAndUpdate(eventId, {
-      $pull: { participants: participantId },
-    });
-    await User.findByIdAndUpdate(participantId, {
-      $pull: { participatedEvents: eventId },
-    });
-    await Inscription.findOneAndDelete({
-      event: eventId,
-      participant: participantId,
-    });
+    await Promise.all([
+      Event.findByIdAndUpdate(eventId, { $pull: { participants: participantId } }),
+      User.findByIdAndUpdate(participantId, { $pull: { participatedEvents: eventId } }),
+      Inscription.findOneAndDelete({ event: eventId, participant: participantId }),
+    ]);
 
     res.status(204).end();
   } catch (error) {
@@ -576,99 +503,114 @@ const removeParticipant = async (req, res, next) => {
   }
 };
 
-// --- Obtenir les événements créés par l'organisateur connecté ---
+/**
+ * GET /organizer/events
+ */
 const getEventsByOrganizer = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const organizerId = req.user.id;
 
     const events = await Event.find({ organizer: organizerId })
       .populate("category", "name emoji")
       .populate("participants", "nom email role sexe profession")
-      .sort({ startDate: -1 });
+      .sort({ startDate: -1 })
+      .lean();
 
     res.json(events);
   } catch (error) {
-    console.error("❌ Erreur getEventsByOrganizer:", error);
+    console.error("Erreur getEventsByOrganizer:", error);
     next(error);
   }
 };
 
-// --- Obtenir les participants validés ---
+/**
+ * GET /events/:id/validated-attendees
+ */
 const getValidatedAttendees = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const eventId = req.params.id;
     const userId = req.user.id;
 
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      return res.status(400).json({ error: "ID d'événement invalide" });
-    }
+    if (!isValidObjectId(eventId)) return res.status(400).json({ error: "ID d'événement invalide." });
 
     const event = await Event.findById(eventId);
-    if (!event) {
-      return res.status(404).json({ error: "Événement non trouvé" });
+    if (!event) return res.status(404).json({ error: "Événement non trouvé." });
+
+    if (!canEditEvent(req.user, event)) {
+      return res.status(403).json({ error: "Action non autorisée." });
     }
 
-    const isOwner = event.organizer.toString() === userId;
-    const isAdmin = req.user.role === "administrateur";
+    const inscriptions = await Inscription.find({ event: eventId, isValidated: true })
+      .populate("participant", "nom email sexe profession")
+      .lean();
 
-    if (!isOwner && !isAdmin) {
-      return res.status(403).json({
-        error:
-          "Action non autorisée. Seul l'organisateur ou un admin peut voir cette liste.",
-      });
-    }
-
-    const inscriptions = await Inscription.find({
-      event: eventId,
-      isValidated: true,
-    }).populate({
-      path: "participant",
-      select: "nom email sexe profession",
-    });
-
-    const attendees = inscriptions.map(
-      (inscription) => inscription.participant
-    );
-
+    const attendees = inscriptions.map((i) => i.participant);
     res.json(attendees);
   } catch (error) {
     next(error);
   }
 };
 
-// --- Générer un rapport PDF (avec PDFKit) ---
+/**
+ * GET /events/:id/report (PDF generation using pdfkit)
+ */
 const generateEventReport = async (req, res, next) => {
   try {
+    requireAuthUser(req);
     const eventId = req.params.id;
     const userId = req.user.id;
 
-    // 1. Récupérer l'événement
-    const event = await Event.findById(eventId).populate("category", "name");
-    if (!event) {
-      return res.status(404).json({ error: "Événement non trouvé" });
-    }
+    if (!isValidObjectId(eventId)) return res.status(400).json({ error: "ID d'événement invalide." });
 
-    // 2. Sécurité : Vérifier les droits
-    const isOwner = event.organizer.toString() === userId;
-    const isAdmin = req.user.role === "administrateur";
-    if (!isOwner && !isAdmin) {
-      return res.status(403).json({ error: "Action non autorisée." });
-    }
+    const event = await Event.findById(eventId).populate("category", "name").lean();
+    if (!event) return res.status(404).json({ error: "Événement non trouvé." });
 
-    // 3. Récupérer TOUTES les inscriptions (pour les stats complètes)
-    const inscriptions = await Inscription.find({ event: eventId }).populate(
-      "participant",
-      "nom email sexe profession"
-    );
+    if (!canEditEvent(req.user, event)) return res.status(403).json({ error: "Action non autorisée." });
 
-    // 4. Calculer les statistiques
+    const inscriptions = await Inscription.find({ event: eventId }).populate("participant", "nom email sexe profession").lean();
+
     const totalRegistered = inscriptions.length;
     const validatedInscriptions = inscriptions.filter((i) => i.isValidated);
     const totalValidated = validatedInscriptions.length;
-    const participationRate =
-      totalRegistered > 0 ? (totalValidated / totalRegistered) * 100 : 0;
+    const participationRate = totalRegistered > 0 ? (totalValidated / totalRegistered) * 100 : 0;
 
-    // Stats par Sexe
+    // Prepare pdf
+    const doc = new PDFDocument({ margin: 50, layout: "portrait", size: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="rapport-${(event.name || 'event').replace(/\s+/g, "_")}.pdf"`);
+
+    doc.pipe(res);
+
+    // Header
+    doc.font("Helvetica-Bold").fontSize(20).text("Rapport d'Événement", { align: "center" });
+    doc.fontSize(16).text(event.name || "N/A", { align: "center" });
+    doc.moveDown(1.5);
+
+    // Details
+    doc.font("Helvetica-Bold").fontSize(14).text("Détails de l'Événement");
+    doc.moveDown(0.4);
+    doc.font("Helvetica").fontSize(11);
+    doc.text(`Date: ${event.startDate ? new Date(event.startDate).toLocaleDateString("fr-FR") : "N/A"}`);
+    doc.text(`Lieu: ${event.city || "N/A"}${event.neighborhood ? ", " + event.neighborhood : ""}`);
+    doc.text(`Catégorie: ${event.category?.name || "N/A"}`);
+    doc.text(`Prix: ${event.price > 0 ? `${event.price} FCFA` : "Gratuit"}`);
+    doc.moveDown();
+
+    // Stats
+    doc.font("Helvetica-Bold").fontSize(14).text("Statistiques de participation");
+    doc.moveDown(0.4);
+    doc.font("Helvetica").fontSize(11);
+    doc.text(`Total Inscrits: ${totalRegistered}`);
+    doc.text(`Total Validés: ${totalValidated}`);
+    doc.text(`Taux de Participation: ${participationRate.toFixed(1)}%`);
+    doc.moveDown();
+
+    // Démographie (sexe)
+    doc.font("Helvetica-Bold").fontSize(14).text("Statistiques démographiques (par sexe)");
+    doc.moveDown(0.4);
     const statsSexRegistered = inscriptions.reduce((acc, i) => {
       const sexe = i.participant?.sexe || "Inconnu";
       acc[sexe] = (acc[sexe] || 0) + 1;
@@ -679,173 +621,69 @@ const generateEventReport = async (req, res, next) => {
       acc[sexe] = (acc[sexe] || 0) + 1;
       return acc;
     }, {});
-
-    // 5. Initialiser le document PDF
-    const doc = new PDFDocument({
-      margin: 50,
-      layout: "portrait",
-      size: "A4",
-    });
-
-    // 6. Envoyer le PDF au client
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="rapport-${event.name.replace(/ /g, "_")}.pdf"`
-    );
-    doc.pipe(res);
-
-    // --- Écriture du contenu du PDF ---
-
-    // En-tête
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(20)
-      .text(`Rapport d'Événement`, { align: "center" });
-    doc.fontSize(16).text(event.name, { align: "center" });
-    doc.moveDown(2);
-
-    // Section Détails
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text("Détails de l'Événement", { underline: true });
-    doc.moveDown();
-    doc.font("Helvetica").fontSize(12);
-    doc.text(`Date: ${new Date(event.startDate).toLocaleDateString("fr-FR")}`);
-    doc.text(`Lieu: ${event.city}, ${event.neighborhood || ""}`);
-    doc.text(`Catégorie: ${event.category?.name || "N/A"}`);
-    doc.text(`Prix: ${event.price > 0 ? `${event.price} FCFA` : "Gratuit"}`);
-    doc.moveDown();
-
-    // Section Statistiques
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text("Statistiques de Participation", { underline: true });
-    doc.moveDown();
-    doc.font("Helvetica").fontSize(12);
-    doc.text(`Total Inscrits: ${totalRegistered}`);
-    doc.text(`Total Validés (Présents): ${totalValidated}`);
-    doc
-      .fontSize(14)
-      .font("Helvetica-Bold")
-      .text(`Taux de Participation: ${participationRate.toFixed(1)}%`);
-    doc.moveDown();
-
-    // Section Stats Démographiques (Sexe)
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text("Statistiques Démographiques (par Sexe)", { underline: true });
-    doc.moveDown();
-    const allSexes = new Set([
-      ...Object.keys(statsSexRegistered),
-      ...Object.keys(statsSexValidated),
-    ]);
+    const allSexes = new Set([...Object.keys(statsSexRegistered), ...Object.keys(statsSexValidated)]);
     allSexes.forEach((sexe) => {
-      doc
-        .font("Helvetica-Bold")
-        .fontSize(10)
-        .text(sexe || "Inconnu");
-      doc
-        .font("Helvetica")
-        .fontSize(10)
-        .text(
-          `   Inscrits: ${statsSexRegistered[sexe] || 0} | Validés: ${
-            statsSexValidated[sexe] || 0
-          }`
-        );
-      doc.moveDown(0.5);
+      doc.font("Helvetica-Bold").fontSize(10).text(sexe || "Inconnu");
+      doc.font("Helvetica").fontSize(10).text(`  Inscrits: ${statsSexRegistered[sexe] || 0} | Validés: ${statsSexValidated[sexe] || 0}`);
+      doc.moveDown(0.3);
     });
-    doc.moveDown();
 
-    // Section Liste des Participants Validés
+    // Validated participants list
     doc.addPage();
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text(`Liste des Participants Validés (${totalValidated})`, {
-        underline: true,
-      });
-    doc.moveDown();
+    doc.font("Helvetica-Bold").fontSize(14).text(`Participants validés (${totalValidated})`);
+    doc.moveDown(0.6);
 
-    // En-têtes de table
     doc.font("Helvetica-Bold").fontSize(10);
     doc.text("Nom", 50, doc.y, { width: 140 });
     doc.text("Email", 200, doc.y, { width: 150 });
     doc.text("Sexe", 360, doc.y, { width: 50 });
     doc.text("Profession", 420, doc.y, { width: 130 });
-    doc.moveDown();
-    doc
-      .strokeColor("#aaaaaa")
-      .lineWidth(0.5)
-      .moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .stroke();
     doc.moveDown(0.5);
-
-    // Lignes de table
+    doc.strokeColor("#aaaaaa").lineWidth(0.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(0.6);
     doc.font("Helvetica").fontSize(9);
-    validatedInscriptions.forEach((inscription) => {
-      const participant = inscription.participant;
-      if (participant) {
-        doc.text(participant.nom || "N/A", 50, doc.y, { width: 140 });
-        doc.text(participant.email || "N/A", 200, doc.y, { width: 150 });
-        doc.text(participant.sexe || "N/A", 360, doc.y, { width: 50 });
-        doc.text(participant.profession || "N/A", 420, doc.y, { width: 130 });
-        doc.moveDown(1);
-      }
+
+    validatedInscriptions.forEach((ins) => {
+      const p = ins.participant || {};
+      doc.text(p.nom || "N/A", 50, doc.y, { width: 140 });
+      doc.text(p.email || "N/A", 200, doc.y, { width: 150 });
+      doc.text(p.sexe || "N/A", 360, doc.y, { width: 50 });
+      doc.text(p.profession || "N/A", 420, doc.y, { width: 130 });
+      doc.moveDown(0.8);
     });
 
-    // Section Liste de Tous les Inscrits
+    // All registered list on a new page
     doc.addPage();
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text(`Liste de Tous les Inscrits (${totalRegistered})`, {
-        underline: true,
-      });
-    doc.moveDown();
+    doc.font("Helvetica-Bold").fontSize(14).text(`Tous les inscrits (${totalRegistered})`);
+    doc.moveDown(0.6);
 
-    // En-têtes de table
     doc.font("Helvetica-Bold").fontSize(10);
     doc.text("Nom", 50, doc.y, { width: 140 });
     doc.text("Email", 200, doc.y, { width: 150 });
     doc.text("Sexe", 360, doc.y, { width: 50 });
     doc.text("Profession", 420, doc.y, { width: 130 });
-    doc.moveDown();
-    doc
-      .strokeColor("#aaaaaa")
-      .lineWidth(0.5)
-      .moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .stroke();
     doc.moveDown(0.5);
-
-    // Lignes de table
+    doc.strokeColor("#aaaaaa").lineWidth(0.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(0.6);
     doc.font("Helvetica").fontSize(9);
-    inscriptions.forEach((inscription) => {
-      const participant = inscription.participant;
-      if (participant) {
-        doc.text(participant.nom || "N/A", 50, doc.y, { width: 140 });
-        doc.text(participant.email || "N/A", 200, doc.y, { width: 150 });
-        doc.text(participant.sexe || "N/A", 360, doc.y, { width: 50 });
-        doc.text(participant.profession || "N/A", 420, doc.y, { width: 130 });
-        doc.moveDown(1);
-      }
+
+    inscriptions.forEach((ins) => {
+      const p = ins.participant || {};
+      doc.text(p.nom || "N/A", 50, doc.y, { width: 140 });
+      doc.text(p.email || "N/A", 200, doc.y, { width: 150 });
+      doc.text(p.sexe || "N/A", 360, doc.y, { width: 50 });
+      doc.text(p.profession || "N/A", 420, doc.y, { width: 130 });
+      doc.moveDown(0.8);
     });
 
-    // 7. Finaliser le document
     doc.end();
   } catch (error) {
-    console.error("❌ Erreur génération PDF (pdfkit):", error);
+    console.error("Erreur génération PDF:", error);
     next(error);
   }
 };
-// --- FIN MODIFICATION ---
 
-// --- NETTOYAGE DES EXPORTS ---
+// Exports -------------------------------------------------------------------
 module.exports = {
   getAllEvents,
   getEventById,

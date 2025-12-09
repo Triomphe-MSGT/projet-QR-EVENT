@@ -1,4 +1,3 @@
-// qrevent-backend/utils/config.js
 require("dotenv").config();
 
 // --- Variables critiques ---
@@ -7,7 +6,7 @@ const MONGODB_URI =
     ? process.env.TEST_MONGODB_URI
     : process.env.MONGODB_URI;
 
-// Utilise la clé 'JWT_SECRET' de votre .env
+// Utilise la clé 'JWT_SECRET' du.env
 const JWT_SECRET = process.env.JWT_SECRET;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
@@ -20,13 +19,13 @@ const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 const PORT = process.env.PORT || 3001;
 const GEOAPIFY_KEY = process.env.GEOAPIFY_KEY;
 
-// --- Vérifications de sécurité ---
+
 if (!MONGODB_URI) {
   console.error("ERREUR CRITIQUE: MONGODB_URI n'est pas défini dans .env");
   process.exit(1);
 }
 if (!JWT_SECRET) {
-  // Vérifie la bonne variable
+ 
   console.error("ERREUR CRITIQUE: JWT_SECRET n'est pas défini dans .env");
   process.exit(1);
 }
@@ -44,7 +43,7 @@ if (!CLOUDINARY_API_KEY) {
 module.exports = {
   MONGODB_URI,
   PORT,
-  JWT_SECRET, // Exporte la bonne clé
+  JWT_SECRET, 
   GOOGLE_CLIENT_ID,
   CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY,

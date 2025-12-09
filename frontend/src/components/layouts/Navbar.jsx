@@ -124,14 +124,14 @@ const Navbar = () => {
 
     const role = user?.role;
 
-    if (role === "Organisateur" || role === "administrateur") {
+    if (role === "Organisateur" || role === "Administrateur") {
       baseItems.splice(1, 0, {
         label: "Scanner un Ticket",
         icon: ScanLine,
         path: "/scan",
       });
     }
-    if (role === "administrateur") {
+    if (role === "Administrateur") {
       baseItems.splice(1, 0, {
         label: "Admin Dashboard",
         icon: ShieldCheck,
@@ -148,19 +148,17 @@ const Navbar = () => {
     return baseItems;
   }, [user, navigate]);
 
-  // --- CORRECTION 2: Fonction `getAvatarUrl` ---
   // Retourne l’URL ou 'null' si pas d'image
   const getAvatarUrl = (imagePath) => {
     if (!imagePath) {
-      return null; // Renvoie null pour utiliser l'icône par défaut
+      return null;
     }
     if (imagePath.startsWith("http")) {
-      return imagePath; // Pour Cloudinary / Google
+      return imagePath;
     }
     // Construit l'URL avec la base STATIQUE
     return `${STATIC_BASE_URL}/${imagePath}`;
   };
-  // --- FIN CORRECTION ---
 
   // On calcule l'URL de l'avatar une seule fois
   const avatarUrl = user ? getAvatarUrl(user.image) : null;
@@ -226,8 +224,6 @@ const Navbar = () => {
           </h1>
         </Link>
 
-        {/* --- CORRECTION 3: Structure JSX --- */}
-        {/* Tous les boutons sont maintenant au même niveau (siblings) */}
         <div className="flex items-center gap-2 relative">
           {/* Bouton Thème */}
           <button
@@ -355,7 +351,6 @@ const Navbar = () => {
             </>
           )}
         </div>
-        {/* --- FIN CORRECTION 3 --- */}
       </nav>
 
       {/* --- Menu latéral (drawer) --- */}
@@ -450,7 +445,7 @@ const Navbar = () => {
         </>
       )}
 
-      {/* --- Animations (Suggestion: Déplacez ceci dans tailwind.config.js) --- */}
+      {/* --- Animations --- */}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }

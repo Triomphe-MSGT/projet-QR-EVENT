@@ -5,18 +5,18 @@ const path = require("path");
 // --- Configuration des Styles ---
 const FONT_REGULAR = "Helvetica";
 const FONT_BOLD = "Helvetica-Bold";
-const COLOR_PRIMARY = "#0866FF"; // Bleu Qr-Event
+const COLOR_PRIMARY = "#0866FF";
 const COLOR_TEXT = "#333333";
 const COLOR_LIGHT_TEXT = "#777777";
-const COLOR_HEADER_BG = "#F0F2F5"; // Fond de tableau
+const COLOR_HEADER_BG = "#F0F2F5";
 const COLOR_BORDER = "#DDDDDD";
-const LOGO_PATH = path.join(__dirname, "..", "assets", "logo.png"); // Chemin vers votre logo
+const LOGO_PATH = path.join(__dirname, "..", "assets", "logo.png");
 
 async function generatePdfReport(event, inscriptions, stats, res) {
   const doc = new PDFDocument({
     size: "A4",
     margin: 50,
-    bufferPages: true, // Important pour les en-têtes/pieds de page
+    bufferPages: true,
   });
 
   // Pipe le PDF directement dans la réponse HTTP

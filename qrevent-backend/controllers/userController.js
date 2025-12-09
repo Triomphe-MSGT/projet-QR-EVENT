@@ -1,49 +1,52 @@
-// Fichier: qrevent-backend/controllers/userController.js
-
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const Event = require("../models/event");
 const Inscription = require("../models/inscription");
 
-// --- SUPPRIMÉ ---
-// Nous n'utilisons plus 'fs' ou 'path' pour gérer les images
-// const fs = require("fs");
-// const path = require("path");
-// --- FIN SUPPRESSION ---
-
+// -----------------------------------------------------
+// GET : tous les utilisateurs (admin uniquement)
+// -----------------------------------------------------
 const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select("-passwordHash");
+    const users = await User.find().select("-passwordHash").lean();
     res.json(users);
   } catch (error) {
     next(error);
   }
 };
 
+// -----------------------------------------------------
+// GET : utilisateur par ID
+// -----------------------------------------------------
 const getUserById = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select("-passwordHash");
-    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
+    const user = await User.findById(req.params.id)
+      .select("-passwordHash")
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
     res.json(user);
   } catch (error) {
     next(error);
   }
 };
 
+// -----------------------------------------------------
+// POST : création de compte utilisateur
+// -----------------------------------------------------
 const createUser = async (req, res, next) => {
   try {
     const { nom, email, password, role, sexe, profession, phone } = req.body;
 
-    const existing = await User.findOne({ email });
-    if (existing) {
+    const exists = await User.findOne({ email });
+    if (exists) {
       return res.status(400).json({ error: "Cet email est déjà utilisé." });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-
-    // ✅ CORRECT : Utilise l'URL de Cloudinary
-    const imageUrl = req.file ? req.file.path : null;
 
     const newUser = new User({
       nom,
@@ -53,7 +56,7 @@ const createUser = async (req, res, next) => {
       sexe,
       profession,
       phone,
-      image: imageUrl,
+      image: req.file ? req.file.path : null,
     });
 
     const savedUser = await newUser.save();
@@ -63,46 +66,35 @@ const createUser = async (req, res, next) => {
   }
 };
 
+// -----------------------------------------------------
+// PUT : mise à jour d’un utilisateur (Admin ou lui-même)
+// -----------------------------------------------------
 const updateUser = async (req, res, next) => {
   try {
     const targetUser = await User.findById(req.params.id);
     if (!targetUser)
       return res.status(404).json({ error: "Utilisateur non trouvé" });
 
-    if (req.user.role === "Participant") {
-      if (req.user.id !== targetUser.id) {
-        return res.status(403).json({ error: "Accès refusé." });
-      }
-
-      const updateData = {
-        nom: req.body.nom || targetUser.nom,
-        image: req.file ? req.file.path : targetUser.image,
-      };
-
-      const updatedUser = await User.findByIdAndUpdate(
-        req.user.id,
-        updateData,
-        { new: true }
-      );
-      return res.json(updatedUser);
+    // ➤ Participant : peut seulement modifier son propre profil
+    if (req.user.role === "Participant" && req.user.id !== targetUser.id) {
+      return res.status(403).json({ error: "Accès refusé." });
     }
 
-    const { nom, email, role, sexe, profession, phone } = req.body;
+    const updateData = {
+      nom: req.body.nom,
+      email: req.body.email,
+      role: req.body.role,
+      sexe: req.body.sexe,
+      profession: req.body.profession,
+      phone: req.body.phone,
+      image: req.file ? req.file.path : targetUser.image,
+    };
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        nom,
-        email,
-        role,
-        sexe,
-        profession,
-        phone,
-
-        image: req.file ? req.file.path : targetUser.image,
-      },
+      targetUser.id,
+      updateData,
       { new: true, runValidators: true }
-    );
+    ).select("-passwordHash");
 
     res.json(updatedUser);
   } catch (error) {
@@ -110,6 +102,9 @@ const updateUser = async (req, res, next) => {
   }
 };
 
+// -----------------------------------------------------
+// DELETE : suppression d’un utilisateur (Admin uniquement)
+// -----------------------------------------------------
 const deleteUser = async (req, res, next) => {
   try {
     if (req.user.role !== "administrateur") {
@@ -119,14 +114,10 @@ const deleteUser = async (req, res, next) => {
     }
 
     const deletedUser = await User.findByIdAndDelete(req.params.id);
-    if (!deletedUser)
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
 
-    // --- SUPPRESSION ---
-    // La logique 'fs.unlinkSync' est supprimée.
-    // TODO (Optionnel) : Appeler l'API Cloudinary pour supprimer l'image
-    // si 'deletedUser.image' existe.
-    // --- FIN SUPPRESSION ---
+    if (!deletedUser) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
 
     res.status(204).end();
   } catch (error) {
@@ -134,16 +125,16 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+// -----------------------------------------------------
+// GET : profil connecté
+// -----------------------------------------------------
 const getMe = async (req, res, next) => {
   try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ error: "Token manquant ou invalide" });
-    }
+    const user = await User.findById(req.user.id)
+      .select("-passwordHash")
+      .lean();
 
-    const user = await User.findById(req.user.id).select("-passwordHash");
-    if (!user) {
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
-    }
+    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
 
     res.json(user);
   } catch (error) {
@@ -151,109 +142,89 @@ const getMe = async (req, res, next) => {
   }
 };
 
+// -----------------------------------------------------
+// PUT : mise à jour du profil connecté
+// -----------------------------------------------------
 const updateMe = async (req, res, next) => {
   try {
-    const { nom, email, profession, phone, sexe } = req.body;
+    const { email } = req.body;
     const userId = req.user.id;
 
     if (email) {
-      const existingUser = await User.findOne({ email: email });
-      if (existingUser && existingUser._id.toString() !== userId) {
+      const exists = await User.findOne({ email });
+      if (exists && exists._id.toString() !== userId) {
         return res.status(400).json({ error: "Cet email est déjà utilisé." });
       }
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { nom, email, profession, phone, sexe },
+      req.body,
       { new: true, runValidators: true }
     ).select("-passwordHash");
 
-    if (!updatedUser) {
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
-    }
     res.json(updatedUser);
   } catch (error) {
     next(error);
   }
 };
 
+// -----------------------------------------------------
+// POST : upload avatar utilisateur
+// -----------------------------------------------------
 const uploadUserAvatar = async (req, res, next) => {
   try {
-    const userId = req.user.id;
     if (!req.file) {
       return res.status(400).json({ error: "Aucun fichier fourni" });
     }
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
-    }
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
 
-    // --- SUPPRESSION ---
-    // La logique 'fs.unlinkSync' est supprimée.
-    // TODO (Optionnel) : Supprimer l'ancienne image de Cloudinary
-    // --- FIN SUPPRESSION ---
-
-    // --- CORRECTION ---
-    // On sauvegarde la nouvelle URL complète de Cloudinary
+    // Mise à jour avatar
     user.image = req.file.path;
-    // --- FIN CORRECTION ---
+    await user.save();
 
-    const savedUser = await user.save();
-
-    res.json({ image: savedUser.image }); // Renvoie la nouvelle URL
+    res.json({ image: user.image });
   } catch (error) {
     next(error);
   }
 };
 
+// -----------------------------------------------------
+// GET : événements organisés + événements participés
+// -----------------------------------------------------
 const getMyEvents = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    // Récupère les événements que l'utilisateur organise
     const organizedEvents = await Event.find({ organizer: userId })
       .populate("category", "name emoji")
-      .populate("participants", "nom email role sexe profession") // ✅ Important pour le dashboard
-      .sort({ startDate: -1 });
+      .populate("participants", "nom email role sexe profession")
+      .sort({ startDate: -1 })
+      .lean();
 
-    // Récupère les inscriptions (billets) de l'utilisateur
-    const inscriptions = await Inscription.find({
-      participant: userId,
-    })
-      .select("event qrCodeToken qrCodeImage") // On prend l'ID de l'événement, le token et l'image
+    const inscriptions = await Inscription.find({ participant: userId })
+      .select("event qrCodeToken qrCodeImage")
       .populate({
-        path: "event", // On charge les détails de l'événement lié
-        populate: {
-          path: "category", // On charge la catégorie de cet événement
-          select: "name emoji",
-        },
-      });
-
-    // On transforme les inscriptions en une liste d'événements
-    // Votre code ici est déjà correct (il crée un 'id' et passe 'imageUrl')
-    const participatedEvents = inscriptions
-      .map((inscription) => {
-        if (!inscription.event) return null;
-
-        const event = inscription.event;
-
-        return {
-          id: event._id.toString(),
-          name: event.name,
-          startDate: event.startDate,
-          city: event.city,
-          imageUrl: event.imageUrl,
-          category: event.category,
-          // ... (ajoutez 'location' si nécessaire)
-          location: event.location,
-
-          qrCodeToken: inscription.qrCodeToken,
-          qrCodeImage: inscription.qrCodeImage,
-        };
+        path: "event",
+        populate: { path: "category", select: "name emoji" },
       })
-      .filter((event) => event !== null); // On retire les inscriptions invalides
+      .lean();
+
+    const participatedEvents = inscriptions
+      .filter((i) => i.event)
+      .map((i) => ({
+        id: i.event._id,
+        name: i.event.name,
+        startDate: i.event.startDate,
+        city: i.event.city,
+        location: i.event.location,
+        imageUrl: i.event.imageUrl,
+        category: i.event.category,
+        qrCodeToken: i.qrCodeToken,
+        qrCodeImage: i.qrCodeImage,
+      }));
 
     res.json({
       organized: organizedEvents,
@@ -264,118 +235,99 @@ const getMyEvents = async (req, res, next) => {
   }
 };
 
+// -----------------------------------------------------
+// POST : passer de participant → organisateur
+// -----------------------------------------------------
 const upgradeToOrganizer = async (req, res, next) => {
   try {
-    const userId = req.user.id; // Vient du token (middleware userExtractor)
-    const { profession, sexe, phone } = req.body;
+    const user = await User.findById(req.user.id);
 
-    if (!profession || !sexe || !phone) {
+    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé." });
+
+    if (user.role !== "Participant") {
       return res.status(400).json({
-        error:
-          "La profession et le sexe et le numero de telephone sont requis.",
+        error: "Seul un Participant peut devenir Organisateur.",
       });
     }
 
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ error: "Utilisateur non trouvé." });
+    const { profession, sexe, phone } = req.body;
+    if (!profession || !sexe || !phone) {
+      return res.status(400).json({
+        error: "La profession, le sexe et le numéro de téléphone sont requis.",
+      });
     }
 
-    if (user.role !== "Participant") {
-      return res
-        .status(400)
-        .json({ error: "Seul un Participant peut devenir organisateur." });
-    }
-
-    // Mise à jour des informations
     user.role = "Organisateur";
     user.profession = profession;
     user.sexe = sexe;
     user.phone = phone;
 
-    const updatedUser = await user.save();
+    const updated = await user.save();
 
-    res.status(200).json({
-      message: "Félicitations, vous êtes maintenant un organisateur!",
-      user: updatedUser.toJSON(),
+    res.json({
+      message: "Félicitations, vous êtes maintenant Organisateur !",
+      user: updated.toJSON(),
     });
   } catch (error) {
     next(error);
   }
 };
 
+// -----------------------------------------------------
+// PUT : changer mot de passe
+// -----------------------------------------------------
 const changeMyPassword = async (req, res, next) => {
   try {
     const { oldPassword, newPassword } = req.body;
-    const userId = req.user.id; // Vient de userExtractor
 
-    if (!oldPassword || !newPassword) {
+    if (!oldPassword || !newPassword)
+      return res.status(400).json({
+        error: "L'ancien et le nouveau mot de passe sont requis.",
+      });
+
+    if (newPassword.length < 6) {
       return res
         .status(400)
-        .json({ error: "L'ancien et le nouveau mot de passe sont requis." });
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        error: "Le nouveau mot de passe doit faire au moins 6 caractères.",
-      });
+        .json({ error: "Le nouveau mot de passe doit faire au moins 6 caractères." });
     }
 
-    const user = await User.findById(userId); // Récupère l'utilisateur complet
-    if (!user) {
-      return res.status(404).json({ error: "Utilisateur non trouvé." });
-    }
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé." });
 
-    // 1. Vérifier l'ancien mot de passe
     const isMatch = await bcrypt.compare(oldPassword, user.passwordHash);
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ error: "L'ancien mot de passe est incorrect." });
+      return res.status(401).json({ error: "L'ancien mot de passe est incorrect." });
     }
 
-    // 2. Hasher et sauvegarder le nouveau
-    const passwordHash = await bcrypt.hash(newPassword, 10);
-    user.passwordHash = passwordHash;
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
     await user.save();
 
-    // 3. (Optionnel mais recommandé) Révoquer tous les autres tokens/sessions
-    // ... (Logique à ajouter si vous avez un service de tokens)
-
-    res.status(200).json({ message: "Mot de passe mis à jour avec succès." });
+    res.json({ message: "Mot de passe mis à jour avec succès." });
   } catch (error) {
     next(error);
   }
 };
 
-// --- NOUVELLE FONCTION : SUPPRIMER MON COMPTE ---
+// -----------------------------------------------------
+// DELETE : supprimer mon compte
+// -----------------------------------------------------
 const deleteMe = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    // 1. (Optionnel mais propre) Anonymiser ou supprimer les données liées
-    // Par ex, supprimer les inscriptions
     await Inscription.deleteMany({ participant: userId });
 
-    // Par ex, retirer des listes de participants
     await Event.updateMany(
       { participants: userId },
       { $pull: { participants: userId } }
     );
 
-    // (Note: La suppression des événements organisés est plus complexe,
-    // on pourrait les anonymiser ou les supprimer en cascade.
-    // Pour l'instant, nous supprimons juste l'utilisateur.)
-
-    // 2. Supprimer l'utilisateur
     const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {
       return res.status(404).json({ error: "Utilisateur non trouvé." });
     }
 
-    // (TODO: Supprimer l'avatar de Cloudinary)
-
-    res.status(204).end(); // Succès, pas de contenu
+    res.status(204).end();
   } catch (error) {
     next(error);
   }
@@ -392,6 +344,6 @@ module.exports = {
   uploadUserAvatar,
   getMyEvents,
   upgradeToOrganizer,
-  changeMyPassword, // <- Exporter la nouvelle fonction
-  deleteMe, // <- Exporter la nouvelle fonction
+  changeMyPassword,
+  deleteMe,
 };

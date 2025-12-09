@@ -12,7 +12,7 @@ const Footer = () => {
 
   // Définit les rôles qui peuvent voir le bouton "Créer"
   const isCreator =
-    user?.role === "Organisateur" || user?.role === "administrateur";
+    user?.role === "Organisateur" || user?.role === "Administrateur";
 
   // Définition des onglets de navigation
   const navItems = [

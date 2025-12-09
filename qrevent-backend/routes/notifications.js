@@ -7,10 +7,10 @@ const {
   markAllAsRead,
 } = require("../controllers/notificationController");
 
-// ✅ Récupérer les notifications
+// Récupérer les notifications
 router.get("/", userExtractor, getMyNotifications);
 
-// ✅ Marquer comme lues
+// Marquer comme lues
 router.post("/read", userExtractor, markAllAsRead);
 
 module.exports = router;

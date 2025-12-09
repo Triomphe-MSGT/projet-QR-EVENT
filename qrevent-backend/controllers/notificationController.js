@@ -1,35 +1,38 @@
-const Notification = require("../models/Notification"); // Assurez-vous d'avoir ce modèle
+const Notification = require("../models/Notification");
 
-// GET /api/notifications
-// Récupère toutes les notifications pour l'utilisateur connecté
+// --- Récupérer les notifications de l'utilisateur connecté ---
 const getMyNotifications = async (req, res, next) => {
   try {
-    // userExtractor doit avoir été exécuté avant
-    if (!req.user || !req.user.id) {
-      return res.json([]);
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentification requise" });
     }
 
-    const notifications = await Notification.find({ user: req.user.id })
-      .sort({ createdAt: -1 }) // Les plus récentes en premier
-      .limit(20);
-    res.json(notifications);
+    const notifications = await Notification.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean(); // Plus performant, pas d'objets Mongoose
+
+    return res.json(notifications);
   } catch (error) {
     next(error);
   }
 };
 
+// --- Marquer toutes les notifications comme lues ---
 const markAllAsRead = async (req, res, next) => {
   try {
-    if (!req.user || !req.user.id) {
+    const userId = req.user?.id;
+    if (!userId) {
       return res.status(401).json({ error: "Authentification requise" });
     }
 
-    // Met à jour toutes les notifications non lues de cet utilisateur
     await Notification.updateMany(
-      { user: req.user.id, isRead: false },
-      { $set: { isRead: true } }
+      { user: userId, isRead: false },
+      { isRead: true }
     );
-    res.status(204).end(); // Succès, pas de contenu
+
+    return res.status(200).json({ message: "Toutes les notifications ont été marquées comme lues." });
   } catch (error) {
     next(error);
   }

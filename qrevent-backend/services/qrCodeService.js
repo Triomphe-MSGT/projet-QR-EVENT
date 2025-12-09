@@ -32,7 +32,7 @@ const generateQRCodeForInscription = async (
       userId: user._id,
       eventName: event.name,
       participant: {
-        ...participantFormData, // nom, email, profession, don
+        ...participantFormData, 
       },
     });
 
