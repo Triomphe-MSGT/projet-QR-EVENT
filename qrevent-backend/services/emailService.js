@@ -1,4 +1,3 @@
-
 const nodemailer = require("nodemailer");
 const logger = require("../utils/logger");
 
@@ -17,7 +16,9 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
 
   logger.info("📧 SMTP Gmail chargé avec succès.");
 } else {
-  logger.warn("⚠️ EMAIL_USER ou EMAIL_PASS manquant. Le mode STUB est activé.");
+  console.warn(
+    "⚠️ EMAIL_USER ou EMAIL_PASS manquant. Le mode STUB est activé."
+  );
 }
 
 // 2️Fonction générique pour envoyer un email
@@ -25,7 +26,9 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
 const sendEmail = async (to, subject, text, html) => {
   // Mode STUB (aucun envoi réel)
   if (!transporter) {
-    logger.info("📨 MODE STUB - Aucun email envoyé (configuration SMTP absente)");
+    logger.info(
+      "📨 MODE STUB - Aucun email envoyé (configuration SMTP absente)"
+    );
     logger.info("----- EMAIL SIMULÉ -----");
     logger.info(`À : ${to}`);
     logger.info(`Sujet : ${subject}`);
