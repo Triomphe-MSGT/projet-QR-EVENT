@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Button from "./Button/"; // Assurez-vous que le chemin vers Button est correct
 import Togglable from "./Togglable"; // Assurez-vous que le chemin vers Togglable est correct
 import authService from "../../services/authService";
@@ -135,10 +135,11 @@ const AuthFormRegisterConnection = () => {
       else navigate("/home");
     } catch (err) {
       console.error(err);
+      const errorMessage = err.response?.data?.message || err.message;
       setError(
         activeTab === "Inscription"
-          ? "Erreur lors de l'inscription avec Google"
-          : "Erreur lors de la connexion avec Google"
+          ? `Erreur inscription Google: ${errorMessage}`
+          : `Erreur connexion Google: ${errorMessage}`
       );
     } finally {
       setLoading(false);
@@ -249,6 +250,15 @@ const AuthFormRegisterConnection = () => {
               required
               className="w-full p-3 border border-gray-300 dark:border-[#3E4042] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#3A3B3C] dark:text-[#E4E6EB]"
             />
+
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
 
             <Button type="submit" variant="connecter" disabled={loading}>
               {loading ? "Connexion..." : "Se connecter"}

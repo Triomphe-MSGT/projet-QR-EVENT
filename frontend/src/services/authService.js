@@ -24,24 +24,33 @@ const authService = {
 
   register: async (userData) => {
     try {
-      const payload = {
-        nom: userData.nom,
-        email: userData.email,
-        password: userData.password,
-        role: userData.role,
-        sexe: userData.sexe,
-        phone: userData.phone,
-        profession: userData.profession,
-      };
+      const formData = new FormData();
+      formData.append("nom", userData.nom);
+      formData.append("email", userData.email);
+      formData.append("password", userData.password);
+      formData.append("role", userData.role);
+      
+      if (userData.sexe) formData.append("sexe", userData.sexe);
+      if (userData.phone) formData.append("phone", userData.phone);
+      if (userData.profession) formData.append("profession", userData.profession);
 
-      if (["Organisateur"].includes(payload.role)) {
-        payload.phone = userData.phone || "Non renseigné";
-        payload.profession = userData.profession || "Non renseigné";
+      if (["Organisateur"].includes(userData.role)) {
+        if (!userData.phone) formData.append("phone", "Non renseigné");
+        if (!userData.profession) formData.append("profession", "Non renseigné");
       }
 
-      await api.post(`/auth/register`, payload);
+      // Si une image est fournie (supposons qu'elle soit dans userData.image)
+      if (userData.image) {
+        formData.append("image", userData.image);
+      }
 
-      return authService.login(payload.email, payload.password);
+      await api.post(`/auth/register`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return authService.login(userData.email, userData.password);
     } catch (err) {
       console.error(
         "Erreur complète du serveur :",
@@ -86,6 +95,19 @@ const authService = {
       );
     }
   },
+};
+
+export const forgotPassword = async (email) => {
+  const response = await api.post("/auth/forgot-password", { email });
+  return response.data;
+};
+
+export const resetPassword = async (token, newPassword) => {
+  const response = await api.post("/auth/reset-password", {
+    token,
+    newPassword,
+  });
+  return response.data;
 };
 
 export default authService;

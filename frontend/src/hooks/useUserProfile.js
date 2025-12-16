@@ -48,8 +48,8 @@ export const useDeleteMyAccount = () => {
     mutationFn: userProfileService.deleteMyAccount,
     onSuccess: () => {
       // 4. Déconnexion complète de l'utilisateur
-      dispatch(logout()); // Vide Redux et localStorage
-      queryClient.clear(); // Vide le cache React Query
+      dispatch(logout());
+      queryClient.clear();
       // La redirection se fera dans le composant
     },
     onError: (error) => {

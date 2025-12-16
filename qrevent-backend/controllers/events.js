@@ -10,6 +10,7 @@ const Inscription = require("../models/inscription");
 const Notification = require("../models/Notification");
 
 const qrCodeService = require("../services/qrCodeService");
+const { sendEmail } = require("../services/emailService");
 const { emitToUser } = require("../socket/socketHandler");
 
 const GEOAPIFY_KEY = process.env.GEOAPIFY_KEY || null;
@@ -193,6 +194,34 @@ const updateEvent = async (req, res, next) => {
 
     if (!updatedEvent) return res.status(404).json({ error: "Événement introuvable après mise à jour." });
 
+    // --- NOTIFICATIONS AUX PARTICIPANTS ---
+    // On le fait en "fire-and-forget" pour ne pas bloquer la réponse
+    (async () => {
+      try {
+        const participants = updatedEvent.participants || [];
+        const io = req.app.get("io");
+
+        for (const participant of participants) {
+          // Ne pas notifier l'organisateur s'il est dans la liste (peu probable mais possible)
+          if (participant._id.toString() === user.id) continue;
+
+          const message = `L'événement "${updatedEvent.name}" a été modifié par l'organisateur.`;
+          
+          const notification = new Notification({
+            user: participant._id,
+            sender: user.id,
+            message,
+            link: `/events/${updatedEvent._id}`,
+          });
+
+          const savedNotif = await notification.save();
+          emitToUser(io, participant._id.toString(), "new_notification", savedNotif);
+        }
+      } catch (notifError) {
+        console.error("Erreur envoi notifications updateEvent:", notifError);
+      }
+    })();
+
     res.json(updatedEvent);
   } catch (error) {
     if (error.name === "ValidationError") {
@@ -221,6 +250,35 @@ const deleteEvent = async (req, res, next) => {
     if (!canEditEvent(user, eventToDelete)) {
       return res.status(403).json({ error: "Action non autorisée." });
     }
+
+    // --- NOTIFICATIONS AUX PARTICIPANTS (AVANT SUPPRESSION) ---
+    // On le fait en "fire-and-forget"
+    (async () => {
+      try {
+        // Il faut peupler les participants pour avoir leurs IDs
+        const eventWithParticipants = await Event.findById(eventId).populate("participants");
+        const participants = eventWithParticipants.participants || [];
+        const io = req.app.get("io");
+
+        for (const participant of participants) {
+          if (participant._id.toString() === user.id) continue;
+
+          const message = `L'événement "${eventToDelete.name}" a été annulé par l'organisateur.`;
+          
+          const notification = new Notification({
+            user: participant._id,
+            sender: user.id,
+            message,
+            link: "/dashboard", // Rediriger vers le dashboard car l'event n'existe plus
+          });
+
+          const savedNotif = await notification.save();
+          emitToUser(io, participant._id.toString(), "new_notification", savedNotif);
+        }
+      } catch (notifError) {
+        console.error("Erreur envoi notifications deleteEvent:", notifError);
+      }
+    })();
 
     // Supprimer les inscriptions et nettoyer références
     await Promise.all([
@@ -306,17 +364,45 @@ const registerToEvent = async (req, res, next) => {
         // Email content (simple text + HTML can be delegated to email service)
         // sendEmail(...) => implémentation existante dans ton projet
         const subject = `Confirmation: ${event.name}`;
-        const textBody = `Bonjour ${participantUser.nom},\n\nVous êtes inscrit à ${event.name} (${new Date(event.startDate).toLocaleDateString("fr-FR")}).`;
-        const htmlBody = `<p>Bonjour ${participantUser.nom},</p><p>Vous êtes inscrit à <strong>${event.name}</strong>.</p>`;
+        let textBody = `Bonjour ${participantUser.nom},\n\nVous êtes inscrit à ${event.name} (${new Date(event.startDate).toLocaleDateString("fr-FR")}).`;
+        
+        let qrMessage = "";
+        if (qrCodeUrl) {
+          textBody += `\n\nVotre QR Code d'accès est disponible dans l'application.`;
+          qrMessage = `<p style="margin-top: 20px; font-weight: bold; color: #3b82f6;">Votre QR Code d'accès est disponible dans l'application.</p>
+                       <p>Veuillez le présenter à l'entrée.</p>`;
+        }
 
-        // sendEmail is assumed to exist globally or imported; wrap in try/catch
-        if (typeof sendEmail === "function") {
-          try {
-            await sendEmail(participantUser.email, subject, textBody, htmlBody);
-            console.info(`E-mail de confirmation envoyé à ${participantUser.email}`);
-          } catch (e) {
-            console.warn("Échec envoi e-mail confirmation :", e.message);
-          }
+        const htmlBody = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+          <div style="background: linear-gradient(to right, #3b82f6, #4ade80); padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Qr-Event</h1>
+          </div>
+          <div style="padding: 20px; background-color: #ffffff;">
+            <h2 style="color: #1f2937; margin-top: 0;">Bonjour ${participantUser.nom},</h2>
+            <p style="color: #4b5563; line-height: 1.6;">
+              Votre inscription à l'événement <strong>${event.name}</strong> a été confirmée avec succès.
+            </p>
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <p style="margin: 5px 0; color: #374151;"><strong>📅 Date :</strong> ${new Date(event.startDate).toLocaleDateString("fr-FR")}</p>
+              <p style="margin: 5px 0; color: #374151;"><strong>📍 Lieu :</strong> ${event.city}</p>
+            </div>
+            ${qrMessage}
+            <p style="color: #4b5563; margin-top: 20px;">
+              Merci de votre confiance !
+            </p>
+          </div>
+          <div style="background-color: #f9fafb; padding: 15px; text-align: center; font-size: 12px; color: #9ca3af;">
+            &copy; ${new Date().getFullYear()} Qr-Event. Tous droits réservés.
+          </div>
+        </div>
+        `;
+
+        try {
+          await sendEmail(participantUser.email, subject, textBody, htmlBody);
+          console.info(`E-mail de confirmation envoyé à ${participantUser.email}`);
+        } catch (e) {
+          console.warn("Échec envoi e-mail confirmation :", e.message);
         }
 
         // Notifications (participant + organizer)
@@ -553,39 +639,101 @@ const getValidatedAttendees = async (req, res, next) => {
   }
 };
 
+const path = require("path");
+const fs = require("fs");
+
 /**
- * GET /events/:id/report (PDF generation using pdfkit)
+ * GET /events/:id/report (PDF or CSV generation)
  */
 const generateEventReport = async (req, res, next) => {
   try {
     requireAuthUser(req);
     const eventId = req.params.id;
-    const userId = req.user.id;
+    const format = req.query.format || "pdf"; // "pdf" ou "csv"
 
-    if (!isValidObjectId(eventId)) return res.status(400).json({ error: "ID d'événement invalide." });
+    if (!isValidObjectId(eventId))
+      return res.status(400).json({ error: "ID d'événement invalide." });
 
-    const event = await Event.findById(eventId).populate("category", "name").lean();
+    const event = await Event.findById(eventId)
+      .populate("category", "name")
+      .lean();
     if (!event) return res.status(404).json({ error: "Événement non trouvé." });
 
-    if (!canEditEvent(req.user, event)) return res.status(403).json({ error: "Action non autorisée." });
+    if (!canEditEvent(req.user, event))
+      return res.status(403).json({ error: "Action non autorisée." });
 
-    const inscriptions = await Inscription.find({ event: eventId }).populate("participant", "nom email sexe profession").lean();
+    const inscriptions = await Inscription.find({ event: eventId })
+      .populate("participant", "nom email sexe profession phone")
+      .lean();
 
     const totalRegistered = inscriptions.length;
     const validatedInscriptions = inscriptions.filter((i) => i.isValidated);
     const totalValidated = validatedInscriptions.length;
-    const participationRate = totalRegistered > 0 ? (totalValidated / totalRegistered) * 100 : 0;
+    const participationRate =
+      totalRegistered > 0 ? (totalValidated / totalRegistered) * 100 : 0;
 
-    // Prepare pdf
+    // --- GÉNÉRATION CSV ---
+    if (format === "csv") {
+      const fields = [
+        "Nom",
+        "Email",
+        "Sexe",
+        "Profession",
+        "Téléphone",
+        "Statut",
+        "Date Validation",
+      ];
+      const csvRows = inscriptions.map((ins) => {
+        const p = ins.participant || {};
+        return [
+          `"${p.nom || ""}"`,
+          `"${p.email || ""}"`,
+          `"${p.sexe || ""}"`,
+          `"${p.profession || ""}"`,
+          `"${p.phone || ""}"`,
+          `"${ins.isValidated ? "Présent" : "Inscrit"}"`,
+          `"${ins.validatedAt ? new Date(ins.validatedAt).toLocaleString() : ""}"`,
+        ].join(",");
+      });
+
+      const csvContent = [fields.join(","), ...csvRows].join("\n");
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="rapport-${(event.name || "event").replace(
+          /\s+/g,
+          "_"
+        )}.csv"`
+      );
+      return res.send(csvContent);
+    }
+
+    // --- GÉNÉRATION PDF (Par défaut) ---
     const doc = new PDFDocument({ margin: 50, layout: "portrait", size: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="rapport-${(event.name || 'event').replace(/\s+/g, "_")}.pdf"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="rapport-${(event.name || "event").replace(
+        /\s+/g,
+        "_"
+      )}.pdf"`
+    );
 
     doc.pipe(res);
 
+    // --- LOGO ---
+    const logoPath = path.join(__dirname, "../assets/logo.png");
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 50, 45, { width: 50 });
+    }
+
     // Header
-    doc.font("Helvetica-Bold").fontSize(20).text("Rapport d'Événement", { align: "center" });
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(20)
+      .text("Rapport d'Événement", { align: "center" });
     doc.fontSize(16).text(event.name || "N/A", { align: "center" });
     doc.moveDown(1.5);
 
@@ -593,14 +741,28 @@ const generateEventReport = async (req, res, next) => {
     doc.font("Helvetica-Bold").fontSize(14).text("Détails de l'Événement");
     doc.moveDown(0.4);
     doc.font("Helvetica").fontSize(11);
-    doc.text(`Date: ${event.startDate ? new Date(event.startDate).toLocaleDateString("fr-FR") : "N/A"}`);
-    doc.text(`Lieu: ${event.city || "N/A"}${event.neighborhood ? ", " + event.neighborhood : ""}`);
-    doc.text(`Catégorie: ${event.category?.name || "N/A"}`);
-    doc.text(`Prix: ${event.price > 0 ? `${event.price} FCFA` : "Gratuit"}`);
+    doc
+      .text(
+        `Date: ${
+          event.startDate
+            ? new Date(event.startDate).toLocaleDateString("fr-FR")
+            : "N/A"
+        }`
+      )
+      .text(
+        `Lieu: ${event.city || "N/A"}${
+          event.neighborhood ? ", " + event.neighborhood : ""
+        }`
+      )
+      .text(`Catégorie: ${event.category?.name || "N/A"}`)
+      .text(`Prix: ${event.price > 0 ? `${event.price} FCFA` : "Gratuit"}`);
     doc.moveDown();
 
     // Stats
-    doc.font("Helvetica-Bold").fontSize(14).text("Statistiques de participation");
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(14)
+      .text("Statistiques de participation");
     doc.moveDown(0.4);
     doc.font("Helvetica").fontSize(11);
     doc.text(`Total Inscrits: ${totalRegistered}`);
@@ -609,7 +771,10 @@ const generateEventReport = async (req, res, next) => {
     doc.moveDown();
 
     // Démographie (sexe)
-    doc.font("Helvetica-Bold").fontSize(14).text("Statistiques démographiques (par sexe)");
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(14)
+      .text("Statistiques démographiques (par sexe)");
     doc.moveDown(0.4);
     const statsSexRegistered = inscriptions.reduce((acc, i) => {
       const sexe = i.participant?.sexe || "Inconnu";
@@ -621,16 +786,29 @@ const generateEventReport = async (req, res, next) => {
       acc[sexe] = (acc[sexe] || 0) + 1;
       return acc;
     }, {});
-    const allSexes = new Set([...Object.keys(statsSexRegistered), ...Object.keys(statsSexValidated)]);
+    const allSexes = new Set([
+      ...Object.keys(statsSexRegistered),
+      ...Object.keys(statsSexValidated),
+    ]);
     allSexes.forEach((sexe) => {
       doc.font("Helvetica-Bold").fontSize(10).text(sexe || "Inconnu");
-      doc.font("Helvetica").fontSize(10).text(`  Inscrits: ${statsSexRegistered[sexe] || 0} | Validés: ${statsSexValidated[sexe] || 0}`);
+      doc
+        .font("Helvetica")
+        .fontSize(10)
+        .text(
+          `  Inscrits: ${statsSexRegistered[sexe] || 0} | Validés: ${
+            statsSexValidated[sexe] || 0
+          }`
+        );
       doc.moveDown(0.3);
     });
 
     // Validated participants list
     doc.addPage();
-    doc.font("Helvetica-Bold").fontSize(14).text(`Participants validés (${totalValidated})`);
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(14)
+      .text(`Participants validés (${totalValidated})`);
     doc.moveDown(0.6);
 
     doc.font("Helvetica-Bold").fontSize(10);
@@ -639,7 +817,12 @@ const generateEventReport = async (req, res, next) => {
     doc.text("Sexe", 360, doc.y, { width: 50 });
     doc.text("Profession", 420, doc.y, { width: 130 });
     doc.moveDown(0.5);
-    doc.strokeColor("#aaaaaa").lineWidth(0.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc
+      .strokeColor("#aaaaaa")
+      .lineWidth(0.5)
+      .moveTo(50, doc.y)
+      .lineTo(550, doc.y)
+      .stroke();
     doc.moveDown(0.6);
     doc.font("Helvetica").fontSize(9);
 
@@ -654,7 +837,10 @@ const generateEventReport = async (req, res, next) => {
 
     // All registered list on a new page
     doc.addPage();
-    doc.font("Helvetica-Bold").fontSize(14).text(`Tous les inscrits (${totalRegistered})`);
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(14)
+      .text(`Tous les inscrits (${totalRegistered})`);
     doc.moveDown(0.6);
 
     doc.font("Helvetica-Bold").fontSize(10);
@@ -663,7 +849,12 @@ const generateEventReport = async (req, res, next) => {
     doc.text("Sexe", 360, doc.y, { width: 50 });
     doc.text("Profession", 420, doc.y, { width: 130 });
     doc.moveDown(0.5);
-    doc.strokeColor("#aaaaaa").lineWidth(0.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc
+      .strokeColor("#aaaaaa")
+      .lineWidth(0.5)
+      .moveTo(50, doc.y)
+      .lineTo(550, doc.y)
+      .stroke();
     doc.moveDown(0.6);
     doc.font("Helvetica").fontSize(9);
 
@@ -678,7 +869,7 @@ const generateEventReport = async (req, res, next) => {
 
     doc.end();
   } catch (error) {
-    console.error("Erreur génération PDF:", error);
+    console.error("Erreur génération rapport:", error);
     next(error);
   }
 };

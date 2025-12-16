@@ -21,9 +21,9 @@ const EventList = ({
         <div className="space-y-4">
           {currentEvents.map((event) => (
             <EventCard
-              key={event.id}
+              key={event._id || event.id}
               event={event}
-              handleDetails={() => handleDetails(event.id)}
+              handleDetails={() => handleDetails(event._id || event.id)}
             />
           ))}
         </div>

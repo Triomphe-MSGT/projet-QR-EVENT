@@ -32,6 +32,8 @@ const userSchema = new mongoose.Schema({
     default: "",
   },
   participatedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
 });
 
 userSchema.set("toJSON", {

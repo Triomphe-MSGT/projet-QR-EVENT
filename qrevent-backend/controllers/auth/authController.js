@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../../models/user");
 const { OAuth2Client } = require("google-auth-library");
 const config = require("../../utils/config");
+const crypto = require("crypto");
+const { sendEmail } = require("../../services/emailService");
 
 // Client OAuth2 pour la connexion via Google
 const client = new OAuth2Client(config.GOOGLE_CLIENT_ID);
@@ -189,9 +191,85 @@ const googleLogin = async (req, res, next) => {
   }
 };
 
+/* =========================================================
+   FORGOT PASSWORD - Demande de réinitialisation
+   ========================================================= */
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email requis." });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
+
+    // Générer un token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 heure
+
+    await user.save();
+
+    // Lien de réinitialisation (Frontend URL)
+    const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
+
+    const subject = "Réinitialisation de votre mot de passe";
+    const text = `Vous avez demandé une réinitialisation de mot de passe.\n\nVeuillez cliquer sur le lien suivant :\n${resetUrl}\n\nCe lien expire dans 1 heure.`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Réinitialisation de mot de passe</h2>
+        <p>Vous avez demandé à réinitialiser votre mot de passe.</p>
+        <p>Cliquez sur le bouton ci-dessous pour procéder :</p>
+        <a href="${resetUrl}" style="background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Réinitialiser mon mot de passe</a>
+        <p style="margin-top: 20px;">Ou copiez ce lien : <br> ${resetUrl}</p>
+        <p>Ce lien expire dans 1 heure.</p>
+      </div>
+    `;
+
+    await sendEmail(user.email, subject, text, html);
+
+    res.status(200).json({ message: "Email de réinitialisation envoyé." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/* =========================================================
+   RESET PASSWORD - Nouveau mot de passe
+   ========================================================= */
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token et nouveau mot de passe requis." });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Token invalide ou expiré." });
+    }
+
+    // Hash du nouveau mot de passe
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: "Mot de passe réinitialisé avec succès." });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Export des fonctions du controller
 module.exports = {
   register,
   login,
   googleLogin,
+  forgotPassword,
+  resetPassword,
 };

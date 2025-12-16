@@ -71,7 +71,7 @@ const UserEventsList = () => {
           <div className="space-y-3">
             {eventsData.participated.map((event) => (
               <div
-                key={event.id}
+                key={event._id || event.id}
                 className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg flex items-center gap-4"
               >
                 <div className="flex-grow">
@@ -112,7 +112,7 @@ const UserEventsList = () => {
             {eventsData.organized.map((event) => (
               <Link
                 to={`/events/${event.id}`}
-                key={event.id}
+                key={event._id || event.id}
                 className="block bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition"
               >
                 <p className="font-semibold text-gray-900 dark:text-white">

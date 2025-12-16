@@ -101,6 +101,16 @@ router.get(
 router.post("/:id/register", userExtractor, eventsController.registerToEvent);
 
 /**
+ * DELETE /api/events/:id/register
+ * Permet à un utilisateur de se désinscrire d'un événement
+ */
+router.delete(
+  "/:id/register",
+  userExtractor,
+  eventsController.unregisterFromEvent
+);
+
+/**
  * POST /api/events/:id/participants
  * Ajoute manuellement un participant à un événement
  */

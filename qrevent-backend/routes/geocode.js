@@ -16,6 +16,7 @@ router.get("/", async (req, res) => {
           apiKey:
             process.env.GEOAPIFY_KEY || "9c75ef48a4494d958fbbb9e241db7bfc",
         },
+        timeout: 5000, // Timeout de 5 secondes
       }
     );
     console.log("✅ Geocode OK:", q);
@@ -23,12 +24,13 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error("❌ Erreur proxy /geocode :", {
       message: error.message,
+      code: error.code,
       status: error.response?.status,
       data: error.response?.data,
     });
     res
       .status(error.response?.status || 500)
-      .json({ error: "Erreur lors de la récupération des données." });
+      .json({ error: "Erreur lors de la récupération des données de géolocalisation." });
   }
 });
 

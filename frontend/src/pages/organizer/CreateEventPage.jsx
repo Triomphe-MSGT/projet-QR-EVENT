@@ -186,9 +186,9 @@ const EventForm = () => {
       updateEventMutation.mutate(
         { id: eventIdToEdit, formData: dataToSend },
         {
-          onSuccess: (updatedEvent) => {
+          onSuccess: () => {
             alert("Événement mis à jour avec succès !");
-            navigate(`/events/${updatedEvent.id}`);
+            navigate("/dashboard"); // Retour au dashboard pour voir la liste à jour
           },
           onError: (error) =>
             alert(`Erreur: ${error.response?.data?.error || error.message}`),
@@ -197,9 +197,9 @@ const EventForm = () => {
     } else {
       // --- Logique de CRÉATION ---
       createEventMutation.mutate(dataToSend, {
-        onSuccess: (createdEvent) => {
+        onSuccess: () => {
           alert("Événement créé avec succès !");
-          navigate(`/events/${createdEvent.id}`);
+          navigate("/dashboard"); // Retour au dashboard pour voir le nouvel événement
         },
         onError: (error) =>
           alert(`Erreur: ${error.response?.data?.error || error.message}`),

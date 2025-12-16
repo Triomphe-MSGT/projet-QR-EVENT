@@ -58,7 +58,7 @@ const UserQrCodesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {eventsWithQrCodes.map((event) => (
               <div
-                key={event.id}
+                key={event._id || event.id}
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center text-center"
               >
                 {/* Affiche la petite image du QR code sur la carte */}

@@ -23,17 +23,29 @@ export const getMyOrganizedEvents = async () => {
   }
 };
 
-export const downloadEventReport = async (eventId, eventName) => {
+export const downloadEventReport = async (
+  eventId,
+  eventName,
+  format = "pdf"
+) => {
   try {
-    const response = await api.get(`/events/${eventId}/report`, {
-      responseType: "blob", // !! Important: dit à axios de s'attendre à un fichier
-    });
+    const response = await api.get(
+      `/events/${eventId}/report?format=${format}`,
+      {
+        responseType: "blob", // !! Important: dit à axios de s'attendre à un fichier
+      }
+    );
+
+    // Détermine le type MIME et l'extension
+    const mimeType =
+      format === "csv" ? "text/csv;charset=utf-8;" : "application/pdf";
+    const extension = format === "csv" ? "csv" : "pdf";
 
     // Crée un Blob à partir de la réponse
-    const blob = new Blob([response.data], { type: "application/pdf" });
+    const blob = new Blob([response.data], { type: mimeType });
 
     // Utilise file-saver pour déclencher le téléchargement
-    saveAs(blob, `Rapport_${eventName.replace(/ /g, "_")}.pdf`);
+    saveAs(blob, `Rapport_${eventName.replace(/ /g, "_")}.${extension}`);
   } catch (error) {
     console.error("❌ Échec téléchargement du rapport:", error);
     // Gérer l'erreur (par exemple, afficher une notification)
@@ -41,17 +53,25 @@ export const downloadEventReport = async (eventId, eventName) => {
   }
 };
 
-export const downloadAdminReport = async () => {
+export const downloadAdminReport = async (format = "csv") => {
   try {
-    const response = await api.get("/dashboard/admin-report", {
-      responseType: "text", // On attend du texte (CSV)
+    const response = await api.get(`/dashboard/admin-report?format=${format}`, {
+      responseType: "blob", // On attend un fichier (blob)
     });
 
-    // Crée un Blob à partir du texte CSV
-    const blob = new Blob([response.data], { type: "text/csv;charset=utf-8;" });
+    // Détermine le type MIME et l'extension
+    const mimeType =
+      format === "pdf" ? "application/pdf" : "text/csv;charset=utf-8;";
+    const extension = format === "pdf" ? "pdf" : "csv";
+
+    // Crée un Blob à partir de la réponse
+    const blob = new Blob([response.data], { type: mimeType });
 
     // Déclenche le téléchargement
-    saveAs(blob, `rapport_admin_${new Date().toISOString().split("T")[0]}.csv`);
+    saveAs(
+      blob,
+      `rapport_admin_${new Date().toISOString().split("T")[0]}.${extension}`
+    );
 
     return { success: true };
   } catch (error) {

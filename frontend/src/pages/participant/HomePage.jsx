@@ -135,7 +135,7 @@ const EventCarousel = () => {
   return (
     <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth -mx-4 px-4 md:-mx-6 md:px-6">
       {upcomingEvents.map((event) => (
-        <EventPreviewCard key={event.id} event={event} />
+        <EventPreviewCard key={event._id || event.id} event={event} />
       ))}
       <Link
         to="/events"

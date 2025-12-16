@@ -82,12 +82,12 @@ const EventManagement = () => {
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {events.map((event) => (
               <tr
-                key={event.id}
+                key={event._id || event.id}
                 className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
               >
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                   <Link
-                    to={`/events/${event.id}`}
+                    to={`/events/${event._id || event.id}`}
                     className="hover:text-blue-600"
                   >
                     {event.name}
@@ -106,7 +106,7 @@ const EventManagement = () => {
                   <Button
                     variant="outline_icon"
                     size="xs"
-                    onClick={() => handleEdit(event.id)}
+                    onClick={() => handleEdit(event._id || event.id)}
                     title="Modifier"
                   >
                     <Edit size={14} />
@@ -114,15 +114,15 @@ const EventManagement = () => {
                   <Button
                     variant="danger_icon"
                     size="xs"
-                    onClick={() => handleDelete(event.id, event.name)}
+                    onClick={() => handleDelete(event._id || event.id, event.name)}
                     title="Supprimer"
                     disabled={
                       deleteEventMutation.isPending &&
-                      deleteEventMutation.variables === event.id
+                      deleteEventMutation.variables === (event._id || event.id)
                     }
                   >
                     {deleteEventMutation.isPending &&
-                    deleteEventMutation.variables === event.id ? (
+                    deleteEventMutation.variables === (event._id || event.id) ? (
                       <Loader2 className="animate-spin w-3.5 h-3.5" />
                     ) : (
                       <Trash2 size={14} />

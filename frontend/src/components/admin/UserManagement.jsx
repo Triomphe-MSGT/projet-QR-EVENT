@@ -39,7 +39,7 @@ const UserManagement = () => {
   const handleFormSubmit = (formData) => {
     const mutation = userToEdit ? updateUserMutation : createUserMutation;
     const actionData = userToEdit
-      ? { id: userToEdit.id, userData: formData }
+      ? { id: userToEdit._id || userToEdit.id, userData: formData }
       : formData;
 
     mutation.mutate(actionData, {
@@ -118,7 +118,7 @@ const UserManagement = () => {
             {users.map((user) => (
               // Mettre <tr> sur la même ligne que le début du map ou {
               <tr
-                key={user.id}
+                key={user._id || user.id}
                 className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -148,15 +148,15 @@ const UserManagement = () => {
                   <Button
                     variant="danger_icon"
                     size="xs"
-                    onClick={() => handleDelete(user.id, user.nom)}
+                    onClick={() => handleDelete(user._id || user.id, user.nom)}
                     title="Supprimer"
                     disabled={
                       deleteUserMutation.isPending &&
-                      deleteUserMutation.variables === user.id
+                      deleteUserMutation.variables === (user._id || user.id)
                     }
                   >
                     {deleteUserMutation.isPending &&
-                    deleteUserMutation.variables === user.id ? (
+                    deleteUserMutation.variables === (user._id || user.id) ? (
                       <Loader2 className="animate-spin w-3.5 h-3.5" />
                     ) : (
                       <Trash2 size={14} />

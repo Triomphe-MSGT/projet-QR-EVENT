@@ -14,11 +14,13 @@ const markNotificationsAsRead = async () => {
 };
 
 // Hook 1: Pour obtenir les notifications
-export const useNotifications = () => {
+export const useNotifications = (options = {}) => {
   return useQuery({
     queryKey: ["notifications"],
     queryFn: fetchNotifications,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchInterval: 1000 * 30, // Rafraîchir toutes les 30 secondes
+    ...options,
   });
 };
 

@@ -39,10 +39,21 @@ const AdminDashboard = () => {
   ];
 
   // 5. Ajouter la fonction pour gérer le clic sur le bouton
+  // 5. Ajouter la fonction pour gérer le clic sur le bouton
   const handleDownload = async () => {
+    // Demander le format à l'utilisateur
+    const format = window.prompt(
+      "Choisissez le format du rapport (pdf ou csv) :",
+      "pdf"
+    );
+    if (!format || (format !== "pdf" && format !== "csv")) {
+      if (format) alert("Format invalide. Veuillez choisir 'pdf' ou 'csv'.");
+      return;
+    }
+
     setIsDownloading(true);
     try {
-      await downloadAdminReport();
+      await downloadAdminReport(format);
     } catch (error) {
       console.error("Erreur lors du téléchargement du rapport:", error);
       alert("Le téléchargement a échoué.");

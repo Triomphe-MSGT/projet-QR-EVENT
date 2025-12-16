@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "json-server -p 3001 db.json",
-    "test": "jest",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "dev:all": "concurrently \"npm run proxy\" \"npm run dev\""
   },

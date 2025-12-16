@@ -31,7 +31,7 @@ export const useEventDetails = (eventId) => {
   return useQuery({
     queryKey: ["event", eventId],
     queryFn: () => getEventById(eventId),
-    enabled: !!eventId, // Ne s'active que si eventId est fourni
+    enabled: !!eventId && eventId !== "undefined", // Ne s'active que si eventId est fourni et valide
   });
 };
 

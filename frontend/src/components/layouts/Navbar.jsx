@@ -75,7 +75,7 @@ const Navbar = () => {
 
   // Hooks de notification
   const { data: notifications, isLoading: isLoadingNotifs } =
-    useNotifications();
+    useNotifications({ enabled: !!token });
   const markAsReadMutation = useMarkAsRead();
 
   // --- Gestion des interactions utilisateur ---
@@ -90,7 +90,8 @@ const Navbar = () => {
   const handleLogout = () => {
     dispatch(logout());
     queryClient.clear();
-    navigate("/login");
+    // Force a hard reload to clear all in-memory state and ensure a fresh start
+    window.location.href = "/login";
   };
 
   // 4. Marquer comme lues quand on ouvre la cloche
@@ -269,7 +270,7 @@ const Navbar = () => {
                 )}
                 {notifications?.map((notif) => (
                   <Link
-                    key={notif.id}
+                    key={notif._id || notif.id}
                     to={notif.link || "#"}
                     onClick={closeMenus}
                     className={`block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${

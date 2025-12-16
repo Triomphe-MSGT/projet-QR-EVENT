@@ -67,11 +67,20 @@ const OrganizerEventList = ({ events }) => {
 
   // --- AJOUT ---
   // Fonction pour gérer le téléchargement du rapport
+  // Fonction pour gérer le téléchargement du rapport
   const handleDownload = async (e, eventId, eventName) => {
     e.stopPropagation(); // Empêche le clic de se propager au <Link>
+    
+    // Demander le format à l'utilisateur (simple prompt pour l'instant, pourrait être une modale)
+    const format = window.prompt("Choisissez le format du rapport (pdf ou csv) :", "pdf");
+    if (!format || (format !== "pdf" && format !== "csv")) {
+      if (format) alert("Format invalide. Veuillez choisir 'pdf' ou 'csv'.");
+      return;
+    }
+
     setDownloadingId(eventId); // Active le loader pour ce bouton
     try {
-      await downloadEventReport(eventId, eventName);
+      await downloadEventReport(eventId, eventName, format);
     } catch (error) {
       console.error("Échec du téléchargement du rapport:", error);
       alert("Le téléchargement du rapport a échoué.");
@@ -116,10 +125,10 @@ const OrganizerEventList = ({ events }) => {
           <div className="space-y-3">
             {events.map((event) => (
               <div
-                key={event.id}
+                key={event._id || event.id}
                 className="p-4 bg-gray-50 dark:bg-gray-700/60 rounded-lg flex flex-col md:flex-row justify-between md:items-center gap-3 shadow-sm"
               >
-                <Link to={`/events/${event.id}`} className="flex-grow group">
+                <Link to={`/events/${event._id || event.id}`} className="flex-grow group">
                   <h3 className="font-semibold text-gray-800 dark:text-white group-hover:text-blue-600">
                     {event.name}
                   </h3>
@@ -151,13 +160,13 @@ const OrganizerEventList = ({ events }) => {
                   <Button
                     variant="secondary" // Utilise le même style que "Gérer"
                     size="xs"
-                    onClick={(e) => handleDownload(e, event.id, event.name)}
-                    disabled={downloadingId === event.id}
+                    onClick={(e) => handleDownload(e, event._id || event.id, event.name)}
+                    disabled={downloadingId === (event._id || event.id)}
                     title="Télécharger le rapport PDF"
                     // Couleur verte distincte pour le rapport
                     className="bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300"
                   >
-                    {downloadingId === event.id ? (
+                    {downloadingId === (event._id || event.id) ? (
                       <Loader2 className="animate-spin w-4 h-4 mr-1" />
                     ) : (
                       <Download size={14} className="mr-1" />
@@ -169,7 +178,7 @@ const OrganizerEventList = ({ events }) => {
                   <Button
                     variant="outline_icon"
                     size="xs"
-                    onClick={() => handleEdit(event.id)}
+                    onClick={() => handleEdit(event._id || event.id)}
                     title="Modifier"
                   >
                     <Edit size={14} />
@@ -179,15 +188,15 @@ const OrganizerEventList = ({ events }) => {
                   <Button
                     variant="danger_icon"
                     size="xs"
-                    onClick={() => handleDelete(event.id, event.name)}
+                    onClick={() => handleDelete(event._id || event.id, event.name)}
                     disabled={
                       deleteMutation.isPending &&
-                      deleteMutation.variables === event.id
+                      deleteMutation.variables === (event._id || event.id)
                     }
                     title="Supprimer"
                   >
                     {deleteMutation.isPending &&
-                    deleteMutation.variables === event.id ? (
+                    deleteMutation.variables === (event._id || event.id) ? (
                       <Loader2 className="animate-spin w-4 h-4" />
                     ) : (
                       <Trash2 size={14} />

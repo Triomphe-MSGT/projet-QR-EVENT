@@ -33,6 +33,8 @@ import ScanQrPage from "./pages/organizer/ScanQrPage";
 import SettingsPage from "./pages/AccountSettingsPage";
 import HelpPage from "./pages/HelpPage";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
 const AppRouter = () => {
   return (
@@ -42,6 +44,8 @@ const AppRouter = () => {
         <Route path="/home" element={<HomePage />} />
         <Route path="/" element={<OpenPage />} />
         <Route path="/login" element={<AuthFormRegisterConnection />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/user-profile" element={<ProfilePage />} />
         <Route path="/events" element={<EventListPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />

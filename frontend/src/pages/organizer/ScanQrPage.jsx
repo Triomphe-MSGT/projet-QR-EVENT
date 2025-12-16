@@ -119,7 +119,7 @@ const ScanQrPage = () => {
               </option>
               {/* Affiche la liste appropriée (tous les events pour l'admin, ses events pour l'orga) */}
               {eventListForSelector.map((event) => (
-                <option key={event.id} value={event.name}>
+                <option key={event._id || event.id} value={event.name}>
                   {event.name} ({new Date(event.startDate).toLocaleDateString()}
                   )
                 </option>

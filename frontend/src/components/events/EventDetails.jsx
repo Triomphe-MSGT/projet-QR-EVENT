@@ -83,7 +83,7 @@ const EventDetails = ({ event }) => {
 
   const handleParticipateSubmit = (formData) => {
     registerMutation.mutate(
-      { eventId: event.id, formData },
+      { eventId: event._id || event.id, formData },
       {
         onSuccess: (data) => {
           if (data.qrCode) {
@@ -210,27 +210,47 @@ const EventDetails = ({ event }) => {
                 </div>
               )}
             </div>
-            <Button
-              variant={
-                isAlreadyRegistered || qrCodeData ? "secondary" : "primary"
-              }
-              size="lg"
-              onClick={() =>
-                !isAlreadyRegistered && !qrCodeData && setIsModalOpen(true)
-              }
-              disabled={
-                isAlreadyRegistered ||
-                !!qrCodeData ||
-                registerMutation.isPending
-              }
-              className="w-full max-w-xs"
-            >
-              {registerMutation.isPending
-                ? "Traitement..."
-                : isAlreadyRegistered || qrCodeData
-                ? "Participation Confirmée"
-                : "Participer & Obtenir le QR Code"}
-            </Button>
+            
+            {/* Logic for expiration */}
+            {(() => {
+              const isExpired = event.startDate && new Date() > new Date(event.startDate);
+              
+              return (
+                <>
+                  <Button
+                    variant={
+                      isAlreadyRegistered || qrCodeData || isExpired ? "secondary" : "primary"
+                    }
+                    size="lg"
+                    onClick={() =>
+                      !isAlreadyRegistered && !qrCodeData && !isExpired && setIsModalOpen(true)
+                    }
+                    disabled={
+                      isAlreadyRegistered ||
+                      !!qrCodeData ||
+                      registerMutation.isPending ||
+                      isExpired
+                    }
+                    className="w-full max-w-xs"
+                  >
+                    {registerMutation.isPending
+                      ? "Traitement..."
+                      : isAlreadyRegistered || qrCodeData
+                      ? "Participation Confirmée"
+                      : isExpired
+                      ? "Inscriptions Fermées"
+                      : "Participer & Obtenir le QR Code"}
+                  </Button>
+                  
+                  {isExpired && (
+                    <p className="text-red-500 font-semibold mt-2">
+                      Date de l'événement expirée
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+
             {registerMutation.error && (
               <p className="text-red-500 text-sm mt-2">
                 Erreur:{" "}

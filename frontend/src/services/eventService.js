@@ -1,4 +1,4 @@
-import api from "../slices/axiosInstance"; // ✅ Vérifiez ce chemin
+import api from "../slices/axiosInstance";
 
 // Récupère tous les événements
 export const getEvents = async () => {
