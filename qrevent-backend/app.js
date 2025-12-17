@@ -35,6 +35,17 @@ app.use("/api/dashboard", dashboardRouter);
 app.use("/api/geocode", geocodeRoutes);
 app.use("/api/notifications", notificationsRouter);
 
+// --- Gestion du Routing Frontend (SPA) ---
+// Pour toute requête qui n'est PAS une API (ne commence pas par /api)
+// et qui n'a pas été servie par express.static (fichiers statiques),
+// on renvoie index.html pour laisser le React Router gérer l'affichage.
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    return next();
+  }
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);
 
