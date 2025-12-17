@@ -39,3 +39,22 @@ export const useMarkAsRead = () => {
     },
   });
 };
+// Service 3: Supprimer une notification
+const deleteNotification = async (id) => {
+  await api.delete(`/notifications/${id}`);
+};
+
+// Hook 3: Pour supprimer une notification
+export const useDeleteNotification = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteNotification,
+    onSuccess: (_, id) => {
+      // Mettre à jour manuellement le cache
+      queryClient.setQueryData(["notifications"], (oldData) =>
+        oldData ? oldData.filter((n) => n._id !== id && n.id !== id) : []
+      );
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+};

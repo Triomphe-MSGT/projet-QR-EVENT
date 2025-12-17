@@ -38,7 +38,33 @@ const markAllAsRead = async (req, res, next) => {
   }
 };
 
+// --- Supprimer une notification ---
+const deleteNotification = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    const { id } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentification requise" });
+    }
+
+    const notification = await Notification.findOneAndDelete({
+      _id: id,
+      user: userId,
+    });
+
+    if (!notification) {
+      return res.status(404).json({ error: "Notification non trouvée" });
+    }
+
+    return res.status(200).json({ message: "Notification supprimée" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getMyNotifications,
   markAllAsRead,
+  deleteNotification,
 };

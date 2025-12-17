@@ -125,9 +125,9 @@ const EventDetails = ({ event }) => {
         eventName={event.name}
         isSubmitting={registerMutation.isPending}
       />
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden animate-fade-in-up">
         {/* Header with image */}
-        <div className="relative w-full h-60 md:h-80">
+        <div className="relative w-full h-64 md:h-96">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -142,154 +142,202 @@ const EventDetails = ({ event }) => {
           <div
             className={`absolute inset-0 bg-gradient-to-t ${
               imageUrl
-                ? "from-black/70 via-black/30 to-transparent"
-                : "from-black/40 to-transparent"
+                ? "from-black/80 via-black/40 to-transparent"
+                : "from-black/50 to-transparent"
             }`}
           ></div>
-          <div className="absolute bottom-0 left-0 p-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
-              {event.name}
-            </h1>
-            {event.category && (
-              <span className="mt-1 inline-block px-3 py-1 text-xs font-semibold text-white bg-black/40 rounded-full">
-                {event.category.emoji} {event.category.name}
-              </span>
-            )}
+          <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full">
+            <div className="max-w-7xl mx-auto">
+              {event.category && (
+                <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-full mb-3 shadow-sm">
+                  {event.category.emoji} {event.category.name}
+                </span>
+              )}
+              <h1 className="text-3xl md:text-5xl font-bold text-white drop-shadow-lg leading-tight mb-2">
+                {event.name}
+              </h1>
+              <div className="flex flex-wrap items-center gap-4 text-white/90 text-sm md:text-base font-medium">
+                <div className="flex items-center">
+                  <Calendar className="w-5 h-5 mr-2" />
+                  {formatDate(event.startDate)}
+                </div>
+                <div className="flex items-center">
+                  <MapPin className="w-5 h-5 mr-2" />
+                  {event.city}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Main content */}
-        <div className="p-6 space-y-8">
-          {/* About section */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              À propos de l'événement
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-              {event.description}
-            </p>
-          </section>
+        {/* Main content Split Layout */}
+        <div className="max-w-7xl mx-auto p-6 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Left Column: Description & Map */}
+          <div className="lg:col-span-2 space-y-10">
+            {/* About section */}
+            <section>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                À propos de l'événement
+              </h2>
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed text-lg">
+                {event.description}
+              </p>
+            </section>
 
-          {/* Details (Date, Location, Price) */}
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm border-t border-b border-gray-200 dark:border-gray-700 py-4">
-            <div className="flex items-center text-gray-700 dark:text-gray-300">
-              <Calendar className="w-5 h-5 mr-3 shrink-0 text-blue-500" />
-              <span className="font-medium">{formatDate(event.startDate)}</span>
-            </div>
-            <div className="flex items-center text-gray-700 dark:text-gray-300">
-              <MapPin className="w-5 h-5 mr-3 shrink-0 text-blue-500" />
-              <span className="font-medium">{event.city}</span>
-            </div>
-            {event.time && (
-              <div className="flex items-center text-gray-700 dark:text-gray-300">
-                <Clock className="w-5 h-5 mr-3 shrink-0 text-blue-500" />
-                <span className="font-medium">{event.time}</span>
-              </div>
-            )}
-            <div className="flex items-center text-gray-700 dark:text-gray-300 font-semibold">
-              <Tag className="w-5 h-5 mr-3 shrink-0 text-blue-500" />
-              <span>{event.price > 0 ? `${event.price} FCFA` : "Gratuit"}</span>
-            </div>
-          </section>
-
-          {/* Registration & QR Code section */}
-          <section className="flex flex-col items-center pt-4">
-            <div className="w-40 h-40 p-1 bg-white flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg mb-4">
-              {qrCodeData ? (
-                <QrCodeDisplay value={qrCodeData} size={150} />
-              ) : isAlreadyRegistered ? (
-                <div className="text-center p-4">
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-                  <p className="mt-2 font-semibold text-green-600">
-                    Déjà Inscrit
-                  </p>
+            {/* Map section */}
+            <section>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                Localisation
+              </h2>
+              {loadingMap ? (
+                <div className="h-80 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-xl">
+                  <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
+                  <p className="ml-2 text-gray-500">Chargement de la carte...</p>
+                </div>
+              ) : errorMap ? (
+                <div className="h-80 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-xl p-4 border border-red-200 dark:border-red-800">
+                  <AlertTriangle className="h-6 w-6 text-red-500 mr-2" />
+                  <p className="text-red-500">{errorMap}</p>
+                </div>
+              ) : coords ? (
+                <div className="rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-700 h-80">
+                  <LocalisationCart
+                    location={{
+                      address: event.neighborhood || event.city,
+                      city: event.city,
+                      country: event.country,
+                      coords: coords,
+                    }}
+                  />
                 </div>
               ) : (
-                <div className="text-center text-gray-400 dark:text-gray-500 text-sm p-4">
-                  Votre QR code apparaîtra ici après inscription
+                <div className="h-80 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-xl">
+                  <p className="text-gray-500">Localisation non disponible.</p>
                 </div>
               )}
-            </div>
-            
-            {/* Logic for expiration */}
-            {(() => {
-              const isExpired = event.startDate && new Date() > new Date(event.startDate);
-              
-              return (
-                <>
-                  <Button
-                    variant={
-                      isAlreadyRegistered || qrCodeData || isExpired ? "secondary" : "primary"
-                    }
-                    size="lg"
-                    onClick={() =>
-                      !isAlreadyRegistered && !qrCodeData && !isExpired && setIsModalOpen(true)
-                    }
-                    disabled={
-                      isAlreadyRegistered ||
-                      !!qrCodeData ||
-                      registerMutation.isPending ||
-                      isExpired
-                    }
-                    className="w-full max-w-xs"
-                  >
-                    {registerMutation.isPending
-                      ? "Traitement..."
-                      : isAlreadyRegistered || qrCodeData
-                      ? "Participation Confirmée"
-                      : isExpired
-                      ? "Inscriptions Fermées"
-                      : "Participer & Obtenir le QR Code"}
-                  </Button>
-                  
-                  {isExpired && (
-                    <p className="text-red-500 font-semibold mt-2">
-                      Date de l'événement expirée
-                    </p>
+            </section>
+          </div>
+
+          {/* Right Column: Sidebar (Details & Booking) */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 space-y-6">
+              {/* Event Details Card */}
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 border border-gray-200 dark:border-gray-600 shadow-sm">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
+                  Détails
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <Calendar className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Date</p>
+                      <p className="text-gray-900 dark:text-gray-200">{formatDate(event.startDate)}</p>
+                    </div>
+                  </div>
+                  {event.time && (
+                    <div className="flex items-start">
+                      <Clock className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Heure</p>
+                        <p className="text-gray-900 dark:text-gray-200">{event.time}</p>
+                      </div>
+                    </div>
                   )}
-                </>
-              );
-            })()}
+                  <div className="flex items-start">
+                    <MapPin className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Lieu</p>
+                      <p className="text-gray-900 dark:text-gray-200">{event.city}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{event.neighborhood}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Tag className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Prix</p>
+                      <p className={`font-bold ${event.price === 0 ? "text-green-600" : "text-gray-900 dark:text-gray-200"}`}>
+                        {event.price > 0 ? `${event.price} FCFA` : "Gratuit"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            {registerMutation.error && (
-              <p className="text-red-500 text-sm mt-2">
-                Erreur:{" "}
-                {registerMutation.error.response?.data?.error ||
-                  registerMutation.error.message}
-              </p>
-            )}
-          </section>
+              {/* Booking Card */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
+                  Inscription
+                </h3>
+                
+                <div className="flex flex-col items-center">
+                  {qrCodeData ? (
+                    <div className="mb-4 p-2 bg-white rounded-lg border border-gray-200 shadow-inner">
+                       <QrCodeDisplay value={qrCodeData} size={160} />
+                       <p className="text-center text-xs text-gray-500 mt-2 font-medium">Votre billet d'entrée</p>
+                    </div>
+                  ) : isAlreadyRegistered ? (
+                    <div className="text-center p-4 mb-4 bg-green-50 dark:bg-green-900/20 rounded-lg w-full">
+                      <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
+                      <p className="font-bold text-green-700 dark:text-green-400">
+                        Vous participez !
+                      </p>
+                    </div>
+                  ) : null}
 
-          {/* Map section */}
-          <section className="pt-6 border-t border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              Localisation
-            </h2>
-            {loadingMap ? (
-              <div className="h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg">
-                <Loader2 className="animate-spin h-6 w-6 text-gray-500" />
-                <p className="ml-2 text-gray-500">Chargement de la carte...</p>
+                  {(() => {
+                    const isExpired = event.startDate && new Date() > new Date(event.startDate);
+                    
+                    return (
+                      <>
+                        <Button
+                          variant={
+                            isAlreadyRegistered || qrCodeData || isExpired ? "secondary" : "primary"
+                          }
+                          size="lg"
+                          onClick={() =>
+                            !isAlreadyRegistered && !qrCodeData && !isExpired && setIsModalOpen(true)
+                          }
+                          disabled={
+                            isAlreadyRegistered ||
+                            !!qrCodeData ||
+                            registerMutation.isPending ||
+                            isExpired
+                          }
+                          className="w-full py-4 text-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                        >
+                          {registerMutation.isPending
+                            ? "Traitement..."
+                            : isAlreadyRegistered || qrCodeData
+                            ? "Voir mon Billet"
+                            : isExpired
+                            ? "Inscriptions Fermées"
+                            : "Réserver ma place"}
+                        </Button>
+                        
+                        {isExpired && (
+                          <p className="text-red-500 font-semibold mt-3 text-center text-sm">
+                            Cet événement est passé.
+                          </p>
+                        )}
+                        {!isExpired && !isAlreadyRegistered && !qrCodeData && (
+                           <p className="text-center text-xs text-gray-500 mt-3">
+                             Places limitées. Réservez vite !
+                           </p>
+                        )}
+                      </>
+                    );
+                  })()}
+
+                  {registerMutation.error && (
+                    <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg w-full text-center">
+                      {registerMutation.error.response?.data?.error ||
+                        registerMutation.error.message}
+                    </div>
+                  )}
+                </div>
               </div>
-            ) : errorMap ? (
-              <div className="h-64 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-lg p-4">
-                <AlertTriangle className="h-6 w-6 text-red-500 mr-2" />
-                <p className="text-red-500">{errorMap}</p>
-              </div>
-            ) : coords ? (
-              <LocalisationCart
-                location={{
-                  address: event.neighborhood || event.city,
-                  city: event.city,
-                  country: event.country,
-                  coords: coords,
-                }}
-              />
-            ) : (
-              <div className="h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg">
-                <p className="text-gray-500">Localisation non disponible.</p>
-              </div>
-            )}
-          </section>
+            </div>
+          </div>
         </div>
       </div>
     </>

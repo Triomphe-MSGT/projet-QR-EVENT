@@ -4,8 +4,8 @@ import { API_BASE_URL } from "../../slices/axiosInstance";
 
 import MainLayout from "../../components/layouts/MainLayout";
 import ListCategorie from "../../components/categories/CategoryList";
+import HeroSection from "../../components/home/HeroSection"; // Import du nouveau composant
 import {
-  Search,
   MapPin,
   Loader2,
   AlertTriangle,
@@ -50,14 +50,14 @@ const EventPreviewCard = ({ event }) => {
 
   return (
     <Link
-      to={`/events/${event.id}`}
-      className="flex-shrink-0 w-72 snap-start rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 transition-all transform hover:shadow-2xl hover:-translate-y-1 duration-300 ease-in-out block group"
+      to={`/events/${event._id}`}
+      className="flex-shrink-0 w-72 md:w-full snap-start rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 transition-all transform hover:shadow-2xl hover:-translate-y-2 duration-300 ease-in-out block group"
     >
-      <div className="relative w-full h-40">
+      <div className="relative w-full h-40 md:h-56 overflow-hidden">
         <img
           src={getImageUrl(event.imageUrl)}
           alt={event.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         {event.category && (
           <span className="absolute top-2 right-2 bg-black/50 text-white text-xs font-semibold px-2 py-1 rounded-full backdrop-blur-sm">
@@ -105,7 +105,7 @@ const EventCarousel = () => {
       return allEvents
         .filter((event) => new Date(event.startDate) > now)
         .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-        .slice(0, 5);
+        .slice(0, 8); // Augmenté à 8 pour un meilleur affichage grille (2 lignes de 4)
     } catch (e) {
       console.error("Erreur filtrage événements:", e);
       return [];
@@ -133,15 +133,15 @@ const EventCarousel = () => {
     );
 
   return (
-    <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth -mx-4 px-4 md:-mx-6 md:px-6">
+    <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth -mx-4 px-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 md:overflow-visible md:mx-0 md:px-0">
       {upcomingEvents.map((event) => (
         <EventPreviewCard key={event._id || event.id} event={event} />
       ))}
       <Link
         to="/events"
-        className="flex-shrink-0 w-72 snap-start rounded-xl shadow-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex flex-col items-center justify-center text-center p-6 transition-all transform hover:shadow-2xl hover:-translate-y-1 duration-300 ease-in-out"
+        className="flex-shrink-0 w-72 md:w-full snap-start rounded-xl shadow-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex flex-col items-center justify-center text-center p-6 transition-all transform hover:shadow-2xl hover:-translate-y-1 duration-300 ease-in-out min-h-[18rem] group"
       >
-        <div className="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center mb-4">
+        <div className="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
           <ArrowRight className="w-8 h-8" />
         </div>
         <span className="font-semibold text-lg text-blue-700 dark:text-blue-300">
@@ -229,72 +229,35 @@ const AdCard = ({ ad }) => {
 // --- Composant HomePage (Restructuré) ---
 const HomePage = () => {
   const { data: user } = useUserProfile();
-  const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    const searchQuery = query.trim();
-    navigate(
-      searchQuery
-        ? `/events?search=${encodeURIComponent(searchQuery)}`
-        : "/events"
-    );
-  };
-
   return (
     <>
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 p-4 md:p-8 space-y-16 md:space-y-24">
-          <section className="max-w-4xl mx-auto text-center pt-8 pb-12 px-6 rounded-b-3xl md:rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-700 dark:to-indigo-800 shadow-2xl">
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white leading-tight">
-              Trouvez votre prochain événement
-            </h1>
-            <p className="text-lg text-blue-100 dark:text-blue-200 mb-8">
-              Recherchez parmi des milliers de concerts, conférences, et plus
-              encore.
-            </p>
-            <form
-              onSubmit={handleSearchSubmit}
-              className="relative flex items-center shadow-lg rounded-full bg-white/90 dark:bg-gray-800/90 overflow-hidden border border-transparent max-w-xl mx-auto backdrop-blur-sm"
-            >
-              <Search className="absolute left-5 w-5 h-5 text-gray-500 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Rechercher un événement..."
-                className="w-full h-16 py-4 pl-14 pr-20 bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-lg"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-              <button
-                type="submit"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition duration-150"
-                aria-label="Rechercher"
-              >
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </form>
-          </section>
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 p-4 md:p-0 space-y-16 md:space-y-32">
+          
+          {/* --- SECTION 1: HERO (Extrait) --- */}
+          <HeroSection />
 
           {/* --- SECTION 2: EXPLORER PAR CATÉGORIE --- */}
-          <section className="max-w-4xl mx-auto">
+          <section className="max-w-4xl md:max-w-7xl mx-auto animate-fade-in-up delay-100">
             <h2 className="text-3xl font-bold mb-6 text-center sm:text-left">
               Catégories
             </h2>
-            <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-4 md:p-6 border dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-4 md:p-6 border dark:border-gray-700 transition-transform hover:scale-[1.01] duration-300">
               <ListCategorie />
             </div>
           </section>
 
           {/* --- SECTION 3: ÉVÉNEMENTS À LA UNE --- */}
-          <section className="max-w-6xl mx-auto">
+          <section className="max-w-6xl md:max-w-7xl mx-auto animate-fade-in-up delay-200">
             <div className="flex justify-between items-center mb-6 px-4 md:px-0">
               <h2 className="text-3xl font-bold dark:text-white">À la une</h2>
               <Link
                 to="/events"
-                className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+                className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold transition-colors hover:text-blue-700"
               >
                 Tout voir <ArrowRight className="w-4 h-4" />
               </Link>
@@ -303,17 +266,17 @@ const HomePage = () => {
           </section>
 
           {/* --- SECTION 4: ESPACE PUBLICITAIRE (MISE À JOUR) --- */}
-          <section>
+          <section className="animate-fade-in-up delay-300">
             <NewsFeed />
           </section>
 
           {/* --- SECTION 5: ACTUALITÉS --- */}
-          <section className="max-w-4xl mx-auto px-4 md:px-0">
+          <section className="max-w-4xl md:max-w-7xl mx-auto px-4 md:px-0 animate-fade-in-up delay-300">
             <h2 className="text-3xl font-bold mb-6 text-center sm:text-left">
               Actualités
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4 transition-all hover:shadow-2xl hover:-translate-y-1 duration-300">
                 <div className="flex-shrink-0 p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
                   <Newspaper className="w-6 h-6 text-blue-600 dark:text-blue-300" />
                 </div>
@@ -333,7 +296,7 @@ const HomePage = () => {
                   </a>
                 </div>
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4 transition-all hover:shadow-2xl hover:-translate-y-1 duration-300">
                 <div className="flex-shrink-0 p-3 bg-green-100 dark:bg-green-900/50 rounded-lg">
                   <Calendar className="w-6 h-6 text-green-600 dark:text-green-300" />
                 </div>
@@ -358,7 +321,7 @@ const HomePage = () => {
 
           {/* --- SECTION 6: APPEL À L'ACTION (CONTACT) --- */}
           {user && (
-            <section className="max-w-4xl mx-auto px-4 md:px-0">
+            <section className="max-w-4xl md:max-w-7xl mx-auto px-4 md:px-0 animate-fade-in-up delay-300">
               <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 text-white p-8 md:p-12 rounded-2xl shadow-2xl">
                 <div>
                   <MessageSquare className="w-12 h-12 opacity-80 mb-4" />
@@ -409,7 +372,7 @@ const HomePage = () => {
           )}
 
           {/* --- SECTION 7: À PROPOS DE NOUS --- */}
-          <section className="max-w-3xl mx-auto text-center px-4 md:px-0">
+          <section className="max-w-3xl md:max-w-5xl mx-auto text-center px-4 md:px-0">
             <Briefcase className="w-10 h-10 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
             <h2 className="text-3xl font-bold mb-4">À Propos de Qr-Event</h2>
             <p className="text-md text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -422,7 +385,7 @@ const HomePage = () => {
           </section>
 
           {/* --- SECTION 8: FOOTER --- */}
-          <footer className="max-w-3xl mx-auto text-center border-t border-gray-200 dark:border-gray-700 pt-8 mt-16 px-4 md:px-0">
+          <footer className="max-w-3xl mx-auto text-center border-t border-gray-200 dark:border-gray-700 pt-8 mt-16 px-4 md:px-0 md:hidden">
             <p className="text-xs text-gray-500 dark:text-gray-400">
               © {new Date().getFullYear()} Qr-Event. Tous droits réservés.
             </p>

@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import MainLayout from "../../components/layouts/MainLayout";
 import QrCodeDisplay from "../../components/ui/QrCodeDisplay";
 import { useUserEvents } from "../../hooks/useUserProfile";
+import { useUnregisterFromEvent } from "../../hooks/useEvents";
+import { Trash2 } from "lucide-react";
 
 const UserQrCodesPage = () => {
   const { data: eventsData, isLoading, isError, error } = useUserEvents();
+  const unregisterMutation = useUnregisterFromEvent();
 
   // État pour gérer l'ouverture/fermeture de la modale et le QR code sélectionné
   const [selectedQr, setSelectedQr] = useState(null); // Stockera l'image Base64
@@ -73,13 +76,29 @@ const UserQrCodesPage = () => {
                   {formatDate(event.startDate)}
                 </p>
 
-                {/* Bouton pour ouvrir la modale d'affichage en grand */}
-                <button
-                  onClick={() => setSelectedQr(event.qrCodeImage)}
-                  className="mt-4 w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors"
-                >
-                  Afficher pour Scan
-                </button>
+                <div className="flex gap-2 mt-4 w-full">
+                  <button
+                    onClick={() => setSelectedQr(event.qrCodeImage)}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors"
+                  >
+                    Afficher
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Êtes-vous sûr de vouloir supprimer ce QR code ? Cela annulera votre participation à l'événement."
+                        )
+                      ) {
+                        unregisterMutation.mutate(event._id || event.id);
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-100 text-red-600 font-semibold rounded-lg shadow hover:bg-red-200 transition-colors"
+                    title="Supprimer le QR Code"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
 
                 <Link
                   to={`/events/${event.id}`}

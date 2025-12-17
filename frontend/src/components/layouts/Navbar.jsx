@@ -28,11 +28,13 @@ import {
   ChevronRight,
   LogOut,
   HelpCircle,
+  PlusCircle, // Import de l'icône Plus
+  Trash2, // Import de l'icône Trash2
 } from "lucide-react";
 
 // --- Import de l'URL de base ---
 import { API_BASE_URL } from "../../slices/axiosInstance";
-import { useMarkAsRead, useNotifications } from "../../hooks/useNotifications"; // Assurez-vous que le chemin est correct
+import { useMarkAsRead, useNotifications, useDeleteNotification } from "../../hooks/useNotifications"; // Assurez-vous que le chemin est correct
 
 // --- CORRECTION : URL statique pour les images ---
 // Votre API_BASE_URL est '.../api', mais les images sont à la racine '/uploads'
@@ -77,6 +79,7 @@ const Navbar = () => {
   const { data: notifications, isLoading: isLoadingNotifs } =
     useNotifications({ enabled: !!token });
   const markAsReadMutation = useMarkAsRead();
+  const deleteNotificationMutation = useDeleteNotification();
 
   // --- Gestion des interactions utilisateur ---
   const handleThemeToggle = () => setTheme(theme === "dark" ? "light" : "dark");
@@ -129,7 +132,16 @@ const Navbar = () => {
       baseItems.splice(1, 0, {
         label: "Scanner un Ticket",
         icon: ScanLine,
+        label: "Scanner un Ticket",
+        icon: ScanLine,
         path: "/scan",
+      });
+      // AJOUT: Bouton Créer un événement
+      baseItems.splice(1, 0, {
+        label: "Créer un événement",
+        icon: PlusCircle,
+        path: "/createevent",
+        highlight: true, // Marqueur pour le style
       });
     }
     if (role === "Administrateur") {
@@ -205,25 +217,65 @@ const Navbar = () => {
   // --- Navbar principale pour utilisateur connecté ---
   return (
     <>
-      <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white dark:bg-gray-800 shadow-md">
-        {/* Bouton hamburger */}
+      <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-700 transition-all duration-300">
+        {/* Bouton hamburger (Visible uniquement sur mobile) */}
         <button
           onClick={() => {
             closeMenus();
             setMenuOpen(true);
           }}
-          className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+          className="md:hidden p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors active:scale-95"
           aria-label="Ouvrir le menu"
         >
           <Menu className="w-6 h-6" />
         </button>
 
         {/* Logo central */}
-        <Link to="/home" className="flex-shrink-0">
+        <Link to="/home" className="flex-shrink-0 mr-4">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent">
             Qr-Event
           </h1>
         </Link>
+
+        {/* Menu Desktop (Visible uniquement sur écran large) */}
+        <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
+          {menuItems
+            .filter(
+              (item) => item.label !== "Mon Profil" && item.label !== "Retour"
+            )
+            .map((item) => {
+              const Icon = item.icon;
+              return item.path ? (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  className={`flex items-center gap-2 text-sm font-medium transition-all duration-200 ${
+                    item.highlight
+                      ? "bg-blue-600 text-white px-5 py-2.5 rounded-full hover:bg-blue-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                      : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 relative group"
+                  }`}
+                >
+                  <Icon
+                    className={`w-4 h-4 ${item.highlight ? "text-white" : ""}`}
+                  />
+                  <span>{item.label}</span>
+                  {!item.highlight && (
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                  )}
+                </Link>
+              ) : (
+                <button
+                  key={item.label}
+                  onClick={item.onClick}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                </button>
+              );
+            })}
+        </div>
 
         <div className="flex items-center gap-2 relative">
           {/* Bouton Thème */}
@@ -269,23 +321,43 @@ const Navbar = () => {
                   </p>
                 )}
                 {notifications?.map((notif) => (
-                  <Link
+                  <div
                     key={notif._id || notif.id}
-                    to={notif.link || "#"}
-                    onClick={closeMenus}
-                    className={`block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                    className={`flex items-start justify-between p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group ${
                       !notif.isRead
-                        ? "font-medium"
-                        : "font-normal text-gray-600 dark:text-gray-400"
+                        ? "bg-blue-50 dark:bg-blue-900/20"
+                        : ""
                     }`}
                   >
-                    <p className="text-sm dark:text-gray-200">
-                      {notif.message}
-                    </p>
-                    <span className="text-xs text-blue-500">
-                      {new Date(notif.createdAt).toLocaleString("fr-FR")}
-                    </span>
-                  </Link>
+                    <Link
+                      to={notif.link || "#"}
+                      onClick={closeMenus}
+                      className="flex-1"
+                    >
+                      <p
+                        className={`text-sm ${
+                          !notif.isRead
+                            ? "font-semibold text-gray-900 dark:text-white"
+                            : "text-gray-600 dark:text-gray-300"
+                        }`}
+                      >
+                        {notif.message}
+                      </p>
+                      <span className="text-xs text-blue-500 mt-1 block">
+                        {new Date(notif.createdAt).toLocaleString("fr-FR")}
+                      </span>
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNotificationMutation.mutate(notif._id || notif.id);
+                      }}
+                      className="ml-2 p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

@@ -1,6 +1,8 @@
 import axios from "axios";
-export const API_BASE_URL = "https://projet-qr-event-uzrp.onrender.com/api";
-// "http://localhost:3001/api"
+export const API_BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3001/api"
+    : "https://projet-qr-event-uzrp.onrender.com/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

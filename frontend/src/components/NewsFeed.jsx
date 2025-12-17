@@ -26,7 +26,7 @@ const NewsCard = ({ article }) => (
     rel="noopener noreferrer"
     className="
       flex-shrink-0
-      w-72 /* CORRIGÉ: w-50 n'existe pas, w-72 (288px) est mieux */
+      w-72
       mr-6
       bg-white dark:bg-gray-800
       rounded-lg
@@ -35,6 +35,7 @@ const NewsCard = ({ article }) => (
       border border-gray-200 dark:border-gray-700
       transition-all duration-300
       hover:shadow-xl hover:-translate-y-1
+      cursor-pointer
     "
   >
     {/* Image */}
