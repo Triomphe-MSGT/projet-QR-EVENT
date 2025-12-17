@@ -7,11 +7,17 @@ let transporter = null;
 
 if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
   transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true pour 465, false pour les autres ports
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    tls: {
+      rejectUnauthorized: false, // Aide parfois sur certains serveurs cloud
+    },
+    connectionTimeout: 10000, // 10 secondes
   });
 
   logger.info("📧 SMTP Gmail chargé avec succès.");

@@ -132,8 +132,6 @@ const Navbar = () => {
       baseItems.splice(1, 0, {
         label: "Scanner un Ticket",
         icon: ScanLine,
-        label: "Scanner un Ticket",
-        icon: ScanLine,
         path: "/scan",
       });
       // AJOUT: Bouton Créer un événement
