@@ -1,5 +1,13 @@
 const cloudinary = require("cloudinary").v2;
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+// `multer-storage-cloudinary` can export in different shapes depending on version.
+// Normalize to a constructor called `CloudinaryStorage`.
+const _multerStorageCloudinary = require("multer-storage-cloudinary");
+const CloudinaryStorage =
+  (_multerStorageCloudinary &&
+    (_multerStorageCloudinary.CloudinaryStorage ||
+      _multerStorageCloudinary.default ||
+      _multerStorageCloudinary)) ||
+  null;
 const multer = require("multer");
 
 // Configuration Cloudinary

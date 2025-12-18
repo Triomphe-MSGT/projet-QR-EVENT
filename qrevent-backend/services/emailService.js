@@ -1,39 +1,24 @@
-const nodemailer = require("nodemailer");
+const axios = require("axios");
 const logger = require("../utils/logger");
 
-let transporter = null;
+// Configuration Brevo
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
+const BREVO_SENDER_NAME = process.env.BREVO_SENDER_NAME || "QR-Event";
 
-// Initialisation du transporteur SEULEMENT si SMTP est configuré
-
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-  transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // true pour 465, false pour les autres ports
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false, // Aide parfois sur certains serveurs cloud
-    },
-    connectionTimeout: 10000, // 10 secondes
-  });
-
-  logger.info("📧 SMTP Gmail chargé avec succès.");
-} else {
-  console.warn(
-    "⚠️ EMAIL_USER ou EMAIL_PASS manquant. Le mode STUB est activé."
+// Vérifier que les clés sont configurées
+if (!BREVO_API_KEY || !BREVO_SENDER_EMAIL) {
+  logger.warn(
+    "⚠️ BREVO_API_KEY ou BREVO_SENDER_EMAIL manquant. Le mode STUB est activé."
   );
 }
 
-// 2️Fonction générique pour envoyer un email
-
+// Fonction générique pour envoyer un email via Brevo
 const sendEmail = async (to, subject, text, html) => {
-  // Mode STUB (aucun envoi réel)
-  if (!transporter) {
+  // Mode STUB si la configuration manque
+  if (!BREVO_API_KEY || !BREVO_SENDER_EMAIL) {
     logger.info(
-      "📨 MODE STUB - Aucun email envoyé (configuration SMTP absente)"
+      "📨 MODE STUB - Aucun email envoyé (configuration Brevo absente)"
     );
     logger.info("----- EMAIL SIMULÉ -----");
     logger.info(`À : ${to}`);
@@ -43,19 +28,39 @@ const sendEmail = async (to, subject, text, html) => {
     return;
   }
 
-  const mailOptions = {
-    from: `"Qr-Event" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    text: text || undefined,
-    html: html || undefined,
-  };
-
   try {
-    const info = await transporter.sendMail(mailOptions);
-    logger.info(`📧 Email envoyé à ${to} (ID: ${info.messageId})`);
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: BREVO_SENDER_NAME,
+          email: BREVO_SENDER_EMAIL,
+        },
+        to: [
+          {
+            email: to,
+          },
+        ],
+        subject,
+        htmlContent: html || text,
+        textContent: text,
+      },
+      {
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          "api-key": BREVO_API_KEY,
+        },
+      }
+    );
+
+    logger.info(`📧 Email envoyé à ${to} (ID: ${response.data.messageId})`);
+    return response.data;
   } catch (error) {
-    logger.error("❌ Erreur envoi email :", error);
+    logger.error(
+      "❌ Erreur envoi email Brevo:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
