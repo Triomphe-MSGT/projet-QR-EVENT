@@ -78,17 +78,25 @@ export const removeParticipant = async ({ eventId, participantId }) => {
   return { eventId, participantId }; // Retourne les ID pour la mise à jour du cache
 };
 
+// Liker/Unliker un événement
+export const toggleLikeEvent = async (eventId) => {
+  if (!eventId) throw new Error("ID d'événement manquant");
+  const { data } = await api.post(`/events/${eventId}/like`);
+  return data;
+};
+
 // Exporte les fonctions individuellement ou en tant qu'objet
 const eventService = {
   getEvents,
   getEventById,
   registerToEvent,
-  unregisterFromEvent, // ✅ Ajouté
+  unregisterFromEvent,
   createEvent,
   updateEvent,
   deleteEvent,
   validateQrCode,
-  addParticipant, // ✅ Ajouté
+  addParticipant,
   removeParticipant,
+  toggleLikeEvent,
 };
 export default eventService;

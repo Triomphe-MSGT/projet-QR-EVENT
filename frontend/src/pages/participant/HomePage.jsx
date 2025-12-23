@@ -105,7 +105,7 @@ const EventCarousel = ({ dateFilter }) => {
 
   return (
     <div className="relative group animate-fade-in-up">
-      <div className="flex gap-6 overflow-x-auto pb-10 snap-x snap-mandatory no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="flex gap-6 overflow-x-auto pb-10 snap-x snap-mandatory no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
         {filteredEvents.map((event) => (
           <div key={event._id || event.id} className="shrink-0 w-[85vw] sm:w-[400px] snap-center">
             <EventCard 
@@ -130,6 +130,13 @@ const EventCarousel = ({ dateFilter }) => {
             Découvrez plus de {allEvents?.length || 0} événements passionnants.
           </p>
         </Link>
+      </div>
+
+      {/* Mobile Scroll Indicator */}
+      <div className="md:hidden absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none animate-bounce-horizontal">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-2 rounded-full shadow-lg border border-white/20">
+          <ChevronRight className="w-5 h-5 text-blue-600" />
+        </div>
       </div>
     </div>
   );
@@ -174,20 +181,26 @@ const HomePage = () => {
             <ListCategorie />
 
             {/* Date Filters - Scrollable on mobile */}
-            <div className="mt-12 flex overflow-x-auto pb-4 gap-3 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:justify-center">
-              {filters.map((filter) => (
-                <button
-                  key={filter.value}
-                  onClick={() => setDateFilter(filter.value)}
-                  className={`px-6 md:px-8 py-3 md:py-3.5 rounded-2xl font-black text-[10px] md:text-xs tracking-widest transition-all border-2 shrink-0 md:shrink ${
-                    dateFilter === filter.value
-                      ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
-                      : "bg-transparent border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:border-blue-600/30 hover:text-blue-600"
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
+            <div className="relative mt-12">
+              <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:justify-center scroll-smooth">
+                {filters.map((filter) => (
+                  <button
+                    key={filter.value}
+                    onClick={() => setDateFilter(filter.value)}
+                    className={`px-6 md:px-8 py-3 md:py-3.5 rounded-2xl font-black text-[10px] md:text-xs tracking-widest transition-all border-2 shrink-0 md:shrink ${
+                      dateFilter === filter.value
+                        ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
+                        : "bg-transparent border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:border-blue-600/30 hover:text-blue-600"
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+              {/* Mobile Scroll Indicator */}
+              <div className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none animate-pulse">
+                <ChevronRight className="w-4 h-4 text-gray-300" />
+              </div>
             </div>
           </section>
 
@@ -247,9 +260,15 @@ const HomePage = () => {
                   </Link>
                 </div>
                 
-                <div className="flex flex-row md:flex-col gap-4 md:gap-6 overflow-x-auto md:overflow-visible no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-                  <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80" className="w-[70vw] md:w-full h-48 md:h-64 object-cover rounded-[2rem] md:rounded-[2.5rem] md:rotate-2 shadow-2xl border-4 border-white/10 shrink-0" alt="" />
-                  <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=600&q=80" className="w-[70vw] md:w-full h-48 md:h-64 object-cover rounded-[2rem] md:rounded-[2.5rem] md:-rotate-2 shadow-2xl border-4 border-white/10 shrink-0" alt="" />
+                <div className="relative">
+                  <div className="flex flex-row md:flex-col gap-4 md:gap-6 overflow-x-auto md:overflow-visible no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
+                    <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80" className="w-[70vw] md:w-full h-48 md:h-64 object-cover rounded-[2rem] md:rounded-[2.5rem] md:rotate-2 shadow-2xl border-4 border-white/10 shrink-0" alt="" />
+                    <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=600&q=80" className="w-[70vw] md:w-full h-48 md:h-64 object-cover rounded-[2rem] md:rounded-[2.5rem] md:-rotate-2 shadow-2xl border-4 border-white/10 shrink-0" alt="" />
+                  </div>
+                  {/* Mobile Scroll Indicator */}
+                  <div className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none animate-pulse">
+                    <ChevronRight className="w-6 h-6 text-white/50" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -320,7 +339,12 @@ const HomePage = () => {
           from { opacity: 0; transform: translateY(40px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes bounceHorizontal {
+          0%, 100% { transform: translateX(0) translateY(-50%); }
+          50% { transform: translateX(5px) translateY(-50%); }
+        }
         .animate-fade-in-up { animation: fade-in-up 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .animate-bounce-horizontal { animation: bounceHorizontal 1.5s ease-in-out infinite; }
       `}</style>
     </>
   );

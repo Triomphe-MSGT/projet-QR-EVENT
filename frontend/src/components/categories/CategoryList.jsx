@@ -60,12 +60,21 @@ const ListCategorie = () => {
   return (
     <div className="space-y-10">
       {/* Mobile: Horizontal Scroll | Desktop: Grid */}
-      <div className="flex overflow-x-auto pb-4 gap-4 snap-x md:grid md:grid-cols-4 md:gap-8 md:overflow-visible no-scrollbar">
-        {(showAll ? categories : categories?.slice(0, 8))?.map((cat) => (
-          <div key={cat.id || cat._id} className="snap-center shrink-0 md:shrink">
-            <CategoryCard category={cat} />
+      <div className="relative group/cat">
+        <div className="flex overflow-x-auto pb-4 gap-4 snap-x md:grid md:grid-cols-4 md:gap-8 md:overflow-visible no-scrollbar scroll-smooth">
+          {(showAll ? categories : categories?.slice(0, 8))?.map((cat) => (
+            <div key={cat.id || cat._id} className="snap-center shrink-0 md:shrink">
+              <CategoryCard category={cat} />
+            </div>
+          ))}
+        </div>
+        
+        {/* Mobile Scroll Indicator */}
+        <div className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none animate-pulse">
+          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-1 rounded-full">
+            <ChevronDown className="w-4 h-4 text-blue-500 -rotate-90" />
           </div>
-        ))}
+        </div>
       </div>
       
       {/* On cache le bouton "Voir plus" sur mobile car on a le scroll horizontal, ou on le garde pour desktop */}

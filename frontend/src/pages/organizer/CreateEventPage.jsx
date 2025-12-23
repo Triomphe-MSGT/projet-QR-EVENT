@@ -156,59 +156,70 @@ const EventForm = () => {
 
   return (
     <MainLayout>
-      {/* Choice Modal Fallback */}
+      {/* Choice Modal */}
       {showChoiceModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 md:p-12 max-w-2xl w-full shadow-2xl border border-gray-100 dark:border-gray-700 animate-scale-up">
-            <div className="text-center space-y-4 mb-10">
-              <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
-                Quel type d'événement <br /> <span className="text-blue-600">souhaitez-vous créer ?</span>
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 font-medium">
-                Choisissez la visibilité de votre événement.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <button
-                onClick={() => {
-                  setFormData(prev => ({ ...prev, visibility: "public" }));
-                  setShowChoiceModal(false);
-                }}
-                className="group p-8 bg-blue-50 dark:bg-blue-900/20 rounded-[2rem] border-2 border-transparent hover:border-blue-600 transition-all text-left"
-              >
-                <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Users className="w-7 h-7" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300"></div>
+          
+          {/* Modal Content */}
+          <div className="relative bg-white dark:bg-gray-900 w-full h-full md:h-auto md:max-w-2xl md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom md:zoom-in-95 duration-500">
+            <div className="flex-1 overflow-y-auto p-6 md:p-12 flex flex-col justify-center">
+              <div className="text-center space-y-4 mb-12">
+                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-6">
+                  <PlusCircle size={32} />
                 </div>
-                <h4 className="text-xl font-black text-gray-900 dark:text-white mb-2">Événement Public</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                  Visible par tous les utilisateurs sur la plateforme.
+                <h3 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
+                  Quel type d'événement <br /> <span className="text-blue-600">souhaitez-vous créer ?</span>
+                </h3>
+                <p className="text-base md:text-lg text-gray-500 dark:text-gray-400 font-medium max-w-md mx-auto">
+                  Choisissez la visibilité qui correspond le mieux à votre projet.
                 </p>
-              </button>
+              </div>
 
-              <button
-                onClick={() => {
-                  setFormData(prev => ({ ...prev, visibility: "private" }));
-                  setShowChoiceModal(false);
-                }}
-                className="group p-8 bg-purple-50 dark:bg-purple-900/20 rounded-[2rem] border-2 border-transparent hover:border-purple-600 transition-all text-left"
-              >
-                <div className="w-14 h-14 bg-purple-600 text-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Lock className="w-7 h-7" />
-                </div>
-                <h4 className="text-xl font-black text-gray-900 dark:text-white mb-2">Événement Privé</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                  Uniquement accessible via un lien direct.
-                </p>
-              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <button
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, visibility: "public" }));
+                    setShowChoiceModal(false);
+                  }}
+                  className="group p-8 bg-blue-50/50 dark:bg-blue-900/10 rounded-[2.5rem] border-2 border-transparent hover:border-blue-600 hover:bg-white dark:hover:bg-gray-800 transition-all text-left shadow-sm hover:shadow-xl"
+                >
+                  <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/20">
+                    <Users className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-xl font-black text-gray-900 dark:text-white mb-2">Événement Public</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                    Visible par tous les utilisateurs sur la plateforme. Idéal pour les concerts, festivals ou conférences.
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, visibility: "private" }));
+                    setShowChoiceModal(false);
+                  }}
+                  className="group p-8 bg-purple-50/50 dark:bg-purple-900/10 rounded-[2.5rem] border-2 border-transparent hover:border-purple-600 hover:bg-white dark:hover:bg-gray-800 transition-all text-left shadow-sm hover:shadow-xl"
+                >
+                  <div className="w-14 h-14 bg-purple-600 text-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20">
+                    <Lock className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-xl font-black text-gray-900 dark:text-white mb-2">Événement Privé</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                    Uniquement accessible via un lien direct. Parfait pour les mariages, anniversaires ou réunions privées.
+                  </p>
+                </button>
+              </div>
             </div>
             
-            <button
-              onClick={() => navigate(-1)}
-              className="mt-10 w-full py-4 text-sm font-black text-gray-400 hover:text-gray-600 uppercase tracking-widest transition-colors"
-            >
-              Annuler
-            </button>
+            <div className="p-6 md:p-10 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
+              <button
+                onClick={() => navigate(-1)}
+                className="w-full py-4 text-sm font-black text-gray-400 hover:text-gray-900 dark:hover:text-white uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+              >
+                <ArrowLeft size={16} /> Annuler et revenir
+              </button>
+            </div>
           </div>
         </div>
       )}

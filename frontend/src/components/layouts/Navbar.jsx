@@ -434,38 +434,41 @@ const Navbar = () => {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in"
           ></div>
 
-          <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-white dark:bg-gray-800 shadow-2xl animate-slide-in-left flex flex-col">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="avatar"
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              ) : (
-                <DefaultAvatarIcon className="w-12 h-12 rounded-full p-1.5" />
-              )}
-              <div>
-                <p className="font-semibold text-gray-800 dark:text-gray-100">
+          <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl shadow-2xl animate-slide-in-left flex flex-col border-r border-white/20">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center gap-4">
+              <div className="relative">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="avatar"
+                    className="w-14 h-14 rounded-2xl object-cover shadow-md"
+                  />
+                ) : (
+                  <DefaultAvatarIcon className="w-14 h-14 rounded-2xl p-2 shadow-md" />
+                )}
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-gray-900 dark:text-white truncate">
                   {user.nom}
                 </p>
-                <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
                   {user.role}
-                </span>
+                </p>
               </div>
               <button
                 onClick={closeMenus}
-                className="p-2 ml-auto text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+            <nav className="flex-1 p-6 space-y-1 overflow-y-auto no-scrollbar">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const shared =
-                  "flex items-center gap-4 p-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-full font-medium";
+                  "flex items-center gap-4 p-3.5 rounded-2xl text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 w-full font-bold text-sm group";
                 return item.path ? (
                   <Link
                     key={item.label}
@@ -473,9 +476,11 @@ const Navbar = () => {
                     onClick={closeMenus}
                     className={shared}
                   >
-                    <Icon className="w-6 h-6 text-gray-500" />
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-800 transition-colors">
+                      <Icon className="w-5 h-5" />
+                    </div>
                     <span>{item.label}</span>
-                    <ChevronRight className="w-5 h-5 ml-auto text-gray-400" />
+                    <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1" />
                   </Link>
                 ) : (
                   <button
@@ -486,9 +491,11 @@ const Navbar = () => {
                     }}
                     className={shared}
                   >
-                    <Icon className="w-6 h-6 text-gray-500" />
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-800 transition-colors">
+                      <Icon className="w-5 h-5" />
+                    </div>
                     <span>{item.label}</span>
-                    <ChevronRight className="w-5 h-5 ml-auto text-gray-400" />
+                    <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1" />
                   </button>
                 );
               })}

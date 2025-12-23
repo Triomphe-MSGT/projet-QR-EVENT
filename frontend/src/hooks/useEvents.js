@@ -12,6 +12,7 @@ import {
   validateQrCode,
   addParticipant,
   removeParticipant,
+  toggleLikeEvent,
 } from "../services/eventService";
 
 // --- Service pour les données spécifiques au dashboard ---
@@ -184,6 +185,21 @@ export const useRemoveParticipant = () => {
     },
     onError: (error) => {
       console.error("Échec suppression participant:", error);
+    },
+  });
+};
+
+// Hook pour liker/unliker un événement
+export const useToggleLikeEvent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: toggleLikeEvent,
+    onSuccess: (data, eventId) => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["event", eventId] });
+    },
+    onError: (error) => {
+      console.error("Échec du like :", error);
     },
   });
 };

@@ -895,6 +895,36 @@ const generateEventReport = async (req, res, next) => {
   }
 };
 
+/**
+ * POST /events/:id/like
+ */
+const toggleLikeEvent = async (req, res, next) => {
+  try {
+    requireAuthUser(req);
+    const eventId = req.params.id;
+    const userId = req.user.id;
+
+    if (!isValidObjectId(eventId)) return res.status(400).json({ error: "ID d'événement invalide." });
+
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ error: "Événement non trouvé." });
+
+    const likeIndex = event.likes.indexOf(userId);
+    if (likeIndex === -1) {
+      // Like
+      event.likes.push(userId);
+    } else {
+      // Unlike
+      event.likes.splice(likeIndex, 1);
+    }
+
+    await event.save();
+    res.json({ likes: event.likes });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Exports -------------------------------------------------------------------
 module.exports = {
   getAllEvents,
@@ -910,4 +940,5 @@ module.exports = {
   getEventsByOrganizer,
   getValidatedAttendees,
   generateEventReport,
+  toggleLikeEvent,
 };

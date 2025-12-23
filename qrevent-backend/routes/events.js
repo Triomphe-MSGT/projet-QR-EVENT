@@ -101,6 +101,12 @@ router.get(
 router.post("/:id/register", userExtractor, eventsController.registerToEvent);
 
 /**
+ * POST /api/events/:id/like
+ * Permet à un utilisateur de liker/unliker un événement
+ */
+router.post("/:id/like", userExtractor, eventsController.toggleLikeEvent);
+
+/**
  * DELETE /api/events/:id/register
  * Permet à un utilisateur de se désinscrire d'un événement
  */

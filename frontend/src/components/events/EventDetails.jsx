@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../slices/axiosInstance";
 import Button from "../ui/Button";
 import ParticipationFormModal from "../../pages/participant/ParticipationFormModal";
 import QrCodeDisplay from "../ui/QrCodeDisplay";
 import LocalisationCart from "./Localisationcart";
-import { useRegisterToEvent } from "../../hooks/useEvents";
+import { useRegisterToEvent, useEvents } from "../../hooks/useEvents";
+import EventCard from "./EventCard";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import {
   Loader2,
@@ -39,6 +40,19 @@ const EventDetails = ({ event }) => {
 
   const isAlreadyRegistered =
     user && event.participants?.some((p) => p === user.id || p._id === user.id);
+
+  const { data: allEvents } = useEvents();
+  const similarEvents = useMemo(() => {
+    if (!allEvents || !event.category) return [];
+    const currentCategoryId = event.category._id || event.category.id || event.category;
+    const currentEventId = event._id || event.id;
+    
+    return allEvents.filter((e) => {
+      const eCategoryId = e.category?._id || e.category?.id || e.category;
+      const eId = e._id || e.id;
+      return eCategoryId === currentCategoryId && eId !== currentEventId;
+    }).slice(0, 6);
+  }, [allEvents, event]);
 
   const canSeeParticipants = user && (
     user.role === 'Administrateur' || 
@@ -422,9 +436,38 @@ const EventDetails = ({ event }) => {
             </div>
           </div>
         </div>
+
+        {/* Similar Events Section */}
+        {similarEvents.length > 0 && (
+          <div className="max-w-7xl mx-auto px-4 mt-16 pb-12">
+            <div className="flex items-center justify-between mb-8">
+              <div className="space-y-1">
+                <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+                  Événements similaires
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                  D'autres expériences qui pourraient vous plaire
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar snap-x snap-mandatory">
+              {similarEvents.map((similarEvent) => (
+                <div key={similarEvent._id || similarEvent.id} className="shrink-0 w-[280px] md:w-[350px] snap-start">
+                  <EventCard 
+                    event={similarEvent} 
+                    handleDetails={() => navigate(`/events/${similarEvent._id || similarEvent.id}`)} 
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
