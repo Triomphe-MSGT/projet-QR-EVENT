@@ -35,11 +35,13 @@ const EventCarousel = ({ dateFilter }) => {
 
   const filteredEvents = useMemo(() => {
     if (!allEvents) return [];
+    console.log("EventCarousel: Total events received:", allEvents.length);
     const now = new Date();
     
     try {
       return allEvents
         .filter((event) => {
+          if (!event.startDate) return false;
           const eventStart = new Date(event.startDate);
           if (event.time) {
             const [hours, minutes] = event.time.split(":");
@@ -75,6 +77,8 @@ const EventCarousel = ({ dateFilter }) => {
       return [];
     }
   }, [allEvents, dateFilter]);
+
+  console.log("EventCarousel: filteredEvents count:", filteredEvents.length);
 
   if (isLoading)
     return (
@@ -169,13 +173,13 @@ const HomePage = () => {
             
             <ListCategorie />
 
-            {/* Date Filters - Moved below categories and styled transparent */}
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
+            {/* Date Filters - Scrollable on mobile */}
+            <div className="mt-12 flex overflow-x-auto pb-4 gap-3 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:justify-center">
               {filters.map((filter) => (
                 <button
                   key={filter.value}
                   onClick={() => setDateFilter(filter.value)}
-                  className={`px-8 py-3.5 rounded-2xl font-black text-xs tracking-widest transition-all border-2 ${
+                  className={`px-6 md:px-8 py-3 md:py-3.5 rounded-2xl font-black text-[10px] md:text-xs tracking-widest transition-all border-2 shrink-0 md:shrink ${
                     dateFilter === filter.value
                       ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
                       : "bg-transparent border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:border-blue-600/30 hover:text-blue-600"
@@ -243,9 +247,9 @@ const HomePage = () => {
                   </Link>
                 </div>
                 
-                <div className="flex flex-col gap-6">
-                  <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80" className="w-full h-64 object-cover rounded-[2.5rem] rotate-2 shadow-2xl border-4 border-white/10" alt="" />
-                  <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=600&q=80" className="w-full h-64 object-cover rounded-[2.5rem] -rotate-2 shadow-2xl border-4 border-white/10" alt="" />
+                <div className="flex flex-row md:flex-col gap-4 md:gap-6 overflow-x-auto md:overflow-visible no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+                  <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80" className="w-[70vw] md:w-full h-48 md:h-64 object-cover rounded-[2rem] md:rounded-[2.5rem] md:rotate-2 shadow-2xl border-4 border-white/10 shrink-0" alt="" />
+                  <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=600&q=80" className="w-[70vw] md:w-full h-48 md:h-64 object-cover rounded-[2rem] md:rounded-[2.5rem] md:-rotate-2 shadow-2xl border-4 border-white/10 shrink-0" alt="" />
                 </div>
               </div>
             </div>
@@ -254,33 +258,33 @@ const HomePage = () => {
           {/* Organizer CTA Section */}
           {user && (
             <section className="max-w-7xl mx-auto px-4 pb-24">
-              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[3.5rem] p-8 md:p-20 text-white relative overflow-hidden shadow-2xl">
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[2.5rem] md:rounded-[3.5rem] p-8 md:p-20 text-white relative overflow-hidden shadow-2xl">
                 <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
-                  <div className="max-w-2xl space-y-6">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-                      <MessageSquare className="w-8 h-8 text-white" />
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
+                  <div className="max-w-2xl space-y-4 md:space-y-6 text-center md:text-left">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 mx-auto md:mx-0">
+                      <MessageSquare className="w-6 h-6 md:w-8 md:h-8 text-white" />
                     </div>
                     <h2 className="text-3xl md:text-5xl font-black tracking-tighter leading-none">
-                      Vous êtes <br /> <span className="text-indigo-200">Organisateur ?</span>
+                      Vous êtes <br className="hidden md:block" /> <span className="text-indigo-200">Organisateur ?</span>
                     </h2>
-                    <p className="text-indigo-100 text-lg font-medium leading-relaxed">
+                    <p className="text-indigo-100 text-base md:text-lg font-medium leading-relaxed">
                       Utilisez nos outils pour créer, gérer, et sécuriser vos événements. De la billetterie à la validation par QR code.
                     </p>
                   </div>
                   
-                  <div className="shrink-0">
+                  <div className="shrink-0 w-full md:w-auto">
                     {user?.role === "Participant" ? (
                       <button
                         onClick={() => setIsUpgradeModalOpen(true)}
-                        className="px-12 py-5 bg-white text-indigo-600 font-black rounded-2xl hover:bg-indigo-50 transition-all hover:scale-105 shadow-2xl"
+                        className="w-full md:w-auto px-10 md:px-12 py-4 md:py-5 bg-white text-indigo-600 font-black rounded-2xl hover:bg-indigo-50 transition-all hover:scale-105 shadow-2xl text-sm md:text-base"
                       >
                         Devenir Organisateur
                       </button>
                     ) : (
                       <button
                         onClick={() => navigate(user.role === "administrateur" ? "/admin" : "/dashboard")}
-                        className="px-12 py-5 bg-white text-indigo-600 font-black rounded-2xl hover:bg-indigo-50 transition-all hover:scale-105 shadow-2xl"
+                        className="w-full md:w-auto px-10 md:px-12 py-4 md:py-5 bg-white text-indigo-600 font-black rounded-2xl hover:bg-indigo-50 transition-all hover:scale-105 shadow-2xl text-sm md:text-base"
                       >
                         Mon Dashboard
                       </button>

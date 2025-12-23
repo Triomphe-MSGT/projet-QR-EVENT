@@ -80,6 +80,7 @@ export const useUserEvents = () => {
   return useQuery({
     queryKey: ["userEvents"],
     queryFn: userProfileService.getUserEvents,
+    staleTime: 0,
   });
 };
 

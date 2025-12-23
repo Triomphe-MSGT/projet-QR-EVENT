@@ -226,11 +226,14 @@ const getMyEvents = async (req, res, next) => {
         qrCodeImage: i.qrCodeImage,
       }));
 
+    console.log(`getMyEvents: Found ${organizedEvents.length} organized events and ${participatedEvents.length} participated events for user ${userId}`);
+
     res.json({
       organized: organizedEvents,
       participated: participatedEvents,
     });
   } catch (error) {
+    console.error("Error in getMyEvents:", error);
     next(error);
   }
 };

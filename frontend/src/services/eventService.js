@@ -3,6 +3,7 @@ import api from "../slices/axiosInstance";
 // Récupère tous les événements
 export const getEvents = async () => {
   const { data } = await api.get("/events");
+  console.log("eventService: getEvents returned", data.length, "events");
   return data;
 };
 

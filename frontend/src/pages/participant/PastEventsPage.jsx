@@ -11,14 +11,19 @@ const PastEventsPage = () => {
 
   const groupedPastEvents = useMemo(() => {
     if (!events) return {};
+    console.log("PastEventsPage: Total events received:", events.length);
 
     const now = new Date();
     
     const pastEvents = events.filter(event => {
-      const eventDate = new Date(event.startDate || event.date);
+      const dateStr = event.startDate || event.date;
+      if (!dateStr) return false;
+      const eventDate = new Date(dateStr);
       if (event.time) {
         const [hours, minutes] = event.time.split(':');
-        eventDate.setHours(parseInt(hours), parseInt(minutes));
+        if (hours && minutes) {
+          eventDate.setHours(parseInt(hours), parseInt(minutes));
+        }
       }
       return eventDate < now;
     });
@@ -109,9 +114,9 @@ const PastEventsPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
                   {monthEvents.map((event) => (
                     <EventCard 
-                      key={event._id}
+                      key={event._id || event.id}
                       event={event}
-                      handleDetails={() => navigate(`/events/${event._id}`)}
+                      handleDetails={() => navigate(`/events/${event._id || event.id}`)}
                       isArchived={true}
                     />
                   ))}

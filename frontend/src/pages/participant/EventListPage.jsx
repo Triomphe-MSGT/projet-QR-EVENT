@@ -7,6 +7,7 @@ import { useParams, useSearchParams, Link } from "react-router-dom";
 import { History, Sparkles } from "lucide-react";
 
 const EventListPage = () => {
+  console.log("EventListPage: Rendering...");
   const { name: categoryName } = useParams();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get("search") || "";
@@ -17,6 +18,7 @@ const EventListPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: events, isLoading, isError, error } = useEvents();
+  console.log("EventListPage: events data received:", events?.length, "events");
 
   if (isLoading)
     return (
@@ -120,6 +122,8 @@ const EventListPage = () => {
       if (dateFilter === "week") return eventDay >= today && eventDay <= nextWeek;
       return true;
     });
+  
+  console.log("EventListPage: filteredEvents count:", filteredEvents.length);
 
   const eventsPerPage = 12;
   const startIndex = (currentPage - 1) * eventsPerPage;

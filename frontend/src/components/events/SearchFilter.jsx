@@ -87,25 +87,25 @@ const SearchAndFilter = ({
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search Bar */}
         <div className="relative flex-1 group">
-          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+          <div className="absolute inset-y-0 left-0 pl-4 md:pl-5 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 md:h-5 md:w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
           </div>
           <input
             type="text"
-            placeholder="Rechercher par nom, artiste, lieu..."
+            placeholder="Rechercher..."
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-14 pr-12 py-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 border border-gray-100 dark:border-gray-700 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm font-medium"
+            className="w-full pl-10 md:pl-14 pr-10 md:pr-12 py-4 md:py-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 border border-gray-100 dark:border-gray-700 rounded-2xl md:rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm font-medium text-sm md:text-base"
           />
           {query && (
             <button 
               onClick={() => setQuery("")}
-              className="absolute inset-y-0 right-0 pr-5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              className="absolute inset-y-0 right-0 pr-4 md:pr-5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 md:h-5 md:w-5" />
             </button>
           )}
         </div>
@@ -113,16 +113,16 @@ const SearchAndFilter = ({
         {/* Filter Toggle Button */}
         <button
           onClick={() => setIsFilterOpen(!isFilterOpen)}
-          className={`flex items-center justify-center gap-3 px-8 py-5 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg border-2 ${
+          className={`flex items-center justify-center gap-2 md:gap-3 px-6 md:px-8 py-4 md:py-5 rounded-2xl md:rounded-[2rem] font-black text-[10px] md:text-xs uppercase tracking-[0.2em] transition-all shadow-lg border-2 ${
             isFilterOpen 
               ? "bg-blue-600 border-blue-600 text-white shadow-blue-500/30 scale-105" 
               : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-100 dark:border-gray-700 hover:border-blue-600/30"
           }`}
         >
-          <Filter className={`h-4 w-4 ${isFilterOpen ? "animate-pulse" : ""}`} />
+          <Filter className={`h-3 w-3 md:h-4 md:w-4 ${isFilterOpen ? "animate-pulse" : ""}`} />
           <span>Filtres</span>
           {(activeTypes.length + activeFormats.length + activeCities.length + activeCategories.length + (activeTime ? 1 : 0)) > 0 && (
-            <span className="flex items-center justify-center w-5 h-5 bg-white text-blue-600 rounded-full text-[10px] font-black">
+            <span className="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 bg-white text-blue-600 rounded-full text-[9px] md:text-[10px] font-black">
               {activeTypes.length + activeFormats.length + activeCities.length + activeCategories.length + (activeTime ? 1 : 0)}
             </span>
           )}
@@ -131,21 +131,21 @@ const SearchAndFilter = ({
 
       {/* Expanded Filters Panel */}
       {isFilterOpen && (
-        <div className="p-8 md:p-10 bg-white dark:bg-gray-800 rounded-[3rem] border border-gray-100 dark:border-gray-700 shadow-2xl animate-fade-in-up space-y-10">
-          <div className="flex items-center justify-between border-b border-gray-50 dark:border-gray-700 pb-6">
-            <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Personnaliser ma recherche</h3>
+        <div className="p-5 md:p-10 bg-white dark:bg-gray-800 rounded-[2rem] md:rounded-[3rem] border border-gray-100 dark:border-gray-700 shadow-2xl animate-fade-in-up space-y-8 md:space-y-10">
+          <div className="flex items-center justify-between border-b border-gray-50 dark:border-gray-700 pb-4 md:pb-6">
+            <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white tracking-tight">Filtres</h3>
             <button 
               onClick={clearAll}
-              className="text-xs font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest flex items-center gap-2"
+              className="text-[10px] md:text-xs font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest flex items-center gap-1 md:gap-2"
             >
-              <X className="w-4 h-4" /> Réinitialiser
+              <X className="w-3 h-3 md:w-4 md:h-4" /> Réinitialiser
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8">
             {/* Type Filter */}
-            <div className="space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            <div className="space-y-3 md:space-y-4 col-span-1">
+              <label className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                 <Zap className="w-3 h-3 text-amber-500" /> Accès
               </label>
               <div className="flex flex-col gap-2">
@@ -153,7 +153,7 @@ const SearchAndFilter = ({
                   <button
                     key={type.value}
                     onClick={() => toggleMultiFilter("types", type.value)}
-                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border-2 ${
+                    className={`flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-[10px] md:text-[11px] font-bold transition-all border-2 ${
                       activeTypes.includes(type.value)
                         ? "bg-blue-600 border-blue-600 text-white shadow-md"
                         : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:border-gray-200"
@@ -167,8 +167,8 @@ const SearchAndFilter = ({
             </div>
 
             {/* Format Filter */}
-            <div className="space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            <div className="space-y-3 md:space-y-4 col-span-1">
+              <label className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                 <Calendar className="w-3 h-3 text-green-500" /> Format
               </label>
               <div className="flex flex-col gap-2">
@@ -176,14 +176,14 @@ const SearchAndFilter = ({
                   <button
                     key={f.value}
                     onClick={() => toggleMultiFilter("formats", f.value)}
-                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border-2 ${
+                    className={`flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-[10px] md:text-[11px] font-bold transition-all border-2 ${
                       activeFormats.includes(f.value)
                         ? "bg-green-600 border-green-600 text-white shadow-md"
                         : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:border-gray-200"
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <span>{f.icon}</span>
+                    <span className="flex items-center gap-1 md:gap-2">
+                      <span className="hidden md:inline">{f.icon}</span>
                       {f.label}
                     </span>
                     {activeFormats.includes(f.value) && <Check className="w-3 h-3" />}
@@ -193,8 +193,8 @@ const SearchAndFilter = ({
             </div>
 
             {/* City Filter */}
-            <div className="space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            <div className="space-y-3 md:space-y-4 col-span-2 md:col-span-1">
+              <label className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                 <MapPin className="w-3 h-3 text-red-500" /> Villes
               </label>
               <div className="relative">
@@ -205,7 +205,7 @@ const SearchAndFilter = ({
                     const values = Array.from(e.target.selectedOptions, option => option.value);
                     updateFilters("cities", values);
                   }}
-                  className="w-full h-32 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 no-scrollbar"
+                  className="w-full h-24 md:h-32 p-2 md:p-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl md:rounded-2xl text-[10px] md:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 no-scrollbar"
                 >
                   {cities.map(city => (
                     <option key={city} value={city} className="py-1 px-2 rounded-lg mb-1 checked:bg-blue-600 checked:text-white">
@@ -214,54 +214,54 @@ const SearchAndFilter = ({
                   ))}
                 </select>
                 <div className="absolute bottom-2 right-2 pointer-events-none">
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                  <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-gray-400" />
                 </div>
               </div>
             </div>
 
             {/* Time Filter */}
-            <div className="space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                <Clock className="w-3 h-3 text-blue-500" /> Moment de la journée
+            <div className="space-y-3 md:space-y-4 col-span-2 md:col-span-1">
+              <label className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                <Clock className="w-3 h-3 text-blue-500" /> Moment
               </label>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-3 md:grid-cols-1 gap-2">
                 {times.map(time => (
                   <button
                     key={time.value}
                     onClick={() => updateFilters("time", activeTime === time.value ? "" : time.value)}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all border-2 ${
+                    className={`flex items-center justify-between px-3 md:px-4 py-2 md:py-3 rounded-xl text-[10px] md:text-xs font-bold transition-all border-2 ${
                       activeTime === time.value
                         ? "bg-blue-600 border-blue-600 text-white shadow-md"
                         : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:border-gray-200"
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <span className="text-base">{time.icon}</span>
-                      {time.label}
+                    <span className="flex items-center gap-1 md:gap-2">
+                      <span className="text-sm md:text-base">{time.icon}</span>
+                      <span className="hidden md:inline">{time.label}</span>
                     </span>
-                    {activeTime === time.value && <Check className="w-4 h-4" />}
+                    {activeTime === time.value && <Check className="w-3 h-3 md:w-4 md:h-4" />}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Category Filter */}
-            <div className="space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            <div className="space-y-3 md:space-y-4 col-span-2 md:col-span-1">
+              <label className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                 <Tag className="w-3 h-3 text-purple-500" /> Catégories
               </label>
-              <div className="h-32 overflow-y-auto pr-2 space-y-2 no-scrollbar">
+              <div className="h-24 md:h-32 overflow-y-auto pr-2 space-y-2 no-scrollbar">
                 {categories?.map(cat => (
                   <button
                     key={cat._id || cat.id}
                     onClick={() => toggleMultiFilter("categories", cat._id || cat.id)}
-                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border-2 ${
+                    className={`w-full flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-[10px] md:text-[11px] font-bold transition-all border-2 ${
                       activeCategories.includes(cat._id || cat.id)
                         ? "bg-purple-600 border-purple-600 text-white shadow-md"
                         : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:border-gray-200"
                     }`}
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-1 md:gap-2">
                       <span>{cat.emoji}</span>
                       {cat.name}
                     </span>

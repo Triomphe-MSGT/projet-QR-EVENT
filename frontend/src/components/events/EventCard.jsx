@@ -69,37 +69,37 @@ const EventCard = ({ event, handleDetails }) => {
       </div>
 
       {/* Content Section */}
-      <div className="p-6 md:p-8 flex flex-col flex-grow relative">
+      <div className="p-5 md:p-8 flex flex-col flex-grow relative">
         {/* Category Tag */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-black rounded-full tracking-widest">
+        <div className="flex items-center gap-2 mb-3 md:mb-4">
+          <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[9px] md:text-[10px] font-black rounded-full tracking-widest">
             #{event.category?.name || "Événement"}
           </span>
           {event.qrOption && (
-            <span className="flex items-center gap-1 text-[10px] font-black text-amber-500 tracking-widest">
+            <span className="flex items-center gap-1 text-[9px] md:text-[10px] font-black text-amber-500 tracking-widest">
               <Zap className="w-3 h-3 fill-current" /> QR Entry
             </span>
           )}
         </div>
 
-        <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-3 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
+        <h3 className="text-lg md:text-2xl font-black text-gray-900 dark:text-white mb-2 md:mb-3 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
           {event.name}
         </h3>
 
-        <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base line-clamp-2 mb-6 font-medium leading-relaxed">
+        <p className="text-gray-500 dark:text-gray-400 text-xs md:text-base line-clamp-2 mb-4 md:mb-6 font-medium leading-relaxed">
           {event.description}
         </p>
 
         {/* Footer Info */}
-        <div className="mt-auto pt-6 border-t border-gray-50 dark:border-gray-700/50 flex items-center justify-between">
-          <div className="flex items-center text-gray-400 dark:text-gray-500 text-xs font-bold">
-            <MapPin className="w-4 h-4 mr-1.5 text-blue-500" />
-            <span className="truncate max-w-[150px]">{event.city}</span>
+        <div className="mt-auto pt-4 md:pt-6 border-t border-gray-50 dark:border-gray-700/50 flex items-center justify-between">
+          <div className="flex items-center text-gray-400 dark:text-gray-500 text-[10px] md:text-xs font-bold">
+            <MapPin className="w-3.5 h-3.5 mr-1 text-blue-500" />
+            <span className="truncate max-w-[100px] md:max-w-[150px]">{event.city}</span>
           </div>
           
-          <div className="flex items-center gap-1 text-blue-600 font-black text-sm group/btn">
+          <div className="flex items-center gap-1 text-blue-600 font-black text-xs md:text-sm group/btn">
             Détails 
-            <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1" />
           </div>
         </div>
       </div>

@@ -139,7 +139,7 @@ const EventDetails = ({ event }) => {
         user={user}
       />
       
-      <div className="min-h-screen bg-[#F0F2F5] dark:bg-gray-950 pb-20 font-sans">
+      <div className="min-h-screen bg-[#F0F2F5] dark:bg-gray-950 pb-32 md:pb-20 font-sans">
         {/* Hero Section - Optimized for Desktop */}
         <div className="relative h-[40vh] md:h-[55vh] lg:h-[65vh] w-full overflow-hidden bg-gray-900">
           {imageUrl ? (

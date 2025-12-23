@@ -24,6 +24,7 @@ const userProfileService = {
 
   getUserEvents: async () => {
     const { data } = await api.get("/users/me/events");
+    console.log("userProfileService: getUserEvents returned", data);
     return data;
   },
 

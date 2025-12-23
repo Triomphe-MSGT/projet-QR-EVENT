@@ -30,7 +30,7 @@ const Footer = () => {
       {isCreator && (
         <Link
           to="/createevent"
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-20 
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] 
                      w-14 h-14 bg-gradient-to-r from-blue-500 to-green-400 rounded-full 
                      flex items-center justify-center text-white 
                      shadow-lg hover:shadow-xl hover:scale-110 
@@ -45,7 +45,7 @@ const Footer = () => {
        */}
       <footer
         className="
-          fixed bottom-0 left-0 right-0 z-10
+          fixed bottom-0 left-0 right-0 z-[100]
           bg-white dark:bg-gray-800 
           border-t border-gray-200 dark:border-gray-700
           shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)] 

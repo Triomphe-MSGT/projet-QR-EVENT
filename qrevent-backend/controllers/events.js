@@ -68,13 +68,15 @@ const canEditEvent = (user, event) => {
  */
 const getAllEvents = async (req, res, next) => {
   try {
-    const events = await Event.find({ visibility: "public" })
+    const events = await Event.find({ visibility: { $ne: "private" } })
       .populate("organizer", "nom email")
       .populate("category", "name emoji")
-      .sort({ startDate: 1 })
+      .sort({ startDate: -1 })
       .lean();
+    console.log(`getAllEvents: Found ${events.length} public events`);
     res.json(events);
   } catch (error) {
+    console.error("Error in getAllEvents:", error);
     next(error);
   }
 };

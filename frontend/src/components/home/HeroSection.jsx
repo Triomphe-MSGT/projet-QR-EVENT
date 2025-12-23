@@ -55,31 +55,31 @@ const HeroSection = () => {
         <div className="max-w-2xl mx-auto animate-fade-in-up delay-300">
           <form
             onSubmit={handleSearchSubmit}
-            className="flex flex-col md:flex-row items-center gap-3 p-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[2.5rem] shadow-2xl transition-all duration-500 hover:bg-white/15"
+            className="flex flex-col md:flex-row items-stretch md:items-center gap-3 p-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl md:rounded-[2.5rem] shadow-2xl transition-all duration-500 hover:bg-white/15"
           >
-            <div className="flex-1 flex items-center px-6 w-full">
+            <div className="flex-1 flex items-center px-4 md:px-6">
               <Search className="w-5 h-5 text-blue-200 shrink-0" />
               <input
                 type="text"
                 placeholder="Artiste, ville, ou événement..."
-                className="w-full h-14 bg-transparent border-none focus:ring-0 text-white placeholder-blue-100/50 text-lg font-medium"
+                className="w-full h-12 md:h-14 bg-transparent border-none focus:ring-0 text-white placeholder-blue-100/50 text-base md:text-lg font-medium"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
             
-            <div className="flex items-center gap-2 w-full md:w-auto p-1">
+            <div className="flex items-center gap-2 p-1">
               <button
                 type="button"
                 onClick={() => navigate("/events")}
-                className="flex-1 md:flex-none h-14 w-14 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/10 group"
+                className="h-12 w-12 md:h-14 md:w-14 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-2xl md:rounded-full transition-all border border-white/10 group shrink-0"
                 title="Filtres"
               >
                 <SlidersHorizontal className="w-5 h-5 transition-transform group-hover:rotate-180" />
               </button>
               <button
                 type="submit"
-                className="flex-[2] md:flex-none h-14 px-10 bg-white text-blue-600 hover:bg-blue-50 rounded-full transition-all shadow-xl font-black text-sm flex items-center justify-center gap-2 group"
+                className="flex-1 md:flex-none h-12 md:h-14 px-6 md:px-10 bg-white text-blue-600 hover:bg-blue-50 rounded-2xl md:rounded-full transition-all shadow-xl font-black text-xs md:text-sm flex items-center justify-center gap-2 group whitespace-nowrap"
               >
                 Explorer
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
