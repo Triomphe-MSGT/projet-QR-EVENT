@@ -15,6 +15,8 @@ import HomePage from "./pages/participant/HomePage";
 import EventListPage from "./pages/participant/EventListPage";
 import EventDetailsPage from "./pages/participant/EventDetailsPage";
 import UserQrCodesPage from "./pages/participant/UserQrCodesPage";
+import AdvancedFilterPage from "./pages/participant/AdvancedFilterPage";
+import PastEventsPage from "./pages/participant/PastEventsPage";
 
 // Pages Organisateur
 import EventForm from "./pages/organizer/CreateEventPage";
@@ -48,6 +50,8 @@ const AppRouter = () => {
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/user-profile" element={<ProfilePage />} />
         <Route path="/events" element={<EventListPage />} />
+        <Route path="/past-events" element={<PastEventsPage />} />
+        <Route path="/filters" element={<AdvancedFilterPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/qrevent_help" element={<HelpPage />} />
 

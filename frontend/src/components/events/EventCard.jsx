@@ -1,101 +1,106 @@
-// src/components/events/EventCard.jsx
 import React from "react";
-import Button from "../ui/Button"; // ✅ Vérifiez ce chemin
 import { API_BASE_URL } from "../../slices/axiosInstance";
+import { Calendar, MapPin, ArrowRight, Zap } from "lucide-react";
+
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
 const EventCard = ({ event, handleDetails }) => {
   const formatDate = (dateString) => {
     if (!dateString) return "?";
     try {
-      return new Date(dateString).toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "short",
-      });
+      const date = new Date(dateString);
+      return {
+        day: date.toLocaleDateString("fr-FR", { day: "numeric" }),
+        month: date.toLocaleDateString("fr-FR", { month: "short" }).replace('.', ''),
+        year: date.getFullYear()
+      };
     } catch {
-      return "Date invalide";
+      return { day: "?", month: "?", year: "?" };
     }
   };
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith("http")) return imagePath;
-    return `${STATIC_BASE_URL}/${imagePath}`; // URL vers votre backend
+    return `${STATIC_BASE_URL}/${imagePath}`;
   };
 
   const imageUrl = getImageUrl(event.imageUrl);
+  const date = formatDate(event.startDate);
 
   return (
     <div
       onClick={handleDetails}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-md cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full group border border-gray-100 dark:border-gray-700"
+      className="group relative bg-white dark:bg-gray-800 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100 dark:border-gray-700/50 flex flex-col h-full"
     >
-      {/* Image Container */}
-      <div className="relative w-full h-48 overflow-hidden rounded-t-xl bg-gray-200 dark:bg-gray-700">
+      {/* Image Section */}
+      <div className="relative h-64 overflow-hidden">
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={event.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-4xl">
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-6xl">
             {event.name?.charAt(0).toUpperCase() || "?"}
           </div>
         )}
-        {event.price === 0 && (
-          <span className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-            Gratuit
-          </span>
-        )}
-        {event.price > 0 && (
-          <span className="absolute top-3 right-3 bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm backdrop-blur-sm">
-            {event.price} FCFA
-          </span>
-        )}
-      </div>
+        
+        {/* Date Badge Overlay */}
+        <div className="absolute top-4 left-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-2xl p-2 min-w-[60px] text-center shadow-lg border border-white/20">
+          <span className="block text-2xl font-black text-blue-600 leading-none">{date.day}</span>
+          <span className="block text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">{date.month}</span>
+        </div>
 
-      {/* Content */}
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex justify-between items-start mb-2">
-          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-            {formatDate(event.startDate)}
+        {/* Price Tag Overlay */}
+        <div className="absolute top-4 right-4">
+          <span className={`px-4 py-2 rounded-full text-xs font-black tracking-widest shadow-lg backdrop-blur-md border border-white/20 ${
+            event.price === 0 
+              ? "bg-green-500/90 text-white" 
+              : "bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-white"
+          }`}>
+            {event.price === 0 ? "Gratuit" : `${event.price} FCFA`}
           </span>
         </div>
-        
-        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-6 md:p-8 flex flex-col flex-grow relative">
+        {/* Category Tag */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-black rounded-full tracking-widest">
+            #{event.category?.name || "Événement"}
+          </span>
+          {event.qrOption && (
+            <span className="flex items-center gap-1 text-[10px] font-black text-amber-500 tracking-widest">
+              <Zap className="w-3 h-3 fill-current" /> QR Entry
+            </span>
+          )}
+        </div>
+
+        <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-3 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
           {event.name}
         </h3>
-        
-        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-4 flex-grow">
+
+        <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base line-clamp-2 mb-6 font-medium leading-relaxed">
           {event.description}
         </p>
 
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
-          <svg
-            className="w-4 h-4 mr-1.5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-          <span className="truncate">
-            {event.city}
-            {event.neighborhood ? `, ${event.neighborhood}` : ""}
-          </span>
+        {/* Footer Info */}
+        <div className="mt-auto pt-6 border-t border-gray-50 dark:border-gray-700/50 flex items-center justify-between">
+          <div className="flex items-center text-gray-400 dark:text-gray-500 text-xs font-bold">
+            <MapPin className="w-4 h-4 mr-1.5 text-blue-500" />
+            <span className="truncate max-w-[150px]">{event.city}</span>
+          </div>
+          
+          <div className="flex items-center gap-1 text-blue-600 font-black text-sm group/btn">
+            Détails 
+            <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+          </div>
         </div>
       </div>
     </div>

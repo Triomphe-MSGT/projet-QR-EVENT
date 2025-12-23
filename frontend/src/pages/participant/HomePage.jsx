@@ -4,7 +4,8 @@ import { API_BASE_URL } from "../../slices/axiosInstance";
 
 import MainLayout from "../../components/layouts/MainLayout";
 import ListCategorie from "../../components/categories/CategoryList";
-import HeroSection from "../../components/home/HeroSection"; // Import du nouveau composant
+import HeroSection from "../../components/home/HeroSection";
+import EventCard from "../../components/events/EventCard";
 import {
   MapPin,
   Loader2,
@@ -12,417 +13,311 @@ import {
   ArrowRight,
   MessageSquare,
   Briefcase,
-  Newspaper,
-  Calendar,
-  PlayCircle,
-  Phone,
+  History,
+  Sparkles,
+  Zap,
+  TrendingUp,
+  ChevronRight
 } from "lucide-react";
 
 import Button from "../../components/ui/Button";
 import { useEvents } from "../../hooks/useEvents";
 import { useUserProfile } from "../../hooks/useUserProfile";
-
-// --- AJOUT ---
-// Import de la modale pour la mise à niveau
 import UpgradeToOrganizerModal from "../../components/dashboard/UpgradeToOrganizerModal";
 import NewsFeed from "../../components/NewsFeed";
-// --- FIN AJOUT ---
 
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
-// --- Composant EventPreviewCard
-const EventPreviewCard = ({ event }) => {
-  const getImageUrl = (imagePath) => {
-    if (!imagePath)
-      return `https://placehold.co/600x400/${Math.floor(
-        Math.random() * 16777215
-      ).toString(16)}/FFFFFF?text=${encodeURIComponent(
-        event.name.charAt(0)
-      )}&font=lora`;
-    if (imagePath.startsWith("http")) return imagePath;
-    return `${STATIC_BASE_URL}/${imagePath}`;
-  };
-
-  const formatPrice = (price) => {
-    if (!price || price === 0) return "Gratuit";
-    return `${price.toLocaleString("fr-FR")} FCFA`;
-  };
-
-  return (
-    <Link
-      to={`/events/${event._id}`}
-      className="flex-shrink-0 w-72 md:w-full snap-start rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 transition-all transform hover:shadow-2xl hover:-translate-y-2 duration-300 ease-in-out block group"
-    >
-      <div className="relative w-full h-40 md:h-56 overflow-hidden">
-        <img
-          src={getImageUrl(event.imageUrl)}
-          alt={event.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-        {event.category && (
-          <span className="absolute top-2 right-2 bg-black/50 text-white text-xs font-semibold px-2 py-1 rounded-full backdrop-blur-sm">
-            {event.category.emoji} {event.category.name}
-          </span>
-        )}
-      </div>
-      <div className="p-4">
-        <h3 className="font-bold text-lg truncate text-gray-800 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-          {event.name}
-        </h3>
-        <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mt-1">
-          {new Date(event.startDate).toLocaleDateString("fr-FR", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          })}
-        </p>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 flex items-center">
-          <MapPin size={14} className="mr-1.5 inline-block shrink-0" />
-          <span className="truncate">{event.neighborhood || event.city}</span>
-        </p>
-        <p
-          className={`text-md font-semibold mt-3 ${
-            event.price === 0
-              ? "text-green-600 dark:text-green-400"
-              : "text-gray-800 dark:text-gray-100"
-          }`}
-        >
-          {formatPrice(event.price)}
-        </p>
-      </div>
-    </Link>
-  );
-};
-
 // --- Composant EventCarousel ---
-const EventCarousel = () => {
+const EventCarousel = ({ dateFilter }) => {
   const { data: allEvents, isLoading, isError } = useEvents();
+  const navigate = useNavigate();
 
-  const upcomingEvents = useMemo(() => {
+  const filteredEvents = useMemo(() => {
     if (!allEvents) return [];
     const now = new Date();
+    
     try {
       return allEvents
-        .filter((event) => new Date(event.startDate) > now)
+        .filter((event) => {
+          const eventStart = new Date(event.startDate);
+          if (event.time) {
+            const [hours, minutes] = event.time.split(":");
+            eventStart.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          } else {
+            eventStart.setHours(23, 59, 59, 999);
+          }
+
+          // Basic "upcoming" check
+          if (eventStart < now && dateFilter === 'all') return false;
+
+          if (dateFilter === 'today') {
+            const today = new Date();
+            return eventStart.toDateString() === today.toDateString();
+          }
+          if (dateFilter === 'tomorrow') {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return eventStart.toDateString() === tomorrow.toDateString();
+          }
+          if (dateFilter === 'week') {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            return eventStart >= now && eventStart <= nextWeek;
+          }
+
+          return eventStart >= now;
+        })
         .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-        .slice(0, 8); // Augmenté à 8 pour un meilleur affichage grille (2 lignes de 4)
+        .slice(0, 8);
     } catch (e) {
       console.error("Erreur filtrage événements:", e);
       return [];
     }
-  }, [allEvents]);
+  }, [allEvents, dateFilter]);
 
   if (isLoading)
     return (
-      <div className="h-56 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      <div className="h-80 flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
+        <p className="text-gray-400 font-black text-[10px] tracking-widest">Chargement des pépites...</p>
       </div>
     );
+    
   if (isError)
     return (
-      <div className="h-56 flex flex-col items-center justify-center text-red-500">
-        <AlertTriangle className="w-8 h-8 mb-2" />
-        <p>Impossible de charger les événements.</p>
+      <div className="h-80 flex flex-col items-center justify-center text-red-500 bg-red-50 dark:bg-red-900/10 rounded-[3rem]">
+        <AlertTriangle className="w-10 h-10 mb-4" />
+        <p className="font-bold">Impossible de charger les événements.</p>
       </div>
     );
-  if (upcomingEvents.length === 0 && !isLoading)
+
+  if (filteredEvents.length === 0 && !isLoading)
     return (
-      <div className="h-56 flex items-center justify-center text-center text-gray-500 dark:text-gray-400">
-        <p>Aucun événement à venir n'est programmé.</p>
+      <div className="h-80 flex flex-col items-center justify-center text-center bg-gray-50 dark:bg-gray-900/50 rounded-[3rem] border border-dashed border-gray-200 dark:border-gray-700 animate-fade-in-up">
+        <p className="text-gray-500 font-bold">Aucun événement trouvé pour cette période.</p>
       </div>
     );
 
   return (
-    <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth -mx-4 px-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 md:overflow-visible md:mx-0 md:px-0">
-      {upcomingEvents.map((event) => (
-        <EventPreviewCard key={event._id || event.id} event={event} />
-      ))}
-      <Link
-        to="/events"
-        className="flex-shrink-0 w-72 md:w-full snap-start rounded-xl shadow-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex flex-col items-center justify-center text-center p-6 transition-all transform hover:shadow-2xl hover:-translate-y-1 duration-300 ease-in-out min-h-[18rem] group"
-      >
-        <div className="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-          <ArrowRight className="w-8 h-8" />
-        </div>
-        <span className="font-semibold text-lg text-blue-700 dark:text-blue-300">
-          Voir tous les événements
-        </span>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          Découvrez ce qui se passe près de chez vous.
-        </p>
-      </Link>
-    </div>
-  );
-};
-
-// --- Composant AdCard (Squelette de chargement) ---
-const AdCardSkeleton = () => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-4 animate-pulse">
-    <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-      <PlayCircle className="w-12 h-12 text-gray-400 dark:text-gray-600" />
-    </div>
-    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md mt-4 w-3/4"></div>
-    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-md mt-2 w-1/2"></div>
-  </div>
-);
-
-const AdCard = ({ ad }) => {
-  const videoRef = useRef(null);
-
-  const handleMouseEnter = () => {
-    if (videoRef.current) {
-      videoRef.current.play().catch((error) => {
-        console.warn("Autoplay vidéo bloqué par le navigateur:", error);
-      });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  };
-
-  return (
-    <a
-      href={ad.link}
-      key={ad.id}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 overflow-hidden group transition-all transform hover:shadow-2xl hover:-translate-y-1 duration-300 ease-in-out"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="w-full h-40 bg-black overflow-hidden relative">
-        <video
-          ref={videoRef}
-          src={ad.videoUrl}
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
-        />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all duration-300">
-          <div
-            className="p-3 bg-white/20 rounded-full backdrop-blur-sm 
-                        scale-100 group-hover:scale-0 group-hover:opacity-0 
-                        transition-all duration-300"
-          >
-            <PlayCircle className="w-8 h-8 text-white opacity-90" />
+    <div className="relative group animate-fade-in-up">
+      <div className="flex gap-6 overflow-x-auto pb-10 snap-x snap-mandatory no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+        {filteredEvents.map((event) => (
+          <div key={event._id || event.id} className="shrink-0 w-[85vw] sm:w-[400px] snap-center">
+            <EventCard 
+              event={event} 
+              handleDetails={() => navigate(`/events/${event._id || event.id}`)} 
+            />
           </div>
-        </div>
+        ))}
+        
+        {/* View All Card */}
+        <Link
+          to="/events"
+          className="shrink-0 w-[85vw] sm:w-[300px] snap-center rounded-[2.5rem] bg-blue-600 flex flex-col items-center justify-center text-center p-8 transition-all transform hover:scale-[1.02] shadow-2xl shadow-blue-500/20 group/all"
+        >
+          <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-6 group-hover/all:scale-110 transition-transform duration-500">
+            <ArrowRight className="w-10 h-10 text-white" />
+          </div>
+          <h3 className="font-black text-2xl text-white tracking-tighter leading-none mb-2">
+            Voir tout
+          </h3>
+          <p className="text-blue-100 text-sm font-medium opacity-80">
+            Découvrez plus de {allEvents?.length || 0} événements passionnants.
+          </p>
+        </Link>
       </div>
-      <div className="p-4">
-        <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-          {ad.sponsor} - Annonce
-        </p>
-        <h3 className="font-semibold text-md text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-          {ad.title}
-        </h3>
-      </div>
-    </a>
+    </div>
   );
 };
 
-// --- Composant HomePage (Restructuré) ---
+// --- Composant HomePage ---
 const HomePage = () => {
   const { data: user } = useUserProfile();
   const navigate = useNavigate();
-
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState('all');
+
+  const filters = [
+    { label: "Tout", value: "all" },
+    { label: "Aujourd'hui", value: "today" },
+    { label: "Demain", value: "tomorrow" },
+    { label: "Cette semaine", value: "week" },
+  ];
 
   return (
     <>
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 p-4 md:p-0 space-y-16 md:space-y-32">
+        <div className="min-h-screen bg-white dark:bg-gray-900 overflow-hidden">
           
-          {/* --- SECTION 1: HERO (Extrait) --- */}
+          {/* Hero Section */}
           <HeroSection />
 
-          {/* --- SECTION 2: EXPLORER PAR CATÉGORIE --- */}
-          <section className="max-w-4xl md:max-w-7xl mx-auto animate-fade-in-up delay-100">
-            <h2 className="text-3xl font-bold mb-6 text-center sm:text-left">
-              Catégories
-            </h2>
-            <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-4 md:p-6 border dark:border-gray-700 transition-transform hover:scale-[1.01] duration-300">
-              <ListCategorie />
-            </div>
-          </section>
-
-          {/* --- SECTION 3: ÉVÉNEMENTS À LA UNE --- */}
-          <section className="max-w-6xl md:max-w-7xl mx-auto animate-fade-in-up delay-200">
-            <div className="flex justify-between items-center mb-6 px-4 md:px-0">
-              <h2 className="text-3xl font-bold dark:text-white">À la une</h2>
-              <Link
-                to="/events"
-                className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold transition-colors hover:text-blue-700"
-              >
-                Tout voir <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <EventCarousel />
-          </section>
-
-          {/* --- SECTION 4: ESPACE PUBLICITAIRE (MISE À JOUR) --- */}
-          <section className="animate-fade-in-up delay-300">
-            <NewsFeed />
-          </section>
-
-          {/* --- SECTION 5: ACTUALITÉS --- */}
-          <section className="max-w-4xl md:max-w-7xl mx-auto px-4 md:px-0 animate-fade-in-up delay-300">
-            <h2 className="text-3xl font-bold mb-6 text-center sm:text-left">
-              Actualités
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4 transition-all hover:shadow-2xl hover:-translate-y-1 duration-300">
-                <div className="flex-shrink-0 p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                  <Newspaper className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+          {/* Categories Section */}
+          <section className="max-w-7xl mx-auto px-4 py-24">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-blue-600 font-black text-xs tracking-[0.2em]">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Exploration</span>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-1 dark:text-white">
-                    Lancement de Qr-Event
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Notre plateforme est désormais ouverte ! Créez votre premier
-                    événement dès aujourd'hui.
-                  </p>
-                  <a
-                    href="#"
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
-                  >
-                    Lire la suite...
-                  </a>
-                </div>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border dark:border-gray-700 p-6 flex items-start gap-4 transition-all hover:shadow-2xl hover:-translate-y-1 duration-300">
-                <div className="flex-shrink-0 p-3 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                  <Calendar className="w-6 h-6 text-green-600 dark:text-green-300" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-1 dark:text-white">
-                    Partenariat avec les Villes
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Nous collaborons avec Douala et Yaoundé pour les événements
-                    culturels.
-                  </p>
-                  <a
-                    href="#"
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
-                  >
-                    Lire la suite...
-                  </a>
-                </div>
+                <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-gray-900 dark:text-white leading-none">
+                  Parcourir par <br /> <span className="text-blue-600">Catégorie</span>
+                </h2>
               </div>
             </div>
+            
+            <ListCategorie />
+
+            {/* Date Filters - Moved below categories and styled transparent */}
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
+              {filters.map((filter) => (
+                <button
+                  key={filter.value}
+                  onClick={() => setDateFilter(filter.value)}
+                  className={`px-8 py-3.5 rounded-2xl font-black text-xs tracking-widest transition-all border-2 ${
+                    dateFilter === filter.value
+                      ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
+                      : "bg-transparent border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:border-blue-600/30 hover:text-blue-600"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
           </section>
 
-          {/* --- SECTION 6: APPEL À L'ACTION (CONTACT) --- */}
-          {user && (
-            <section className="max-w-4xl md:max-w-7xl mx-auto px-4 md:px-0 animate-fade-in-up delay-300">
-              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 text-white p-8 md:p-12 rounded-2xl shadow-2xl">
-                <div>
-                  <MessageSquare className="w-12 h-12 opacity-80 mb-4" />
-                  <h2 className="text-3xl font-bold mb-3">
-                    Vous êtes organisateur ?
+          {/* Featured Events Section */}
+          <section className="bg-gray-50 dark:bg-gray-800/50 py-24">
+            <div className="max-w-7xl mx-auto px-4">
+              <div className="flex items-center justify-between mb-12">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-amber-500 font-black text-xs tracking-[0.2em]">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>Tendances</span>
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-gray-900 dark:text-white leading-none">
+                    À la une
                   </h2>
-                  <p className="text-indigo-200 leading-relaxed">
-                    Utilisez nos outils pour créer, gérer, et sécuriser vos
-                    événements. De la billetterie à la validation par QR code,
-                    nous avons ce qu'il vous faut.
-                  </p>
                 </div>
-                <div className="text-center">
-                  {/* --- CORRECTION LOGIQUE --- */}
+                
+                <Link
+                  to="/events"
+                  className="hidden md:flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 rounded-2xl text-gray-900 dark:text-white font-black text-xs tracking-widest border border-gray-100 dark:border-gray-700 hover:text-blue-600 transition-all shadow-sm"
+                >
+                  Voir tout <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+              
+              <EventCarousel dateFilter={dateFilter} />
+            </div>
+          </section>
 
-                  {user?.role === "Participant" ? (
-                    // 1. Bouton qui OUVRE LA MODALE
-                    <Button
-                      variant="light"
-                      size="lg"
-                      className="w-full md:w-auto"
-                      onClick={() => setIsUpgradeModalOpen(true)}
-                    >
-                      Devenir Organisateur
-                    </Button>
-                  ) : user?.role === "Organisateur" ||
-                    user?.role === "administrateur" ? (
-                    // 2. Bouton qui MÈNE AU DASHBOARD
-                    <Button
-                      variant="light"
-                      size="lg"
-                      className="w-full md:w-auto"
-                      onClick={() =>
-                        navigate(
-                          user.role === "administrateur"
-                            ? "/admin"
-                            : "/dashboard"
-                        )
-                      }
-                    >
-                      Mon Tableau de Bord
-                    </Button>
-                  ) : null}
-                  {/* --- FIN CORRECTION --- */}
+          {/* News Section */}
+          <NewsFeed />
+
+          {/* History Section */}
+          <section className="max-w-7xl mx-auto px-4 py-24">
+            <div className="bg-gray-900 rounded-[3.5rem] p-8 md:p-20 relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
+              <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-600/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-[80px]"></div>
+              
+              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div className="space-y-8">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-blue-400 text-xs font-black tracking-widest border border-white/10">
+                    <History className="w-4 h-4" />
+                    <span>Archives</span>
+                  </div>
+                  <h2 className="text-4xl md:text-6xl font-black text-white leading-[0.9] tracking-tighter">
+                    Revivez vos <br /> <span className="text-blue-500">Souvenirs</span>
+                  </h2>
+                  <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed max-w-lg">
+                    Accédez à l'historique complet de tous les événements passés. Retrouvez les moments qui ont marqué l'année.
+                  </p>
+                  <Link 
+                    to="/past-events"
+                    className="inline-flex items-center gap-4 px-10 py-5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all hover:scale-105 shadow-xl shadow-blue-600/20 group"
+                  >
+                    Explorer l'historique 
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                  </Link>
+                </div>
+                
+                <div className="flex flex-col gap-6">
+                  <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80" className="w-full h-64 object-cover rounded-[2.5rem] rotate-2 shadow-2xl border-4 border-white/10" alt="" />
+                  <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=600&q=80" className="w-full h-64 object-cover rounded-[2.5rem] -rotate-2 shadow-2xl border-4 border-white/10" alt="" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Organizer CTA Section */}
+          {user && (
+            <section className="max-w-7xl mx-auto px-4 pb-24">
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[3.5rem] p-8 md:p-20 text-white relative overflow-hidden shadow-2xl">
+                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+                  <div className="max-w-2xl space-y-6">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
+                      <MessageSquare className="w-8 h-8 text-white" />
+                    </div>
+                    <h2 className="text-3xl md:text-5xl font-black tracking-tighter leading-none">
+                      Vous êtes <br /> <span className="text-indigo-200">Organisateur ?</span>
+                    </h2>
+                    <p className="text-indigo-100 text-lg font-medium leading-relaxed">
+                      Utilisez nos outils pour créer, gérer, et sécuriser vos événements. De la billetterie à la validation par QR code.
+                    </p>
+                  </div>
+                  
+                  <div className="shrink-0">
+                    {user?.role === "Participant" ? (
+                      <button
+                        onClick={() => setIsUpgradeModalOpen(true)}
+                        className="px-12 py-5 bg-white text-indigo-600 font-black rounded-2xl hover:bg-indigo-50 transition-all hover:scale-105 shadow-2xl"
+                      >
+                        Devenir Organisateur
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => navigate(user.role === "administrateur" ? "/admin" : "/dashboard")}
+                        className="px-12 py-5 bg-white text-indigo-600 font-black rounded-2xl hover:bg-indigo-50 transition-all hover:scale-105 shadow-2xl"
+                      >
+                        Mon Dashboard
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </section>
           )}
 
-          {/* --- SECTION 7: À PROPOS DE NOUS --- */}
-          <section className="max-w-3xl md:max-w-5xl mx-auto text-center px-4 md:px-0">
-            <Briefcase className="w-10 h-10 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold mb-4">À Propos de Qr-Event</h2>
-            <p className="text-md text-gray-600 dark:text-gray-400 leading-relaxed">
-              Qr-Event est votre plateforme centralisée pour découvrir et gérer
-              des événements au Cameroun et au-delà. Notre mission est de
-              simplifier l'accès à l'événementiel grâce à une technologie de QR
-              code rapide et sécurisée, connectant organisateurs et
-              participants.
+          {/* About Section */}
+          <section className="max-w-4xl mx-auto text-center px-4 py-24 border-t border-gray-100 dark:border-gray-800">
+            <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-gray-100 dark:border-gray-700">
+              <Briefcase className="w-8 h-8 text-gray-400" />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tighter mb-6">À Propos de Qr-Event</h2>
+            <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+              Qr-Event est votre plateforme centralisée pour découvrir et gérer des événements au Cameroun. 
+              Notre mission est de simplifier l'accès à l'événementiel grâce à une technologie de QR code rapide et sécurisée.
             </p>
           </section>
-
-          {/* --- SECTION 8: FOOTER --- */}
-          <footer className="max-w-3xl mx-auto text-center border-t border-gray-200 dark:border-gray-700 pt-8 mt-16 px-4 md:px-0 md:hidden">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              © {new Date().getFullYear()} Qr-Event. Tous droits réservés.
-            </p>
-            <div className="mt-3 space-x-4 flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
-              <Link
-                to="/privacy"
-                className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-              >
-                Politique de Confidentialité
-              </Link>
-              <span className="text-gray-400 dark:text-gray-600 hidden sm:inline">
-                |
-              </span>
-              <Link
-                to="/terms"
-                className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-              >
-                Conditions d'Utilisation
-              </Link>
-              <span className="text-gray-400 dark:text-gray-600 hidden sm:inline">
-                |
-              </span>
-              <a
-                href="tel:+237657785435"
-                className="text-sm text-blue-600 hover:underline dark:text-blue-400 flex items-center gap-1"
-              >
-                <Phone size={14} /> Contacter l'Admin (+237 657785435)
-              </a>
-            </div>
-          </footer>
         </div>
       </MainLayout>
 
-      {/* --- AJOUT : Rendu de la modale --- */}
       {isUpgradeModalOpen && (
         <UpgradeToOrganizerModal onClose={() => setIsUpgradeModalOpen(false)} />
       )}
+      
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fade-in-up 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+      `}</style>
     </>
   );
 };

@@ -68,7 +68,7 @@ const canEditEvent = (user, event) => {
  */
 const getAllEvents = async (req, res, next) => {
   try {
-    const events = await Event.find()
+    const events = await Event.find({ visibility: "public" })
       .populate("organizer", "nom email")
       .populate("category", "name emoji")
       .sort({ startDate: 1 })
@@ -128,6 +128,7 @@ const createEvent = async (req, res, next) => {
       organizer: user.id,
       imageUrl,
       location,
+      type: body.format || body.type, // Sync type with format
     });
 
     const savedEvent = await newEvent.save();
@@ -183,6 +184,8 @@ const updateEvent = async (req, res, next) => {
     } else {
       delete body.imageUrl; // ne pas écraser si pas de changement
     }
+
+    if (body.format) body.type = body.format; // Sync type with format
 
     const updatedEvent = await Event.findByIdAndUpdate(eventId, body, {
       new: true,
@@ -247,8 +250,24 @@ const deleteEvent = async (req, res, next) => {
     const eventToDelete = await Event.findById(eventId);
     if (!eventToDelete) return res.status(404).json({ error: "Événement non trouvé." });
 
-    if (!canEditEvent(user, eventToDelete)) {
+    const isAdmin = user.role === ROLE_ADMIN;
+    const isOwner = eventToDelete.organizer && eventToDelete.organizer.toString() === user.id;
+
+    if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Action non autorisée." });
+    }
+
+    // Restriction : l'organisateur ne peut supprimer que dans les 24h suivant la création
+    if (!isAdmin && isOwner) {
+      const creationDate = eventToDelete.createdAt || eventToDelete._id.getTimestamp();
+      const now = new Date();
+      const diffInHours = (now - creationDate) / (1000 * 60 * 60);
+
+      if (diffInHours > 24) {
+        return res.status(403).json({ 
+          error: "Délai de suppression dépassé (24h). Seul un administrateur peut supprimer cet événement." 
+        });
+      }
     }
 
     // --- NOTIFICATIONS AUX PARTICIPANTS (AVANT SUPPRESSION) ---

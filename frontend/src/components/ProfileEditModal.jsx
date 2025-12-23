@@ -10,13 +10,8 @@ const ProfileEditModal = ({
   updateError,
   isUpdateSuccess,
 }) => {
-  const [form, setForm] = useState({
-    nom: user.nom || "",
-    email: user.email || "",
-    profession: user.profession || "",
-    phone: user.phone || "",
-    sexe: user.sexe || "",
-  });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // S'assurer que le formulaire se met à jour si 'user' change (après le 1er chargement)
   useEffect(() => {
@@ -35,12 +30,15 @@ const ProfileEditModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onUpdate(form); // Enverra { nom, email, profession, phone, sexe }
+    onUpdate(form, selectedFile); // Enverra { nom, email, profession, phone, sexe } et le fichier
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) onUploadPhoto(file); // Appelle la fonction d'upload d'avatar
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
   };
 
   return (
@@ -125,6 +123,16 @@ const ProfileEditModal = ({
                          file:bg-blue-50 dark:file:bg-gray-700 file:text-blue-600 dark:file:text-gray-200
                          hover:file:bg-blue-100 dark:hover:file:bg-gray-600 transition"
             />
+            {previewUrl && (
+              <div className="mt-4 flex flex-col items-center">
+                <p className="text-xs text-gray-500 mb-2 uppercase font-bold">Aperçu</p>
+                <img 
+                  src={previewUrl} 
+                  alt="Aperçu" 
+                  className="w-20 h-20 rounded-full object-cover border-2 border-blue-500" 
+                />
+              </div>
+            )}
           </div>
 
           {/* Messages d'état */}

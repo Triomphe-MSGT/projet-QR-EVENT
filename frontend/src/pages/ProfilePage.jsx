@@ -64,7 +64,10 @@ const ProfilePage = () => {
     isSuccess: isUpdateSuccess,
     error: updateError,
   } = useUpdateProfile();
-  const { mutate: uploadAvatar, isPending: isUploading } = useUploadAvatar();
+  const {
+    mutateAsync: uploadAvatarAsync,
+    isPending: isUploading
+  } = useUploadAvatar();
 
   // 3. Gérer l'état de la modale
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -86,16 +89,21 @@ const ProfilePage = () => {
   }, [eventsData]);
 
   // 5. Fonctions de gestion
-  const handleUpdateProfile = async (formData) => {
+  const handleUpdateProfile = async (formData, file) => {
     try {
+      // 1. Mettre à jour les infos textuelles
       await updateProfileAsync(formData);
+      
+      // 2. Si un fichier est présent, l'uploader
+      if (file) {
+        await uploadAvatarAsync(file);
+      }
+
       setTimeout(() => setIsEditModalOpen(false), 1500);
     } catch (error) {
       console.error("La mise à jour du profil a échoué:", error);
     }
   };
-
-  const handleUploadPhoto = (file) => uploadAvatar(file);
 
   const getAvatarUrl = (imagePath) => {
     if (!imagePath)
@@ -215,7 +223,7 @@ const ProfilePage = () => {
                 const { tag, bgColor, textColor } = getEventTagAndColor(
                   event.name
                 );
-                const eventKey = event._id || event.id || index;
+                const eventKey = `${event._id || event.id}-${event.type}`;
                 return (
                   <Link
                     key={eventKey}

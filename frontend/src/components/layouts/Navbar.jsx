@@ -30,6 +30,7 @@ import {
   HelpCircle,
   PlusCircle, // Import de l'icône Plus
   Trash2, // Import de l'icône Trash2
+  History,
 } from "lucide-react";
 
 // --- Import de l'URL de base ---
@@ -119,6 +120,7 @@ const Navbar = () => {
       { label: "Accueil", icon: Home, path: "/home" },
       // CORRIGÉ: /categories pointe vers /events
       { label: "Explorer les Événements", icon: Grid, path: "/events" },
+      { label: "Historique", icon: History, path: "/past-events" },
       { label: "Mes QR Codes", icon: QrCode, path: "/my-qrcodes" },
       { label: "Mon Profil", icon: UserCircle, path: "/user-profile" },
       { label: "Retour", icon: ArrowLeft, onClick: () => navigate(-1) },

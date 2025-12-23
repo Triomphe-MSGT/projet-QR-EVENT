@@ -46,13 +46,23 @@ const eventSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  visibility: {
+    type: String,
+    enum: ["public", "private"],
+    default: "public",
+  },
+  format: {
+    type: String,
+    enum: ["Présentiel", "En ligne"],
+    default: "Présentiel",
+  },
   participants: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
   ],
-});
+}, { timestamps: true });
 
 eventSchema.set("toJSON", {
   transform: (doc, ret) => {
