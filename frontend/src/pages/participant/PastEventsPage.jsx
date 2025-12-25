@@ -61,28 +61,40 @@ const PastEventsPage = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       
+      {/* Mobile Sticky Header */}
+      <div className="md:hidden sticky top-16 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
+        <button 
+          onClick={() => navigate(-1)}
+          className="p-2 bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-600 dark:text-gray-400"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h2 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">Historique</h2>
+        <div className="w-9"></div> {/* Spacer for balance */}
+      </div>
+
       {/* Header Section */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 pt-20 md:pt-28 pb-10">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 pt-8 md:pt-28 pb-10">
         <div className="max-w-7xl mx-auto px-4">
           <button 
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-8 font-black text-xs tracking-widest"
+            className="hidden md:flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-8 font-black text-xs tracking-widest uppercase"
           >
             <ArrowLeft className="w-4 h-4" /> Retour
           </button>
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-blue-600 font-black text-xs tracking-[0.2em]">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-blue-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em]">
                 <History className="w-4 h-4" />
                 <span>Archives QR-EVENT</span>
               </div>
-               <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-gray-900 dark:text-white leading-none">
-                L'historique <br /> <span className="text-blue-600">des événements</span>
+              <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tighter uppercase leading-tight bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
+                L'historique des événements
               </h1>
             </div>
             <div className="flex items-center">
-              <div className="px-5 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl font-black text-xs tracking-widest flex items-center gap-2 border border-blue-100 dark:border-blue-800/50">
+              <div className="px-5 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 border border-blue-100 dark:border-blue-800/50">
                 <Calendar className="w-4 h-4" />
                 {Object.values(groupedPastEvents).flat().length} Souvenirs
               </div>
@@ -104,11 +116,12 @@ const PastEventsPage = () => {
           <div className="space-y-20 md:space-y-32">
             {Object.entries(groupedPastEvents).map(([month, monthEvents]) => (
               <section key={month} className="animate-fade-in-up">
-                <div className="flex items-center gap-6 mb-12">
-                  <h2 className="text-xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter">
+                <div className="flex items-center gap-4 mb-8 md:mb-12">
+                  <div className="w-1.5 h-8 bg-blue-600 rounded-full"></div>
+                  <h2 className="text-xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter uppercase">
                     {month}
                   </h2>
-                  <div className="h-1 flex-1 bg-gradient-to-r from-blue-600/20 to-transparent rounded-full"></div>
+                  <div className="h-px flex-1 bg-gradient-to-r from-gray-200 dark:from-gray-700 to-transparent"></div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">

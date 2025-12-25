@@ -6,6 +6,7 @@ const {
   getMyNotifications,
   markAllAsRead,
   deleteNotification,
+  deleteAllNotifications,
 } = require("../controllers/notificationController");
 
 // Récupérer les notifications
@@ -13,6 +14,9 @@ router.get("/", userExtractor, getMyNotifications);
 
 // Marquer comme lues
 router.post("/read", userExtractor, markAllAsRead);
+
+// Supprimer toutes les notifications
+router.delete("/all", userExtractor, deleteAllNotifications);
 
 // Supprimer une notification
 router.delete("/:id", userExtractor, deleteNotification);

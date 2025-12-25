@@ -83,10 +83,27 @@ const generateAdminReport = async (req, res, next) => {
     const avgPerEvent =
       totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : 0;
 
-    // --- 2. Utilisateurs ---
-    const allUsers = await User.find({})
-      .select("nom email role sexe profession phone") // Ajout de 'phone'
+    // --- 2. Utilisateurs avec statistiques ---
+    const usersRaw = await User.find({})
+      .select("nom email role sexe profession phone participatedEvents")
       .lean();
+
+    const allUsers = await Promise.all(
+      usersRaw.map(async (u) => {
+        const organizedCount = await Event.countDocuments({ organizer: u._id });
+        const names = (u.nom || "").split(" ");
+        const nom = names[0] || "N/A";
+        const prenom = names.slice(1).join(" ") || "N/A";
+        
+        return {
+          ...u,
+          nom,
+          prenom,
+          organizedCount,
+          participatedCount: u.participatedEvents?.length || 0,
+        };
+      })
+    );
 
     // --- GÉNÉRATION PDF ---
     if (format === "pdf") {
@@ -94,98 +111,151 @@ const generateAdminReport = async (req, res, next) => {
       const path = require("path");
       const fs = require("fs");
 
-      const doc = new PDFDocument({ margin: 30, layout: "landscape", size: "A4" }); // Landscape pour plus d'espace
+      const doc = new PDFDocument({ margin: 30, layout: "landscape", size: "A4" });
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename="rapport_admin_${new Date()
-          .toISOString()
-          .split("T")[0]}.pdf"`
+        `attachment; filename="rapport_admin_${new Date().toISOString().split("T")[0]}.pdf"`
       );
 
       doc.pipe(res);
 
-      // --- LOGO ---
+      // --- HEADER DESIGN ---
+      doc.rect(0, 0, 842, 80).fill("#1e293b"); // Fond sombre pour le header
+      
       const logoPath = path.join(__dirname, "../assets/logo.png");
       if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 30, 25, { width: 50 });
+        doc.image(logoPath, 40, 15, { width: 50 });
       }
 
-      // Header
       doc
+        .fillColor("#ffffff")
         .font("Helvetica-Bold")
-        .fontSize(20)
-        .text("Rapport Global Administrateur", { align: "center" });
+        .fontSize(22)
+        .text("QR-EVENT", 100, 25)
+        .fontSize(10)
+        .font("Helvetica")
+        .text("PLATEFORME ÉVÉNEMENTIELLE PROFESSIONNELLE", 100, 50);
+
+      doc
+        .fillColor("#ffffff")
+        .fontSize(16)
+        .font("Helvetica-Bold")
+        .text("RAPPORT GLOBAL ADMINISTRATEUR", 0, 30, { align: "right", indent: 40 });
+
+      doc.moveDown(4);
+      doc.fillColor("#1e293b");
+
+      // Stats Section
+      doc.font("Helvetica-Bold").fontSize(16).text("Statistiques Globales", 40);
+      doc.rect(40, doc.y + 5, 760, 2).fill("#3b82f6");
       doc.moveDown(1.5);
 
-      // Stats
-      doc.font("Helvetica-Bold").fontSize(14).text("Statistiques Globales");
-      doc.moveDown(0.4);
-      doc.font("Helvetica").fontSize(11);
-      doc.text(`Total Utilisateurs: ${totalUsers}`);
-      doc.text(`  - Participants: ${participantCount}`);
-      doc.text(`  - Organisateurs: ${organizerCount}`);
-      doc.text(`  - Administrateurs: ${adminCount}`);
-      doc.moveDown(0.5);
-      doc.text(`Total Événements: ${totalEvents}`);
-      doc.text(`Total Inscriptions: ${totalRegistrations}`);
-      doc.text(`Tickets Validés: ${qrValidated}`);
-      doc.text(`Moyenne inscriptions / événement: ${avgPerEvent}`);
-      doc.moveDown();
+      const statsY = doc.y;
+      doc.font("Helvetica-Bold").fontSize(11);
+      doc.text("UTILISATEURS", 40, statsY);
+      doc.text("ÉVÉNEMENTS & INSCRIPTIONS", 440, statsY);
+      
+      doc.font("Helvetica").fontSize(10);
+      doc.text(`Total Utilisateurs: ${totalUsers}`, 40, statsY + 20);
+      doc.text(`• Participants: ${participantCount}`, 50, statsY + 35);
+      doc.text(`• Organisateurs: ${organizerCount}`, 50, statsY + 50);
+      doc.text(`• Administrateurs: ${adminCount}`, 50, statsY + 65);
+
+      doc.text(`Total Événements: ${totalEvents}`, 440, statsY + 20);
+      doc.text(`Total Inscriptions: ${totalRegistrations}`, 440, statsY + 35);
+      doc.text(`Tickets Validés: ${qrValidated}`, 440, statsY + 50);
+      doc.text(`Moyenne inscriptions / événement: ${avgPerEvent}`, 440, statsY + 65);
+
+      doc.moveDown(6);
 
       // Users List
       doc.addPage();
-      doc.font("Helvetica-Bold").fontSize(14).text(`Liste des Utilisateurs (${totalUsers})`);
-      doc.moveDown(0.6);
+      doc.rect(0, 0, 842, 50).fill("#3b82f6");
+      doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(14).text("LISTE DÉTAILLÉE DES UTILISATEURS", 40, 18);
+      
+      doc.moveDown(3);
+      doc.fillColor("#1e293b");
 
-      // En-têtes de colonnes (Ajustement pour Landscape A4 ~841pts de large, marges 30 => ~780pts utilisables)
+      // Table Headers
       const colX = {
-        nom: 30,
-        email: 180,
-        role: 340,
-        sexe: 430,
-        phone: 490,
-        profession: 600
+        nom: 40,
+        prenom: 130,
+        email: 230,
+        role: 380,
+        phone: 460,
+        profession: 560,
+        org: 680,
+        part: 740
       };
       
-      doc.font("Helvetica-Bold").fontSize(10);
-      doc.text("Nom", colX.nom, doc.y, { width: 140 });
-      doc.text("Email", colX.email, doc.y, { width: 150 });
-      doc.text("Rôle", colX.role, doc.y, { width: 80 });
-      doc.text("Sexe", colX.sexe, doc.y, { width: 50 });
-      doc.text("Téléphone", colX.phone, doc.y, { width: 100 });
-      doc.text("Profession", colX.profession, doc.y, { width: 150 });
+      doc.font("Helvetica-Bold").fontSize(9);
+      doc.text("NOM", colX.nom);
+      doc.text("PRÉNOM", colX.prenom, doc.y - 9);
+      doc.text("EMAIL", colX.email, doc.y - 9);
+      doc.text("RÔLE", colX.role, doc.y - 9);
+      doc.text("TÉLÉPHONE", colX.phone, doc.y - 9);
+      doc.text("PROFESSION", colX.profession, doc.y - 9);
+      doc.text("ORG.", colX.org, doc.y - 9);
+      doc.text("PART.", colX.part, doc.y - 9);
+      
       doc.moveDown(0.5);
-      doc
-        .strokeColor("#aaaaaa")
-        .lineWidth(0.5)
-        .moveTo(30, doc.y)
-        .lineTo(810, doc.y) // Largeur landscape
-        .stroke();
-      doc.moveDown(0.6);
-      doc.font("Helvetica").fontSize(9);
+      doc.strokeColor("#cbd5e1").lineWidth(1).moveTo(40, doc.y).lineTo(800, doc.y).stroke();
+      doc.moveDown(0.8);
 
-      allUsers.forEach((u) => {
+      doc.font("Helvetica").fontSize(8);
+      allUsers.forEach((u, index) => {
+        if (doc.y > 530) {
+          doc.addPage();
+          doc.font("Helvetica-Bold").fontSize(9);
+          doc.text("NOM", colX.nom, 40);
+          doc.text("PRÉNOM", colX.prenom, 40);
+          doc.text("EMAIL", colX.email, 40);
+          doc.text("RÔLE", colX.role, 40);
+          doc.text("TÉLÉPHONE", colX.phone, 40);
+          doc.text("PROFESSION", colX.profession, 40);
+          doc.text("ORG.", colX.org, 40);
+          doc.text("PART.", colX.part, 40);
+          doc.strokeColor("#cbd5e1").moveTo(40, 55).lineTo(800, 55).stroke();
+          doc.font("Helvetica").fontSize(8).y = 65;
+        }
+
         const startY = doc.y;
-        doc.text(u.nom || "N/A", colX.nom, startY, { width: 140 });
-        doc.text(u.email || "N/A", colX.email, startY, { width: 150 });
-        doc.text(u.role || "N/A", colX.role, startY, { width: 80 });
-        doc.text(u.sexe || "N/A", colX.sexe, startY, { width: 50 });
-        doc.text(u.phone || "N/A", colX.phone, startY, { width: 100 });
-        doc.text(u.profession || "N/A", colX.profession, startY, { width: 150 });
+        if (index % 2 === 0) {
+          doc.rect(35, startY - 5, 770, 20).fill("#f8fafc");
+          doc.fillColor("#1e293b");
+        }
+
+        doc.text(u.nom || "N/A", colX.nom, startY, { width: 85, truncate: true });
+        doc.text(u.prenom || "N/A", colX.prenom, startY, { width: 95, truncate: true });
+        doc.text(u.email || "N/A", colX.email, startY, { width: 145, truncate: true });
+        doc.text(u.role || "N/A", colX.role, startY, { width: 75 });
+        doc.text(u.phone || "N/A", colX.phone, startY, { width: 95 });
+        doc.text(u.profession || "N/A", colX.profession, startY, { width: 115, truncate: true });
+        doc.text(u.organizedCount.toString(), colX.org, startY, { width: 40, align: "center" });
+        doc.text(u.participatedCount.toString(), colX.part, startY, { width: 40, align: "center" });
         
-        // Saut de ligne manuel si nécessaire ou juste moveDown standard
-        doc.y = startY; // Réinitialise Y pour le prochain moveDown si text() l'a bougé différemment (mais ici on utilise des colonnes fixes)
-        // Pour être sûr d'avancer correctement, on peut prendre le max de hauteur, mais ici on simplifie
-        doc.moveDown(1.2); 
+        doc.moveDown(1.8);
       });
+
+      // Footer with page numbers
+      const range = doc.bufferedPageRange();
+      for (let i = range.start; i < range.start + range.count; i++) {
+        doc.switchToPage(i);
+        doc.fillColor("#94a3b8").fontSize(8).text(
+          `Page ${i + 1} sur ${range.count} - Généré le ${new Date().toLocaleString("fr-FR")}`,
+          0,
+          570,
+          { align: "center" }
+        );
+      }
 
       doc.end();
       return;
     }
 
-    // --- GÉNÉRATION CSV (Par défaut) ---
+    // --- GÉNÉRATION CSV ---
     const statsData = [
       { Statistique: "Total Utilisateurs", Valeur: totalUsers },
       { Statistique: "Participants", Valeur: participantCount },
@@ -202,31 +272,40 @@ const generateAdminReport = async (req, res, next) => {
 
     const userFields = [
       { label: "Nom", value: "nom" },
+      { label: "Prénom", value: "prenom" },
       { label: "Email", value: "email" },
       { label: "Rôle", value: "role" },
       { label: "Sexe", value: "sexe" },
-      { label: "Téléphone", value: "phone" }, // Ajout
+      { label: "Téléphone", value: "phone" },
       { label: "Profession", value: "profession" },
+      { label: "Événements Organisés", value: "organizedCount" },
+      { label: "Événements Participés", value: "participatedCount" },
     ];
 
     const userParser = new Parser({ fields: userFields, delimiter: ";" });
     const usersCsv = userParser.parse(allUsers);
 
-    // --- 3. Combiner en un seul fichier ---
     const combinedCsv =
-      `RAPPORT GLOBAL QR-EVENT\n\n` +
-      `${statsCsv}\n\n\n` +
-      `LISTE DE TOUS LES UTILISATEURS\n\n` +
+      `RAPPORT GLOBAL QR-EVENT\n` +
+      `Généré le: ${new Date().toLocaleString("fr-FR")}\n\n` +
+      `STATISTIQUES GÉNÉRALES\n` +
+      `${statsCsv}\n\n` +
+      `LISTE DES UTILISATEURS\n` +
       `${usersCsv}\n`;
 
-    // --- 4. Envoi du fichier ---
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="rapport_admin_${new Date().toISOString().split("T")[0]}.csv"`
     );
 
-    res.status(200).send(combinedCsv);
+    // Ajouter le BOM UTF-8 pour Excel
+    res.status(200).send("\uFEFF" + combinedCsv);
+  } catch (error) {
+    console.error("❌ Erreur génération rapport admin:", error);
+    next(error);
+  }
+};
   } catch (error) {
     console.error("❌ Erreur génération rapport admin:", error);
     next(error);

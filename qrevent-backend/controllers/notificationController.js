@@ -63,8 +63,25 @@ const deleteNotification = async (req, res, next) => {
   }
 };
 
+// --- Supprimer toutes les notifications ---
+const deleteAllNotifications = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentification requise" });
+    }
+
+    await Notification.deleteMany({ user: userId });
+
+    return res.status(200).json({ message: "Toutes les notifications ont été supprimées" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getMyNotifications,
   markAllAsRead,
   deleteNotification,
+  deleteAllNotifications,
 };

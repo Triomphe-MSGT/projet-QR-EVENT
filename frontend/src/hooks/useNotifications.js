@@ -58,3 +58,20 @@ export const useDeleteNotification = () => {
     },
   });
 };
+// Service 4: Supprimer toutes les notifications
+const deleteAllNotifications = async () => {
+  await api.delete("/notifications/all");
+};
+
+// Hook 4: Pour supprimer toutes les notifications
+export const useDeleteAllNotifications = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAllNotifications,
+    onSuccess: () => {
+      // Vider manuellement le cache
+      queryClient.setQueryData(["notifications"], []);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+};

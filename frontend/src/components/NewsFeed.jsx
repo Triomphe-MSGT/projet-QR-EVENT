@@ -78,12 +78,12 @@ const FeaturedNewsCarousel = () => {
       </div>
 
       <div 
-        className="relative flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8 lg:h-[650px]"
+        className="relative flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8 lg:h-[550px]"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
         {/* --- MAIN HERO DISPLAY --- */}
-        <div className="lg:col-span-8 relative group overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] bg-gray-900 shadow-2xl h-[450px] md:h-[500px] lg:h-full">
+        <div className="lg:col-span-8 relative group overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] bg-gray-900 shadow-2xl h-[350px] md:h-[450px] lg:h-full">
           {/* Background Image with Transition */}
           <div className="absolute inset-0 transition-all duration-1000 ease-in-out transform">
             <img 
@@ -99,9 +99,9 @@ const FeaturedNewsCarousel = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent hidden lg:block"></div>
 
           {/* Content */}
-          <div className="absolute bottom-0 left-0 p-6 md:p-12 lg:p-16 w-full max-h-full overflow-y-auto custom-scrollbar">
+          <div className="absolute bottom-0 left-0 p-6 md:p-8 lg:p-12 w-full max-h-full overflow-y-auto custom-scrollbar">
             <div className="max-w-3xl animate-fade-in-up">
-              <div className="flex items-center gap-3 mb-4 lg:mb-6">
+              <div className="flex items-center gap-3 mb-3 lg:mb-4">
                 <span className="px-3 py-1 lg:px-4 lg:py-1.5 bg-blue-600 text-white text-[10px] lg:text-xs font-bold rounded-full uppercase tracking-widest">
                   #{currentArticle.tags.split(",")[0]}
                 </span>
@@ -111,7 +111,7 @@ const FeaturedNewsCarousel = () => {
                 </span>
               </div>
               
-              <h3 className="text-2xl md:text-4xl lg:text-6xl font-black text-white mb-4 lg:mb-6 leading-[1.2] lg:leading-[1.1] tracking-tighter">
+              <h3 className="text-xl md:text-3xl lg:text-5xl font-black text-white mb-3 lg:mb-4 leading-[1.2] lg:leading-[1.1] tracking-tighter">
                 {currentArticle.title}
               </h3>
               

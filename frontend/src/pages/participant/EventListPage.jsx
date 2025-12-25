@@ -4,7 +4,7 @@ import EventList from "../../components/events/EventList";
 import SearchAndFilter from "../../components/events/SearchFilter";
 import { useEvents } from "../../hooks/useEvents";
 import { useParams, useSearchParams, Link } from "react-router-dom";
-import { History, Sparkles } from "lucide-react";
+import { History, Sparkles, Search, Filter, X, ArrowLeft } from "lucide-react";
 
 const EventListPage = () => {
   console.log("EventListPage: Rendering...");
@@ -143,39 +143,108 @@ const EventListPage = () => {
   return (
     <MainLayout>
       <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-        {/* Header Section */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 pt-10 pb-10">
-          <div className="max-w-7xl mx-auto px-4">
+        {/* Mobile Sticky Header */}
+        <div className="md:hidden sticky top-16 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+          <button 
+            onClick={() => navigate(-1)}
+            className="p-2 bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-600 dark:text-gray-400 active:scale-90 transition-transform"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input 
+              type="text"
+              placeholder="Rechercher..."
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-9 pr-4 py-2.5 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+          <button 
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className={`p-2.5 rounded-xl transition-all ${isFilterOpen ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}
+          >
+            <Filter className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Header Section (Desktop & Mobile Title) */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 pt-8 md:pt-16 pb-8 md:pb-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <button 
+              onClick={() => navigate(-1)}
+              className="hidden md:flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-8 font-black text-xs tracking-widest uppercase"
+            >
+              <ArrowLeft className="w-4 h-4" /> Retour
+            </button>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-blue-600 font-black text-xs uppercase tracking-[0.2em]">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-blue-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em]">
                   <Sparkles className="w-4 h-4" />
                   <span>Découverte</span>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-gray-900 dark:text-white uppercase leading-none">
+                <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-tight bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
                   {getTitle()}
                 </h1>
               </div>
               
-              <Link 
-                to="/past-events"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 font-black text-xs uppercase tracking-widest rounded-2xl border border-gray-100 dark:border-gray-700 hover:text-blue-600 transition-colors"
-              >
-                <History className="w-4 h-4" />
-                Historique
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link 
+                  to="/past-events"
+                  className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 font-black text-[10px] uppercase tracking-widest rounded-2xl border border-gray-100 dark:border-gray-700 hover:text-blue-600 transition-colors"
+                >
+                  <History className="w-4 h-4" />
+                  Historique
+                </Link>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 py-10 space-y-10">
-          <SearchAndFilter
-            query={query}
-            setQuery={setQuery}
-            isFilterOpen={isFilterOpen}
-            setIsFilterOpen={setIsFilterOpen}
-            setCurrentPage={setCurrentPage}
-          />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12 space-y-8 md:space-y-12">
+          {/* Hide SearchAndFilter on mobile as it's integrated in sticky header */}
+          <div className="hidden md:block">
+            <SearchAndFilter
+              query={query}
+              setQuery={setQuery}
+              isFilterOpen={isFilterOpen}
+              setIsFilterOpen={setIsFilterOpen}
+              setCurrentPage={setCurrentPage}
+            />
+          </div>
+
+          {/* Mobile Filter Panel (Overlay) */}
+          {isFilterOpen && (
+            <div className="md:hidden fixed inset-0 z-[100] bg-white dark:bg-gray-900 overflow-y-auto animate-fade-in">
+              <div className="p-6 pb-24 space-y-8">
+                <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-gray-900 z-10 py-2">
+                  <h2 className="text-xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">Filtres</h2>
+                  <button onClick={() => setIsFilterOpen(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <SearchAndFilter
+                  query={query}
+                  setQuery={setQuery}
+                  isFilterOpen={true}
+                  setIsFilterOpen={setIsFilterOpen}
+                  setCurrentPage={setCurrentPage}
+                />
+                <div className="fixed bottom-6 left-6 right-6 z-20">
+                  <button 
+                    onClick={() => setIsFilterOpen(false)}
+                    className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl shadow-2xl shadow-blue-600/40 uppercase tracking-widest active:scale-95 transition-transform"
+                  >
+                    Appliquer
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <EventList
             currentEvents={currentEvents}

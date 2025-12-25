@@ -65,10 +65,10 @@ const EventCard = ({ event, handleDetails }) => {
   return (
     <div
       onClick={handleDetails}
-      className="group relative bg-white dark:bg-gray-800 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100 dark:border-gray-700/50 flex flex-col h-full cursor-pointer"
+      className="group relative bg-white dark:bg-gray-800 rounded-3xl md:rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border border-gray-100 dark:border-gray-700/50 flex flex-col h-full cursor-pointer"
     >
       {/* Image Section */}
-      <div className="relative h-52 md:h-64 overflow-hidden">
+      <div className="relative h-48 md:h-64 overflow-hidden">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -76,45 +76,45 @@ const EventCard = ({ event, handleDetails }) => {
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-6xl">
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-5xl md:text-6xl">
             {event.name?.charAt(0).toUpperCase() || "?"}
           </div>
         )}
         
         {/* Action Buttons Overlay */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+        <div className="absolute top-3 md:top-4 right-3 md:right-4 flex flex-col gap-2 z-10">
           <button
             onClick={handleLike}
-            className={`p-2.5 rounded-2xl backdrop-blur-md border border-white/20 shadow-lg transition-all active:scale-90 ${
+            className={`p-2 md:p-2.5 rounded-xl md:rounded-2xl backdrop-blur-md border border-white/20 shadow-lg transition-all active:scale-90 ${
               isLiked
                 ? "bg-red-500 text-white border-red-400"
                 : "bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-red-500"
             }`}
           >
-            <Heart size={18} className={isLiked ? "fill-current" : ""} />
+            <Heart size={16} className={isLiked ? "fill-current" : ""} />
           </button>
           <button
             onClick={handleShare}
-            className="p-2.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-all active:scale-90"
+            className="p-2 md:p-2.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-white/20 rounded-xl md:rounded-2xl shadow-lg text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-all active:scale-90"
           >
-            <Share2 size={18} />
+            <Share2 size={16} />
           </button>
         </div>
 
         {/* Date Badge Overlay */}
-        <div className="absolute top-4 left-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-2xl p-2 min-w-[60px] text-center shadow-lg border border-white/20">
-          <span className="block text-2xl font-black text-blue-600 leading-none">{date.day}</span>
-          <span className="block text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">{date.month}</span>
+        <div className="absolute top-3 md:top-4 left-3 md:left-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl md:rounded-2xl p-1.5 md:p-2 min-w-[50px] md:min-w-[60px] text-center shadow-lg border border-white/20">
+          <span className="block text-xl md:text-2xl font-black text-blue-600 leading-none">{date.day}</span>
+          <span className="block text-[8px] md:text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest uppercase">{date.month}</span>
         </div>
 
         {/* Price Tag Overlay */}
-        <div className="absolute bottom-4 left-4">
-          <span className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest shadow-lg backdrop-blur-md border border-white/20 ${
+        <div className="absolute bottom-3 md:bottom-4 left-3 md:left-4">
+          <span className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[8px] md:text-[10px] font-black tracking-widest shadow-lg backdrop-blur-md border border-white/20 ${
             event.price === 0 
               ? "bg-green-500/90 text-white" 
               : "bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-white"
           }`}>
-            {event.price === 0 ? "Gratuit" : `${event.price} FCFA`}
+            {event.price === 0 ? "GRATUIT" : `${event.price} FCFA`}
           </span>
         </div>
 
@@ -123,45 +123,45 @@ const EventCard = ({ event, handleDetails }) => {
       </div>
 
       {/* Content Section */}
-      <div className="p-5 md:p-8 flex flex-col flex-grow relative">
+      <div className="p-4 md:p-8 flex flex-col flex-grow relative">
         {/* Category Tag & Likes */}
-        <div className="flex items-center justify-between mb-3 md:mb-4">
+        <div className="flex items-center justify-between mb-2 md:mb-4">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[9px] md:text-[10px] font-black rounded-full tracking-widest">
+            <span className="px-2 py-0.5 md:px-2.5 md:py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[8px] md:text-[10px] font-black rounded-full tracking-widest uppercase">
               #{event.category?.name || "Événement"}
             </span>
             {event.qrOption && (
-              <span className="flex items-center gap-1 text-[9px] md:text-[10px] font-black text-amber-500 tracking-widest">
-                <Zap className="w-3 h-3 fill-current" /> QR Entry
+              <span className="flex items-center gap-1 text-[8px] md:text-[10px] font-black text-amber-500 tracking-widest uppercase">
+                <Zap className="w-2.5 h-2.5 fill-current" /> QR
               </span>
             )}
           </div>
           {likesCount > 0 && (
-            <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400">
-              <Heart size={10} className="fill-red-500 text-red-500" />
+            <div className="flex items-center gap-1 text-[9px] md:text-[10px] font-bold text-gray-400">
+              <Heart size={8} className="fill-red-500 text-red-500" />
               {likesCount}
             </div>
           )}
         </div>
 
-        <h3 className="text-lg md:text-2xl font-black text-gray-900 dark:text-white mb-2 md:mb-3 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
+        <h3 className="text-base md:text-2xl font-black text-gray-900 dark:text-white mb-1 md:mb-3 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2 tracking-tight">
           {event.name}
         </h3>
 
-        <p className="text-gray-500 dark:text-gray-400 text-xs md:text-base line-clamp-2 mb-4 md:mb-6 font-medium leading-relaxed">
+        <p className="text-gray-500 dark:text-gray-400 text-[10px] md:text-base line-clamp-2 mb-3 md:mb-6 font-medium leading-relaxed">
           {event.description}
         </p>
 
         {/* Footer Info */}
-        <div className="mt-auto pt-4 md:pt-6 border-t border-gray-50 dark:border-gray-700/50 flex items-center justify-between">
-          <div className="flex items-center text-gray-400 dark:text-gray-500 text-[10px] md:text-xs font-bold">
-            <MapPin className="w-3.5 h-3.5 mr-1 text-blue-500" />
-            <span className="truncate max-w-[100px] md:max-w-[150px]">{event.city}</span>
+        <div className="mt-auto pt-3 md:pt-6 border-t border-gray-50 dark:border-gray-700/50 flex items-center justify-between">
+          <div className="flex items-center text-gray-400 dark:text-gray-500 text-[9px] md:text-xs font-bold">
+            <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 text-blue-500" />
+            <span className="truncate max-w-[80px] md:max-w-[150px]">{event.city}</span>
           </div>
           
-          <div className="flex items-center gap-1 text-blue-600 font-black text-xs md:text-sm group/btn">
+          <div className="flex items-center gap-1 text-blue-600 font-black text-[10px] md:text-sm group/btn uppercase tracking-widest">
             Détails 
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1" />
+            <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5 transition-transform group-hover/btn:translate-x-1" />
           </div>
         </div>
       </div>

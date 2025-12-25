@@ -35,7 +35,7 @@ import {
 
 // --- Import de l'URL de base ---
 import { API_BASE_URL } from "../../slices/axiosInstance";
-import { useMarkAsRead, useNotifications, useDeleteNotification } from "../../hooks/useNotifications"; // Assurez-vous que le chemin est correct
+import { useMarkAsRead, useNotifications, useDeleteNotification, useDeleteAllNotifications } from "../../hooks/useNotifications"; // Assurez-vous que le chemin est correct
 
 // --- CORRECTION : URL statique pour les images ---
 // Votre API_BASE_URL est '.../api', mais les images sont à la racine '/uploads'
@@ -81,6 +81,7 @@ const Navbar = () => {
     useNotifications({ enabled: !!token });
   const markAsReadMutation = useMarkAsRead();
   const deleteNotificationMutation = useDeleteNotification();
+  const deleteAllNotificationsMutation = useDeleteAllNotifications();
 
   // --- Gestion des interactions utilisateur ---
   const handleThemeToggle = () => setTheme(theme === "dark" ? "light" : "dark");
@@ -217,22 +218,27 @@ const Navbar = () => {
   // --- Navbar principale pour utilisateur connecté ---
   return (
     <>
-      <nav className="sticky top-0 z-30 flex items-center justify-between px-4 h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-700 transition-all duration-300">
-        {/* Bouton hamburger (Visible uniquement sur mobile) */}
-        <button
-          onClick={() => {
-            closeMenus();
-            setMenuOpen(true);
-          }}
-          className="md:hidden p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors active:scale-95"
-          aria-label="Ouvrir le menu"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
+      <nav className="sticky top-0 z-40 flex items-center justify-between px-4 h-16 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-gray-800 transition-all duration-300">
+        {/* Mobile: Left side (Hamburger) */}
+        <div className="flex items-center md:hidden">
+          <button
+            onClick={() => {
+              closeMenus();
+              setMenuOpen(true);
+            }}
+            className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all active:scale-90"
+            aria-label="Ouvrir le menu"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
 
-        {/* Logo central */}
-        <Link to="/home" className="flex-shrink-0 mr-4">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent">
+        {/* Logo - Centered on mobile, Left on desktop */}
+        <Link 
+          to="/home" 
+          className="flex-shrink-0 md:mr-8 absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0 z-10"
+        >
+          <h1 className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent tracking-tighter">
             Qr-Event
           </h1>
         </Link>
@@ -277,55 +283,81 @@ const Navbar = () => {
             })}
         </div>
 
-        <div className="flex items-center gap-2 relative">
+        <div className="flex items-center gap-0.5 md:gap-2 relative">
           {/* Bouton Thème */}
           <button
             onClick={handleThemeToggle}
-            className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+            className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all active:scale-90"
             aria-label="Changer de thème"
           >
             {theme === "dark" ? (
-              <Sun className="w-6 h-6" />
+              <Sun className="w-5 h-5 md:w-6 md:h-6" />
             ) : (
-              <Moon className="w-6 h-6" />
+              <Moon className="w-5 h-5 md:w-6 md:h-6" />
             )}
           </button>
 
           {/* Bouton Notifications */}
           <button
             onClick={handleNotifClick}
-            className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition relative"
+            className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all relative active:scale-90"
             aria-label="Notifications"
           >
-            <Bell className="w-6 h-6" />
+            <Bell className="w-5 h-5 md:w-6 md:h-6" />
             {hasUnread && (
-              <span className="absolute top-1.5 right-1.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></span>
             )}
           </button>
 
           {/* Menu déroulant des notifications */}
           {notifMenuOpen && (
-            <div className="absolute top-14 right-0 w-80 max-w-sm z-50 p-3 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-lg animate-fade-in-down">
-              <h3 className="font-semibold p-2 dark:text-white">
-                Notifications
-              </h3>
-              <div className="max-h-96 overflow-y-auto">
+            <div className="absolute top-14 right-0 w-80 max-w-[90vw] z-50 p-3 rounded-2xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border border-gray-100 dark:border-gray-700 shadow-2xl animate-fade-in-down">
+              <div className="flex items-center justify-between p-2 mb-2 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="font-black dark:text-white text-sm uppercase tracking-widest">
+                  Notifications
+                </h3>
+                <div className="flex items-center gap-2">
+                  {notifications?.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm("Supprimer toutes les notifications ?")) {
+                          deleteAllNotificationsMutation.mutate();
+                        }
+                      }}
+                      className="text-[10px] font-black text-red-500 uppercase tracking-widest hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1 rounded-lg transition-colors"
+                    >
+                      Tout effacer
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setNotifMenuOpen(false)}
+                    className="p-1 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-h-96 overflow-y-auto no-scrollbar">
                 {isLoadingNotifs && (
                   <p className="p-4 text-center text-sm dark:text-gray-400">
                     Chargement...
                   </p>
                 )}
                 {!isLoadingNotifs && notifications?.length === 0 && (
-                  <p className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                    Vous n'avez aucune notification.
-                  </p>
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Bell className="w-8 h-8 text-gray-200 dark:text-gray-700 mb-2" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Aucune notification
+                    </p>
+                  </div>
                 )}
                 {notifications?.map((notif) => (
                   <div
                     key={notif._id || notif.id}
-                    className={`flex items-start justify-between p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group ${
+                    className={`flex items-start justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 group mb-1 transition-colors ${
                       !notif.isRead
-                        ? "bg-blue-50 dark:bg-blue-900/20"
+                        ? "bg-blue-50/50 dark:bg-blue-900/10"
                         : ""
                     }`}
                   >
@@ -335,15 +367,15 @@ const Navbar = () => {
                       className="flex-1"
                     >
                       <p
-                        className={`text-sm ${
+                        className={`text-xs md:text-sm ${
                           !notif.isRead
-                            ? "font-semibold text-gray-900 dark:text-white"
-                            : "text-gray-600 dark:text-gray-300"
+                            ? "font-bold text-gray-900 dark:text-white"
+                            : "text-gray-600 dark:text-gray-400"
                         }`}
                       >
                         {notif.message}
                       </p>
-                      <span className="text-xs text-blue-500 mt-1 block">
+                      <span className="text-[10px] text-blue-500 font-bold mt-1 block">
                         {new Date(notif.createdAt).toLocaleString("fr-FR")}
                       </span>
                     </Link>
@@ -352,10 +384,10 @@ const Navbar = () => {
                         e.stopPropagation();
                         deleteNotificationMutation.mutate(notif._id || notif.id);
                       }}
-                      className="ml-2 p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all"
+                      className="ml-2 p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 md:opacity-0 md:group-hover:opacity-100 transition-all"
                       title="Supprimer"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -369,7 +401,7 @@ const Navbar = () => {
               closeMenus();
               setProfileMenuOpen(true);
             }}
-            className="flex items-center"
+            className="flex items-center p-1"
             title="Profil utilisateur"
             aria-label="Ouvrir le menu du profil"
           >
@@ -377,10 +409,10 @@ const Navbar = () => {
               <img
                 src={avatarUrl}
                 alt="avatar"
-                className="w-9 h-9 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover border-2 border-blue-500/20 shadow-sm"
               />
             ) : (
-              <DefaultAvatarIcon className="w-9 h-9 rounded-full border-2 border-gray-300 dark:border-gray-600 p-1" />
+              <DefaultAvatarIcon className="w-8 h-8 md:w-9 md:h-9 rounded-full border-2 border-blue-500/20 p-1 shadow-sm" />
             )}
           </button>
 
@@ -388,35 +420,38 @@ const Navbar = () => {
           {profileMenuOpen && (
             <>
               <div onClick={closeMenus} className="fixed inset-0 z-40"></div>
-              <div className="absolute top-14 right-0 w-64 z-50 p-3 flex flex-col gap-1 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-lg animate-fade-in-down">
-                <div className="flex flex-col items-center border-b dark:border-gray-600 pb-3 mb-2">
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt="avatar"
-                      className="w-16 h-16 rounded-full object-cover mb-2"
-                    />
-                  ) : (
-                    <DefaultAvatarIcon className="w-16 h-16 rounded-full mb-2 p-2" />
-                  )}
-                  <p className="font-semibold text-gray-800 dark:text-gray-100">
+              <div className="absolute top-14 right-0 w-64 max-w-[80vw] z-50 p-3 flex flex-col gap-1 rounded-2xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border border-gray-100 dark:border-gray-700 shadow-2xl animate-fade-in-down">
+                <div className="flex flex-col items-center border-b border-gray-100 dark:border-gray-700 pb-4 mb-2">
+                  <div className="relative mb-3">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="avatar"
+                        className="w-16 h-16 rounded-2xl object-cover shadow-lg"
+                      />
+                    ) : (
+                      <DefaultAvatarIcon className="w-16 h-16 rounded-2xl p-3 shadow-lg" />
+                    )}
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+                  </div>
+                  <p className="font-black text-gray-900 dark:text-white tracking-tight">
                     {user.nom}
                   </p>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">
                     {user.role}
                   </span>
                 </div>
                 <Link
                   to="/user-profile"
                   onClick={closeMenus}
-                  className="flex items-center gap-3 p-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors font-bold text-sm"
                 >
-                  <UserCheck className="w-5 h-5" /> Voir mon profil
+                  <UserCheck className="w-5 h-5 text-blue-600" /> Voir mon profil
                 </Link>
-                <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
+                <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-3 p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors text-left"
+                  className="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-left font-bold text-sm"
                 >
                   <LogOut className="w-5 h-5" /> Déconnexion
                 </button>
@@ -431,25 +466,25 @@ const Navbar = () => {
         <>
           <div
             onClick={closeMenus}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-fade-in"
           ></div>
 
-          <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl shadow-2xl animate-slide-in-left flex flex-col border-r border-white/20">
+          <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl shadow-2xl animate-slide-in-left flex flex-col border-r border-gray-100 dark:border-gray-800">
             <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center gap-4">
               <div className="relative">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt="avatar"
-                    className="w-14 h-14 rounded-2xl object-cover shadow-md"
+                    className="w-14 h-14 rounded-2xl object-cover shadow-md border border-gray-100 dark:border-gray-700"
                   />
                 ) : (
-                  <DefaultAvatarIcon className="w-14 h-14 rounded-2xl p-2 shadow-md" />
+                  <DefaultAvatarIcon className="w-14 h-14 rounded-2xl p-2 shadow-md border border-gray-100 dark:border-gray-700" />
                 )}
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-black text-gray-900 dark:text-white truncate">
+                <p className="font-black text-gray-900 dark:text-white truncate tracking-tight">
                   {user.nom}
                 </p>
                 <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
@@ -458,17 +493,17 @@ const Navbar = () => {
               </div>
               <button
                 onClick={closeMenus}
-                className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all active:scale-90"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <nav className="flex-1 p-6 space-y-1 overflow-y-auto no-scrollbar">
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const shared =
-                  "flex items-center gap-4 p-3.5 rounded-2xl text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 w-full font-bold text-sm group";
+                  "flex items-center gap-4 p-3 rounded-2xl text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all duration-200 w-full font-bold text-sm group active:scale-[0.98]";
                 return item.path ? (
                   <Link
                     key={item.label}
@@ -476,7 +511,7 @@ const Navbar = () => {
                     onClick={closeMenus}
                     className={shared}
                   >
-                    <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-800 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
                       <Icon className="w-5 h-5" />
                     </div>
                     <span>{item.label}</span>
@@ -491,7 +526,7 @@ const Navbar = () => {
                     }}
                     className={shared}
                   >
-                    <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-800 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
                       <Icon className="w-5 h-5" />
                     </div>
                     <span>{item.label}</span>
@@ -501,10 +536,10 @@ const Navbar = () => {
               })}
             </nav>
 
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+            <div className="p-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
               <button
                 onClick={handleThemeToggle}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 w-full"
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 w-full transition-colors font-bold text-sm"
               >
                 {theme === "dark" ? (
                   <Sun className="w-5 h-5 text-yellow-500" />
@@ -515,7 +550,7 @@ const Navbar = () => {
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 p-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/50 w-full"
+                className="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 w-full transition-colors font-bold text-sm"
               >
                 <LogOut className="w-5 h-5" />
                 <span>Déconnexion</span>

@@ -59,6 +59,14 @@ const EventDetails = ({ event }) => {
     user.id === (event.organizer?._id || event.organizer?.id || event.organizer)
   );
 
+  const organizerEventCount = useMemo(() => {
+    if (!allEvents || !event.organizer) return 0;
+    const organizerId = event.organizer._id || event.organizer.id || event.organizer;
+    return allEvents.filter(e => (e.organizer?._id || e.organizer?.id || e.organizer) === organizerId).length;
+  }, [allEvents, event.organizer]);
+
+  const isCertified = organizerEventCount >= 10;
+
   useEffect(() => {
     const fetchCoords = async () => {
       setLoadingMap(true);
@@ -139,6 +147,25 @@ const EventDetails = ({ event }) => {
     return `${STATIC_BASE_URL}/${imagePath}`;
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: event.name,
+      text: event.description,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        alert("Lien de l'événement copié !");
+      }
+    } catch (err) {
+      console.error("Erreur de partage:", err);
+    }
+  };
+
   const imageUrl = getImageUrl(event.imageUrl);
   const dateInfo = formatDate(event.startDate);
 
@@ -178,7 +205,10 @@ const EventDetails = ({ event }) => {
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <button className="p-2.5 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all border border-white/20 shadow-lg">
+              <button 
+                onClick={handleShare}
+                className="p-2.5 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all border border-white/20 shadow-lg"
+              >
                 <Share2 className="w-5 h-5" />
               </button>
             </div>
@@ -371,7 +401,8 @@ const EventDetails = ({ event }) => {
                           variant={isAlreadyRegistered || qrCodeData || isExpired ? "secondary" : "primary"}
                           size="lg"
                           onClick={() => {
-                            if (!user) { navigate("/login"); return; }
+                            const token = localStorage.getItem("token");
+                            if (!token) { navigate("/login"); return; }
                             if (!isAlreadyRegistered && !qrCodeData && !isExpired) {
                               setIsModalOpen(true);
                             }
@@ -419,7 +450,7 @@ const EventDetails = ({ event }) => {
 
               {/* Organizer Card */}
               <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <p className="text-[10px] font-black text-gray-400 mb-4">Organisé par</p>
+                <p className="text-[10px] font-black text-gray-400 mb-4 uppercase tracking-widest">Organisé par</p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-lg font-bold text-blue-600 border border-blue-100 dark:border-blue-800/50">
                     {event.organizer?.name?.charAt(0) || "O"}
@@ -427,9 +458,13 @@ const EventDetails = ({ event }) => {
                   <div>
                     <h4 className="text-[#1C1E21] dark:text-white font-bold text-sm flex items-center gap-1">
                       {event.organizer?.name || "Organisateur"}
-                      <ShieldCheck className="w-4 h-4 text-blue-500" />
+                      {isCertified && <ShieldCheck className="w-4 h-4 text-blue-500" />}
                     </h4>
-                    <p className="text-gray-500 dark:text-gray-400 text-[11px] font-medium">Organisateur vérifié</p>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-gray-500 dark:text-gray-400 text-[11px] font-medium">
+                        {isCertified ? "Organisateur Certifié" : "Organisateur Vérifié"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -451,13 +486,58 @@ const EventDetails = ({ event }) => {
               </div>
             </div>
             
-            <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar snap-x snap-mandatory">
+            <div className="flex flex-col gap-4 max-h-[600px] overflow-y-auto pr-2 no-scrollbar">
               {similarEvents.map((similarEvent) => (
-                <div key={similarEvent._id || similarEvent.id} className="shrink-0 w-[280px] md:w-[350px] snap-start">
-                  <EventCard 
-                    event={similarEvent} 
-                    handleDetails={() => navigate(`/events/${similarEvent._id || similarEvent.id}`)} 
-                  />
+                <div 
+                  key={similarEvent._id || similarEvent.id}
+                  onClick={() => {
+                    navigate(`/events/${similarEvent._id || similarEvent.id}`);
+                    window.scrollTo(0, 0);
+                  }}
+                  className="flex gap-4 bg-white dark:bg-gray-800 p-3 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-700/50 active:scale-[0.98] transition-transform cursor-pointer group"
+                >
+                  <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 shadow-inner">
+                    {similarEvent.imageUrl ? (
+                      <img 
+                        src={getImageUrl(similarEvent.imageUrl)} 
+                        alt={similarEvent.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                        <span className="text-white font-black text-xl uppercase">
+                          {similarEvent.name?.charAt(0) || "?"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col justify-between py-1 flex-1 min-w-0">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest">
+                          #{similarEvent.category?.name || "Événement"}
+                        </span>
+                        <span className="text-[10px] font-black text-gray-900 dark:text-white">
+                          {similarEvent.price === 0 ? "GRATUIT" : `${similarEvent.price} FCFA`}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-black text-gray-900 dark:text-white line-clamp-1 tracking-tight leading-tight group-hover:text-blue-600 transition-colors">
+                        {similarEvent.name}
+                      </h3>
+                      <div className="flex items-center gap-1 text-gray-400 text-[10px] mt-1 font-bold">
+                        <MapPin className="w-3 h-3 text-blue-500" />
+                        <span className="truncate">{similarEvent.city}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">
+                        <Calendar className="w-3 h-3 text-blue-600" />
+                        <span className="text-blue-600 font-black text-[9px] uppercase tracking-tighter">
+                          {new Date(similarEvent.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

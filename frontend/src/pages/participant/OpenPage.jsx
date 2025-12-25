@@ -1,268 +1,190 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShieldCheck, Zap, Users, Globe } from "lucide-react";
 
 // --- Composant de chargement (Splash Screen) ---
 const LoadingScreen = () => {
-  const positions = [
-    { top: 5, left: 5 },
-    { bottom: 5, left: 5 },
-    { top: 5, right: 5 },
-    { bottom: 5, right: 5 },
-  ];
-
   return (
-    <div className="fixed inset-0 flex justify-center items-center bg-gradient-to-br from-blue-100 to-white dark:from-gray-900 dark:to-blue-900/50 z-[9999]">
-      <div className="relative w-52 h-52 flex justify-center items-center scale-75 animate-[pulse_2s_ease-in-out_infinite_alternate]">
-        {positions.map((pos, i) => (
-          <div
-            key={i}
-            className="absolute w-10 h-10 bg-blue-400/50 rounded-lg animate-[pulse-fade_3s_infinite_ease-in-out]"
-            style={{ ...pos, animationDelay: `${i * 0.5}s` }}
-          />
-        ))}
-        <h1 className="text-7xl font-['Poppins'] font-thin bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-green-400 z-10">
-          QRe
-        </h1>
+    <div className="fixed inset-0 flex flex-col justify-center items-center bg-white dark:bg-gray-950 z-[9999]">
+      <div className="relative flex flex-col items-center gap-8">
+        <div className="relative w-24 h-24">
+          <div className="absolute inset-0 border-4 border-blue-100 dark:border-blue-900/30 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+          <div className="absolute inset-4 bg-gradient-to-br from-blue-500 to-green-400 rounded-full animate-pulse"></div>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <h1 className="text-4xl font-black tracking-tighter bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent">
+            Qr-Event
+          </h1>
+          <div className="flex gap-1">
+            {[0, 1, 2].map((i) => (
+              <div 
+                key={i} 
+                className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" 
+                style={{ animationDelay: `${i * 0.15}s` }}
+              ></div>
+            ))}
+          </div>
+        </div>
       </div>
-      <style>{`
-        @keyframes pulse-fade {
-          0% { opacity: 0; transform: scale(0.5); }
-          50% { opacity: 0.3; transform: scale(1); }
-          100% { opacity: 0; transform: scale(1.5); }
-        }
-        @keyframes pulse { 0% { transform: scale(0.8); } 100% { transform: scale(0.9); } }
-      `}</style>
     </div>
   );
 };
 
-// --- Page principale (Modernisée avec logo SVG + main animée) ---
 const OpenPage = () => {
   const [loading, setLoading] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
 
-  const handleExploreEvents = () => {
-    navigate("/home");
-  };
+  const steps = [
+    {
+      title: "Découvrez des moments",
+      highlight: "Inoubliables.",
+      description: "Explorez les meilleurs événements au Cameroun et réservez votre place en un clic.",
+      icon: Globe,
+      color: "from-blue-600 to-blue-400"
+    },
+    {
+      title: "Accès sécurisé par",
+      highlight: "QR Code.",
+      description: "Plus besoin de billets papier. Votre QR Code unique est votre laissez-passer sécurisé.",
+      icon: ShieldCheck,
+      color: "from-indigo-600 to-blue-500"
+    },
+    {
+      title: "Organisation",
+      highlight: "Simplifiée.",
+      description: "Créez et gérez vos événements avec des outils professionnels de suivi en temps réel.",
+      icon: Zap,
+      color: "from-blue-500 to-green-400"
+    },
+    {
+      title: "Rejoignez la",
+      highlight: "Communauté.",
+      description: "Partagez des expériences uniques avec des milliers de passionnés à travers le pays.",
+      icon: Users,
+      color: "from-green-500 to-emerald-400"
+    }
+  ];
 
   useEffect(() => {
-    // Splash screen de 3s
-    const timer = setTimeout(() => setLoading(false), 3000);
+    const timer = setTimeout(() => setLoading(false), 2500);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleCreateEvent = () => {
-    navigate("/createevent");
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 flex flex-col min-h-screen relative overflow-hidden">
+    <div className="bg-white dark:bg-gray-950 min-h-screen relative overflow-hidden font-sans selection:bg-blue-100 selection:text-blue-600">
       {loading && <LoadingScreen />}
 
-      <div
-        className={`flex-grow flex flex-col justify-between transition-opacity duration-1000 ease-in-out ${
-          loading ? "opacity-0" : "opacity-100"
-        }`}
-      >
-        {/* Lueurs décoratives  */}
-        <div className="absolute -top-1/4 left-1/2 -translate-x-1/2 w-full max-w-lg h-96 bg-blue-500/20 dark:bg-blue-500/30 blur-3xl rounded-full animate-pulse-slow -z-10"></div>
-        <div className="absolute -bottom-1/4 right-1/4 w-full max-w-md h-80 bg-green-500/10 dark:bg-green-500/20 blur-3xl rounded-full animate-pulse-slow-delay -z-10"></div>
+      {/* Dynamic Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className={`absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 dark:bg-blue-600/20 blur-[120px] rounded-full transition-all duration-1000 ${currentStep % 2 === 0 ? 'opacity-100' : 'opacity-50'}`}></div>
+        <div className={`absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-green-400/10 dark:bg-green-400/20 blur-[120px] rounded-full transition-all duration-1000 ${currentStep % 2 !== 0 ? 'opacity-100' : 'opacity-50'}`}></div>
+      </div>
 
-        {/* --- STYLES POUR LES ANIMATIONS --- */}
-        <style>{`
-          @keyframes pulse-slow { 50% { opacity: 0.5; } }
-          .animate-pulse-slow { animation: pulse-slow 6s infinite ease-in-out; }
-          .animate-pulse-slow-delay { animation: pulse-slow 6s 3s infinite ease-in-out; }
-
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fade-in-up {
-            animation: fadeInUp 0.8s ease-out forwards;
-            opacity: 0;
-          }
-
-          /* Animation d'entrée du logo (inchangée) */
-          @keyframes logo-animate {
-            0% { transform: scale(0.7) rotate(-10deg); opacity: 0; }
-            50% { transform: scale(1.1) rotate(5deg); opacity: 1; }
-            100% { transform: scale(1) rotate(0deg); opacity: 1; }
-          }
-          
-          /* NOUVEAU: Réaction du logo au "tap" */
-          @keyframes logo-react {
-            0%, 50%, 100% { transform: scale(1); }
-            40% { transform: scale(1.08); } /* Réagit au tap */
-          }
-
-          /* NOUVEAU: Animation de la main qui "tape" */
-          @keyframes hand-tap {
-            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
-            30% { transform: translate(-20px, -20px) scale(1.1); opacity: 1; } /* Lève la main */
-            40% { transform: translate(-18px, -18px) scale(1.05); } /* "Tap" */
-            60% { transform: translate(0, 0) scale(1); opacity: 0.8; } /* Retour */
-          }
-          .animate-hand-tap {
-            /* Commence après 1.5s, dure 3s, boucle infinie */
-            animation: hand-tap 3s infinite ease-in-out 1.5s;
-          }
-        `}</style>
-
-        {/* 1. Logo du titre en haut au centre */}
-        <header
-          className="pt-8 text-center opacity-0 animate-fade-in-up"
-          style={{ animationDelay: "0.1s" }}
-        >
-          <h1 className="text-3xl font-bold font-['Poppins'] bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-green-400">
-            QRevent
-          </h1>
-        </header>
-
-        {/* 2. Section "Hero" (Bienvenue) */}
-        <main className="flex-grow flex flex-col items-center justify-center p-6 text-center">
-          <div
-            className="relative w-48 h-auto mb-8 opacity-0 animate-fade-in-up"
-            style={{ animationDelay: "0.3s" }}
+      <div className={`relative z-10 flex flex-col min-h-screen transition-all duration-1000 ${loading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+        
+        {/* Navbar */}
+        <nav className="px-6 py-8 flex justify-between items-center max-w-7xl mx-auto w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Zap className="w-6 h-6 text-white fill-current" />
+            </div>
+            <span className="text-2xl font-black tracking-tighter bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent">
+              Qr-Event
+            </span>
+          </div>
+          <button 
+            onClick={() => navigate('/login')}
+            className="text-gray-500 dark:text-gray-400 font-bold text-sm hover:text-blue-600 transition-colors"
           >
-            {/* Le logo SVG animé */}
-            <svg
-              viewBox="0 0 100 120"
-              className="w-full h-auto object-contain
-                         drop-shadow-lg z-10 relative
-                         animate-[logo-animate_1s_ease-out_forwards,logo-react_3s_ease-in-out_infinite_1.5s]" /* ✅ ANIMATION CORRIGÉE */
-              alt="Logo QRevent"
-            >
-              <defs>
-                <linearGradient
-                  id="logo-gradient"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="100%"
-                >
-                  <stop offset="0%" style={{ stopColor: "#3B82F6" }} />{" "}
-                  <stop offset="100%" style={{ stopColor: "#4338CA" }} />{" "}
-                </linearGradient>
-              </defs>
-              <circle cx="50" cy="50" r="48" fill="url(#logo-gradient)" />
-              <g fill="white">
-                <rect x="22" y="22" width="25" height="25" rx="2" />
-                <rect
-                  x="27"
-                  y="27"
-                  width="15"
-                  height="15"
-                  rx="1"
-                  fill="url(#logo-gradient)"
-                />
-                <rect x="53" y="22" width="25" height="25" rx="2" />
-                <rect
-                  x="58"
-                  y="27"
-                  width="15"
-                  height="15"
-                  rx="1"
-                  fill="url(#logo-gradient)"
-                />
-                <rect x="22" y="53" width="25" height="25" rx="2" />
-                <rect
-                  x="27"
-                  y="58"
-                  width="15"
-                  height="15"
-                  rx="1"
-                  fill="url(#logo-gradient)"
-                />
-                <rect x="53" y="53" width="7" height="7" rx="1" />
-                <rect x="62" y="53" width="7" height="7" rx="1" />
-                <rect x="71" y="62" width="7" height="7" rx="1" />
-                <rect x="53" y="71" width="7" height="7" rx="1" />
-                <rect x="62" y="71" width="7" height="7" rx="1" />
-              </g>
-              <text
-                x="50"
-                y="112"
-                fontFamily="Poppins, sans-serif"
-                fontSize="18"
-                fontWeight="bold"
-                textAnchor="middle"
-                fill="url(#logo-gradient)"
-                className="dark:fill-white"
-              >
-                QRevent
-              </text>
-            </svg>
+            Passer
+          </button>
+        </nav>
 
-            {/* Image de la main animée */}
-            <img
-              src="/handicon.png"
-              alt="Icône de main qui scanne"
-              className="absolute w-28 h-auto object-contain -right-10 -bottom-8 animate-hand-tap z-20"
-            />
+        {/* Onboarding Content */}
+        <main className="flex-grow flex flex-col items-center justify-center px-6 py-12 text-center max-w-4xl mx-auto w-full relative">
+          <div key={currentStep} className="animate-fade-in-up space-y-8">
+            <div className={`w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br ${steps[currentStep].color} flex items-center justify-center shadow-2xl shadow-blue-500/20 mb-8 transform rotate-3`}>
+              {React.createElement(steps[currentStep].icon, { className: "w-10 h-10 text-white" })}
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-[0.9]">
+              {steps[currentStep].title} <br />
+              <span className={`bg-gradient-to-r ${steps[currentStep].color} bg-clip-text text-transparent`}>
+                {steps[currentStep].highlight}
+              </span>
+            </h1>
+
+            <p className="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-xl mx-auto leading-relaxed font-medium">
+              {steps[currentStep].description}
+            </p>
           </div>
 
-          <h2
-            className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 font-['Poppins'] leading-tight opacity-0 animate-fade-in-up"
-            style={{ animationDelay: "0.5s" }}
-          >
-            L'événementiel,
-            <br />
-            simplifié.
-          </h2>
-          <p
-            className="text-lg text-gray-600 dark:text-gray-400 max-w-md mb-10 opacity-0 animate-fade-in-up"
-            style={{ animationDelay: "0.7s" }}
-          >
-            Créez, gérez et participez à vos événements avec la puissance du QR
-            code.
-          </p>
+          {/* Action Area */}
+          <div className="mt-16 w-full max-w-md space-y-6">
+            {currentStep < steps.length - 1 ? (
+              <button
+                onClick={nextStep}
+                className="group w-full py-5 px-8 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-black rounded-2xl shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+              >
+                Suivant
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </button>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-4 animate-fade-in">
+                <button
+                  onClick={() => navigate('/home')}
+                  className="group flex-1 py-5 px-8 bg-blue-600 text-white font-black rounded-2xl shadow-2xl shadow-blue-600/30 hover:bg-blue-700 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3"
+                >
+                  Découvrir
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                </button>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="flex-1 py-5 px-8 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-black rounded-2xl border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all transform hover:scale-[1.02] active:scale-95 shadow-sm"
+                >
+                  Organiser
+                </button>
+              </div>
+            )}
 
-          {/* 3. Boutons d'Action (CTA) */}
-          <div
-            className="w-full max-w-sm space-y-4 opacity-0 animate-fade-in-up"
-            style={{ animationDelay: "0.9s" }}
-          >
-            <button
-              onClick={handleExploreEvents}
-              className="group flex items-center justify-center w-full py-4 px-6 bg-blue-600 text-white font-bold rounded-xl shadow-lg 
-                         hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800
-                         transition-all duration-300 transform hover:scale-[1.03]"
-            >
-              Explorer les événements
-              <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
-            </button>
-
-            <button
-              onClick={handleCreateEvent}
-              className="w-full py-4 px-6 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 
-                         font-semibold rounded-xl shadow-sm hover:bg-gray-200 dark:hover:bg-gray-600 
-                         transition-all duration-300 transform hover:scale-[1.03]"
-            >
-              Créer un événement
-            </button>
+            {/* Progress Dots */}
+            <div className="flex justify-center gap-2 pt-4">
+              {steps.map((_, i) => (
+                <div 
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    i === currentStep ? 'w-8 bg-blue-600' : 'w-2 bg-gray-200 dark:bg-gray-800'
+                  }`}
+                ></div>
+              ))}
+            </div>
           </div>
         </main>
 
-        {/* 4. Pied de page */}
-        <footer
-          className="p-6 text-center opacity-0 animate-fade-in-up"
-          style={{ animationDelay: "1.1s" }}
-        >
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            En continuant, vous acceptez nos{" "}
-            <Link to="/terms" className="text-blue-500 hover:underline">
-              Conditions d'utilisation
-            </Link>
-            et
-            <Link to="/privacy" className="text-blue-500 hover:underline">
-              Politique de confidentialité
-            </Link>
-            .
+        {/* Footer */}
+        <footer className="p-8 text-center">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            © 2025 Qr-Event • L'excellence événementielle
           </p>
         </footer>
       </div>
+
+      <style>{`
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fade-in-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .animate-fade-in { animation: fade-in-up 0.8s ease-out forwards; }
+      `}</style>
     </div>
   );
 };

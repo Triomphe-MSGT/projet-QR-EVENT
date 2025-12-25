@@ -670,7 +670,7 @@ const generateEventReport = async (req, res, next) => {
   try {
     requireAuthUser(req);
     const eventId = req.params.id;
-    const format = req.query.format || "pdf"; // "pdf" ou "csv"
+    const format = req.query.format || "pdf";
 
     if (!isValidObjectId(eventId))
       return res.status(400).json({ error: "ID d'événement invalide." });
@@ -697,6 +697,7 @@ const generateEventReport = async (req, res, next) => {
     if (format === "csv") {
       const fields = [
         "Nom",
+        "Prénom",
         "Email",
         "Sexe",
         "Profession",
@@ -706,8 +707,13 @@ const generateEventReport = async (req, res, next) => {
       ];
       const csvRows = inscriptions.map((ins) => {
         const p = ins.participant || {};
+        const names = (p.nom || "").split(" ");
+        const nom = names[0] || "N/A";
+        const prenom = names.slice(1).join(" ") || "N/A";
+
         return [
-          `"${p.nom || ""}"`,
+          `"${nom}"`,
+          `"${prenom}"`,
           `"${p.email || ""}"`,
           `"${p.sexe || ""}"`,
           `"${p.profession || ""}"`,
@@ -717,176 +723,149 @@ const generateEventReport = async (req, res, next) => {
         ].join(",");
       });
 
-      const csvContent = [fields.join(","), ...csvRows].join("\n");
+      const csvContent = "\uFEFF" + [fields.join(","), ...csvRows].join("\n");
 
-      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename="rapport-${(event.name || "event").replace(
-          /\s+/g,
-          "_"
-        )}.csv"`
+        `attachment; filename="rapport-${(event.name || "event").replace(/\s+/g, "_")}.csv"`
       );
       return res.send(csvContent);
     }
 
-    // --- GÉNÉRATION PDF (Par défaut) ---
-    const doc = new PDFDocument({ margin: 50, layout: "portrait", size: "A4" });
+    // --- GÉNÉRATION PDF ---
+    const doc = new PDFDocument({ margin: 40, layout: "portrait", size: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="rapport-${(event.name || "event").replace(
-        /\s+/g,
-        "_"
-      )}.pdf"`
+      `attachment; filename="rapport-${(event.name || "event").replace(/\s+/g, "_")}.pdf"`
     );
 
     doc.pipe(res);
 
-    // --- LOGO ---
+    // --- HEADER DESIGN ---
+    doc.rect(0, 0, 595, 80).fill("#1e293b");
+    
     const logoPath = path.join(__dirname, "../assets/logo.png");
     if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, 50, 45, { width: 50 });
+      doc.image(logoPath, 40, 15, { width: 50 });
     }
 
-    // Header
     doc
+      .fillColor("#ffffff")
       .font("Helvetica-Bold")
-      .fontSize(20)
-      .text("Rapport d'Événement", { align: "center" });
-    doc.fontSize(16).text(event.name || "N/A", { align: "center" });
+      .fontSize(22)
+      .text("QR-EVENT", 100, 25)
+      .fontSize(10)
+      .font("Helvetica")
+      .text("PLATEFORME ÉVÉNEMENTIELLE PROFESSIONNELLE", 100, 50);
+
+    doc.moveDown(4);
+    doc.fillColor("#1e293b");
+
+    // Title
+    doc.font("Helvetica-Bold").fontSize(20).text("Rapport d'Événement", { align: "center" });
+    doc.fontSize(16).fillColor("#3b82f6").text(event.name || "N/A", { align: "center" });
     doc.moveDown(1.5);
 
-    // Details
-    doc.font("Helvetica-Bold").fontSize(14).text("Détails de l'Événement");
-    doc.moveDown(0.4);
-    doc.font("Helvetica").fontSize(11);
-    doc
-      .text(
-        `Date: ${
-          event.startDate
-            ? new Date(event.startDate).toLocaleDateString("fr-FR")
-            : "N/A"
-        }`
-      )
-      .text(
-        `Lieu: ${event.city || "N/A"}${
-          event.neighborhood ? ", " + event.neighborhood : ""
-        }`
-      )
-      .text(`Catégorie: ${event.category?.name || "N/A"}`)
-      .text(`Prix: ${event.price > 0 ? `${event.price} FCFA` : "Gratuit"}`);
-    doc.moveDown();
+    // Details & Stats
+    const startY = doc.y;
+    doc.fillColor("#1e293b");
+    
+    doc.font("Helvetica-Bold").fontSize(14).text("Détails de l'Événement", 40, startY);
+    doc.rect(40, doc.y + 2, 240, 1).fill("#cbd5e1");
+    doc.moveDown(0.8);
+    doc.font("Helvetica").fontSize(10).fillColor("#475569");
+    doc.text(`Date: ${event.startDate ? new Date(event.startDate).toLocaleDateString("fr-FR") : "N/A"}`);
+    doc.text(`Lieu: ${event.city || "N/A"}${event.neighborhood ? ", " + event.neighborhood : ""}`);
+    doc.text(`Catégorie: ${event.category?.name || "N/A"}`);
+    doc.text(`Prix: ${event.price > 0 ? `${event.price} FCFA` : "Gratuit"}`);
 
-    // Stats
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(14)
-      .text("Statistiques de participation");
-    doc.moveDown(0.4);
-    doc.font("Helvetica").fontSize(11);
-    doc.text(`Total Inscrits: ${totalRegistered}`);
-    doc.text(`Total Validés: ${totalValidated}`);
-    doc.text(`Taux de Participation: ${participationRate.toFixed(1)}%`);
-    doc.moveDown();
+    doc.font("Helvetica-Bold").fontSize(14).text("Statistiques", 320, startY);
+    doc.rect(320, doc.y + 2, 240, 1).fill("#cbd5e1");
+    doc.moveDown(0.8);
+    doc.font("Helvetica").fontSize(10).fillColor("#475569");
+    doc.text(`Total Inscrits: ${totalRegistered}`, 320);
+    doc.text(`Total Présents: ${totalValidated}`, 320);
+    doc.text(`Taux de Participation: ${participationRate.toFixed(1)}%`, 320);
 
-    // Démographie (sexe)
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(14)
-      .text("Statistiques démographiques (par sexe)");
-    doc.moveDown(0.4);
-    const statsSexRegistered = inscriptions.reduce((acc, i) => {
-      const sexe = i.participant?.sexe || "Inconnu";
-      acc[sexe] = (acc[sexe] || 0) + 1;
-      return acc;
-    }, {});
-    const statsSexValidated = validatedInscriptions.reduce((acc, i) => {
-      const sexe = i.participant?.sexe || "Inconnu";
-      acc[sexe] = (acc[sexe] || 0) + 1;
-      return acc;
-    }, {});
-    const allSexes = new Set([
-      ...Object.keys(statsSexRegistered),
-      ...Object.keys(statsSexValidated),
-    ]);
-    allSexes.forEach((sexe) => {
-      doc.font("Helvetica-Bold").fontSize(10).text(sexe || "Inconnu");
-      doc
-        .font("Helvetica")
-        .fontSize(10)
-        .text(
-          `  Inscrits: ${statsSexRegistered[sexe] || 0} | Validés: ${
-            statsSexValidated[sexe] || 0
-          }`
-        );
-      doc.moveDown(0.3);
-    });
+    doc.moveDown(4);
 
-    // Validated participants list
-    doc.addPage();
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(14)
-      .text(`Participants validés (${totalValidated})`);
-    doc.moveDown(0.6);
+    // Participants Table
+    doc.font("Helvetica-Bold").fontSize(14).fillColor("#1e293b").text("Liste des Participants", 40);
+    doc.moveDown(0.8);
 
-    doc.font("Helvetica-Bold").fontSize(10);
-    doc.text("Nom", 50, doc.y, { width: 140 });
-    doc.text("Email", 200, doc.y, { width: 150 });
-    doc.text("Sexe", 360, doc.y, { width: 50 });
-    doc.text("Profession", 420, doc.y, { width: 130 });
+    const colX = {
+      nom: 40,
+      prenom: 120,
+      email: 210,
+      phone: 360,
+      profession: 450,
+      statut: 530
+    };
+
+    doc.fontSize(9).font("Helvetica-Bold").fillColor("#1e293b");
+    doc.text("NOM", colX.nom);
+    doc.text("PRÉNOM", colX.prenom, doc.y - 9);
+    doc.text("EMAIL", colX.email, doc.y - 9);
+    doc.text("TÉLÉPHONE", colX.phone, doc.y - 9);
+    doc.text("PROFESSION", colX.profession, doc.y - 9);
+    doc.text("STATUT", colX.statut, doc.y - 9);
+
     doc.moveDown(0.5);
-    doc
-      .strokeColor("#aaaaaa")
-      .lineWidth(0.5)
-      .moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .stroke();
-    doc.moveDown(0.6);
-    doc.font("Helvetica").fontSize(9);
+    doc.strokeColor("#cbd5e1").lineWidth(1).moveTo(40, doc.y).lineTo(560, doc.y).stroke();
+    doc.moveDown(0.8);
 
-    validatedInscriptions.forEach((ins) => {
+    doc.font("Helvetica").fontSize(8);
+    inscriptions.forEach((ins, index) => {
+      if (doc.y > 750) {
+        doc.addPage();
+        doc.font("Helvetica-Bold").fontSize(9).fillColor("#1e293b");
+        doc.text("NOM", colX.nom, 40);
+        doc.text("PRÉNOM", colX.prenom, 40);
+        doc.text("EMAIL", colX.email, 40);
+        doc.text("TÉLÉPHONE", colX.phone, 40);
+        doc.text("PROFESSION", colX.profession, 40);
+        doc.text("STATUT", colX.statut, 40);
+        doc.strokeColor("#cbd5e1").moveTo(40, 55).lineTo(560, 55).stroke();
+        doc.font("Helvetica").fontSize(8).y = 65;
+      }
+
       const p = ins.participant || {};
-      doc.text(p.nom || "N/A", 50, doc.y, { width: 140 });
-      doc.text(p.email || "N/A", 200, doc.y, { width: 150 });
-      doc.text(p.sexe || "N/A", 360, doc.y, { width: 50 });
-      doc.text(p.profession || "N/A", 420, doc.y, { width: 130 });
-      doc.moveDown(0.8);
+      const names = (p.nom || "").split(" ");
+      const nom = names[0] || "N/A";
+      const prenom = names.slice(1).join(" ") || "N/A";
+      
+      const rowY = doc.y;
+      if (index % 2 === 0) {
+        doc.rect(35, rowY - 5, 530, 18).fill("#f8fafc");
+        doc.fillColor("#1e293b");
+      }
+
+      doc.text(nom, colX.nom, rowY, { width: 75, truncate: true });
+      doc.text(prenom, colX.prenom, rowY, { width: 85, truncate: true });
+      doc.text(p.email || "N/A", colX.email, rowY, { width: 145, truncate: true });
+      doc.text(p.phone || "N/A", colX.phone, rowY, { width: 85 });
+      doc.text(p.profession || "N/A", colX.profession, rowY, { width: 75, truncate: true });
+      
+      const statusColor = ins.isValidated ? "#10b981" : "#64748b";
+      doc.fillColor(statusColor).font("Helvetica-Bold").text(ins.isValidated ? "PRÉSENT" : "INSCRIT", colX.statut, rowY);
+      doc.fillColor("#1e293b").font("Helvetica");
+
+      doc.moveDown(1.5);
     });
 
-    // All registered list on a new page
-    doc.addPage();
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(14)
-      .text(`Tous les inscrits (${totalRegistered})`);
-    doc.moveDown(0.6);
-
-    doc.font("Helvetica-Bold").fontSize(10);
-    doc.text("Nom", 50, doc.y, { width: 140 });
-    doc.text("Email", 200, doc.y, { width: 150 });
-    doc.text("Sexe", 360, doc.y, { width: 50 });
-    doc.text("Profession", 420, doc.y, { width: 130 });
-    doc.moveDown(0.5);
-    doc
-      .strokeColor("#aaaaaa")
-      .lineWidth(0.5)
-      .moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .stroke();
-    doc.moveDown(0.6);
-    doc.font("Helvetica").fontSize(9);
-
-    inscriptions.forEach((ins) => {
-      const p = ins.participant || {};
-      doc.text(p.nom || "N/A", 50, doc.y, { width: 140 });
-      doc.text(p.email || "N/A", 200, doc.y, { width: 150 });
-      doc.text(p.sexe || "N/A", 360, doc.y, { width: 50 });
-      doc.text(p.profession || "N/A", 420, doc.y, { width: 130 });
-      doc.moveDown(0.8);
-    });
+    const range = doc.bufferedPageRange();
+    for (let i = range.start; i < range.start + range.count; i++) {
+      doc.switchToPage(i);
+      doc.fillColor("#94a3b8").fontSize(8).text(
+        `Page ${i + 1} sur ${range.count} - Généré le ${new Date().toLocaleString("fr-FR")}`,
+        0,
+        810,
+        { align: "center" }
+      );
+    }
 
     doc.end();
   } catch (error) {

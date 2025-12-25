@@ -1,56 +1,60 @@
-import { useState } from "react";
-import Button from "./Button";
+import { useState, useEffect } from "react";
 
 const Togglable = (props) => {
-  // true = Connexion visible, false = Inscription visible
-  const [isConnexionVisible, setIsConnexionVisible] = useState(true);
-
-  const showConnexion = () => setIsConnexionVisible(true);
-  const showInscription = () => setIsConnexionVisible(false);
+  const { activeTab, setActiveTab, firstTabLabel, secondTabLabel, firstTabContent, secondTabContent } = props;
+  
+  const isFirstTab = activeTab === firstTabLabel;
 
   return (
-    <div className="bg-white dark:bg-[#242526] p-8 rounded-2xl shadow-xl dark:shadow-none w-full max-w-sm transform transition-all duration-300">
-      <h1 className="text-3xl font-extrabold font-[Poppins] text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-green-400 mb-6">
-        {props.title}
-      </h1>
-
-      <div className="flex justify-center mb-6 border-b-2 border-gray-200 dark:border-[#3E4042]">
-        <Button
-          onClick={showInscription}
-          variant="toggle"
-          active={!isConnexionVisible}
+    <div className="w-full max-w-lg">
+      {/* Tab Switcher */}
+      <div className="flex p-1.5 bg-gray-200/50 dark:bg-[#3A3B3C] rounded-2xl mb-6 relative overflow-hidden border border-gray-200 dark:border-[#3E4042]">
+        {/* Animated Slider */}
+        <div 
+          className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white dark:bg-[#242526] rounded-xl transition-all duration-500 ease-out shadow-sm ${
+            isFirstTab ? 'left-1.5' : 'left-[calc(50%+3px)]'
+          }`}
+        ></div>
+        
+        <button
+          onClick={() => setActiveTab(firstTabLabel)}
+          className={`relative z-10 flex-1 py-3 text-xs font-black uppercase tracking-widest transition-colors duration-300 ${
+            isFirstTab ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
         >
-          {props.firstTabLabel}
-        </Button>
-        <Button
-          onClick={showConnexion}
-          variant="toggle"
-          active={isConnexionVisible}
+          {firstTabLabel}
+        </button>
+        <button
+          onClick={() => setActiveTab(secondTabLabel)}
+          className={`relative z-10 flex-1 py-3 text-xs font-black uppercase tracking-widest transition-colors duration-300 ${
+            !isFirstTab ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
         >
-          {props.secondTabLabel}
-        </Button>
+          {secondTabLabel}
+        </button>
       </div>
 
-      {/* Contenu Inscription */}
-      <div
-        className={`transition-all duration-500 ${
-          isConnexionVisible
-            ? "opacity-0 pointer-events-none absolute"
-            : "opacity-100"
-        }`}
-      >
-        {props.firstTabContent}
-      </div>
+      {/* Content Container */}
+      <div className="relative min-h-[500px]">
+        <div
+          className={`transition-all duration-500 ease-in-out ${
+            isFirstTab
+              ? "opacity-100 translate-x-0"
+              : "opacity-0 -translate-x-8 pointer-events-none absolute inset-0"
+          }`}
+        >
+          {firstTabContent}
+        </div>
 
-      {/* Contenu Connexion */}
-      <div
-        className={`transition-all duration-500 ${
-          isConnexionVisible
-            ? "opacity-100"
-            : "opacity-0 pointer-events-none absolute"
-        }`}
-      >
-        {props.secondTabContent || props.children}
+        <div
+          className={`transition-all duration-500 ease-in-out ${
+            !isFirstTab
+              ? "opacity-100 translate-x-0"
+              : "opacity-0 translate-x-8 pointer-events-none absolute inset-0"
+          }`}
+        >
+          {secondTabContent}
+        </div>
       </div>
     </div>
   );
