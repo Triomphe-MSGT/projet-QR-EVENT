@@ -1,8 +1,8 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { StatCard } from "../../components/cards/StatCard";
-import MainLayout from "../../components/layouts/MainLayout";
-import OrganizerEventList from "../../components/dashboard/OrganizerEventList";
+import { StatCard } from "../../features/dashboard/components/StatCard";
+import MainLayout from "../../components/layout/MainLayout";
+import OrganizerEventList from "../../features/dashboard/components/OrganizerEventList";
 import {
   getDashboardStats,
   getMyOrganizedEvents,

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCategories } from "../../hooks/useCategories";
-import MainLayout from "../../components/layouts/MainLayout";
+import MainLayout from "../../components/layout/MainLayout";
 import { X, Filter, Check, ChevronLeft, Clock, Calendar as CalendarIcon } from "lucide-react";
 import Button from "../../components/ui/Button";
 

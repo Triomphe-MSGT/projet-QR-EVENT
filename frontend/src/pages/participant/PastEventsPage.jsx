@@ -2,12 +2,12 @@ import React, { useMemo } from "react";
 import { useEvents } from "../../hooks/useEvents";
 import { Calendar, History, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../../components/layouts/Navbar";
-import EventCard from "../../components/events/EventCard";
+import Navbar from "../../components/layout/Navbar";
+import EventCard from "../../features/events/components/EventCard";
 
 const PastEventsPage = () => {
   const navigate = useNavigate();
-  const { data: events, isLoading, isError } = useEvents();
+  const { data: events, isLoading } = useEvents();
 
   const groupedPastEvents = useMemo(() => {
     if (!events) return {};

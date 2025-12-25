@@ -1,36 +1,47 @@
 import api from "../slices/axiosInstance";
 
-// Récupère tous les événements
+/**
+ * Fetch all events.
+ */
 export const getEvents = async () => {
   const { data } = await api.get("/events");
-  console.log("eventService: getEvents returned", data.length, "events");
   return data;
 };
 
-// Récupère un événement par ID
+/**
+ * Fetch event by ID.
+ * @param {string} id
+ */
 export const getEventById = async (id) => {
-  if (!id) throw new Error("ID d'événement manquant");
+  if (!id) throw new Error("Event ID missing");
   const { data } = await api.get(`/events/${id}`);
   return data;
 };
 
-// S'inscrire à un événement
+/**
+ * Register for an event.
+ * @param {object} params - { eventId, formData }
+ */
 export const registerToEvent = async ({ eventId, formData }) => {
-  if (!eventId) throw new Error("ID d'événement manquant");
+  if (!eventId) throw new Error("Event ID missing");
   const { data } = await api.post(`/events/${eventId}/register`, formData);
   return data;
 };
 
-// --- NOUVELLE FONCTION AJOUTÉE ---
-// Se désinscrire d'un événement
+/**
+ * Unregister from an event.
+ * @param {string} eventId
+ */
 export const unregisterFromEvent = async (eventId) => {
-  if (!eventId) throw new Error("ID d'événement manquant");
-  // Appelle la route DELETE /api/events/:id/register
+  if (!eventId) throw new Error("Event ID missing");
   await api.delete(`/events/${eventId}/register`);
-  return eventId; // Retourne l'ID pour la mise à jour du cache
+  return eventId;
 };
 
-// Crée un événement
+/**
+ * Create a new event.
+ * @param {FormData} formData
+ */
 export const createEvent = async (formData) => {
   const { data } = await api.post("/events", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -38,54 +49,71 @@ export const createEvent = async (formData) => {
   return data;
 };
 
-// Met à jour un événement
+/**
+ * Update an existing event.
+ * @param {object} params - { id, formData }
+ */
 export const updateEvent = async ({ id, formData }) => {
-  if (!id) throw new Error("ID d'événement manquant");
+  if (!id) throw new Error("Event ID missing");
   const { data } = await api.put(`/events/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return data;
 };
 
-// Supprime un événement
+/**
+ * Delete an event.
+ * @param {string} id
+ */
 export const deleteEvent = async (id) => {
-  if (!id) throw new Error("ID d'événement manquant");
+  if (!id) throw new Error("Event ID missing");
   await api.delete(`/events/${id}`);
   return id;
 };
 
-// Valide un QR code
+/**
+ * Validate a QR code.
+ * @param {object} validationData
+ */
 export const validateQrCode = async (validationData) => {
   const { data } = await api.post("/events/validate-qr", validationData);
   return data;
 };
 
+/**
+ * Add a participant to an event.
+ * @param {object} params - { eventId, participantId }
+ */
 export const addParticipant = async ({ eventId, participantId }) => {
   if (!eventId || !participantId)
-    throw new Error("ID événement ou participant manquant");
+    throw new Error("Event or Participant ID missing");
   const { data } = await api.post(`/events/${eventId}/participants`, {
     participantId,
   });
   return data;
 };
 
-// Supprime un participant (action de l'organisateur/admin)
+/**
+ * Remove a participant from an event.
+ * @param {object} params - { eventId, participantId }
+ */
 export const removeParticipant = async ({ eventId, participantId }) => {
   if (!eventId || !participantId)
-    throw new Error("ID événement ou participant manquant");
-  // Appelle la route DELETE /api/events/:eventId/participants/:participantId
+    throw new Error("Event or Participant ID missing");
   await api.delete(`/events/${eventId}/participants/${participantId}`);
-  return { eventId, participantId }; // Retourne les ID pour la mise à jour du cache
+  return { eventId, participantId };
 };
 
-// Liker/Unliker un événement
+/**
+ * Toggle like on an event.
+ * @param {string} eventId
+ */
 export const toggleLikeEvent = async (eventId) => {
-  if (!eventId) throw new Error("ID d'événement manquant");
+  if (!eventId) throw new Error("Event ID missing");
   const { data } = await api.post(`/events/${eventId}/like`);
   return data;
 };
 
-// Exporte les fonctions individuellement ou en tant qu'objet
 const eventService = {
   getEvents,
   getEventById,

@@ -20,7 +20,7 @@ const FloatingBackButton = () => {
     return () => window.removeEventListener("scroll", toggleVisibility);
   }, []);
 
-  // Only show on desktop (hidden on mobile as per request "pour la version web")
+  // Only show on desktop (hidden on mobile for better UX)
   return (
     <div className="hidden md:block fixed bottom-8 left-8 z-50">
       {isVisible && (

@@ -14,7 +14,7 @@ export const ThemeProvider = ({
     localStorage.getItem(storageKey) || defaultTheme
   );
 
-  // Applique le thème au <html>
+  // Apply theme to <html>
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
@@ -32,7 +32,7 @@ export const ThemeProvider = ({
     localStorage.setItem(storageKey, theme);
   }, [theme, storageKey]);
 
-  // Setter pour changer le thème
+  // Setter to change theme
   const setTheme = (newTheme) => {
     localStorage.setItem(storageKey, newTheme);
     setThemeState(newTheme);

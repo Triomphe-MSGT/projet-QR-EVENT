@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import MainLayout from "../../components/layouts/MainLayout";
-import EventList from "../../components/events/EventList";
-import SearchAndFilter from "../../components/events/SearchFilter";
+import MainLayout from "../../components/layout/MainLayout";
+import EventList from "../../features/events/components/EventList";
+import SearchAndFilter from "../../features/events/components/SearchFilter";
 import { useEvents } from "../../hooks/useEvents";
-import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { History, Sparkles, Search, Filter, X, ArrowLeft } from "lucide-react";
 
 const EventListPage = () => {
   console.log("EventListPage: Rendering...");
+  const navigate = useNavigate();
   const { name: categoryName } = useParams();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get("search") || "";

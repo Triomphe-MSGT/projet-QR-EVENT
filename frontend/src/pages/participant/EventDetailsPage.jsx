@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import MainLayout from "../../components/layouts/MainLayout";
-import EventDetails from "../../components/events/EventDetails";
+import MainLayout from "../../components/layout/MainLayout";
+import EventDetails from "../../features/events/components/EventDetails";
 import { useEventDetails } from "../../hooks/useEvents";
 
 const EventDetailsPage = () => {

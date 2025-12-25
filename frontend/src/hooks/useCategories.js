@@ -5,49 +5,57 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-} from "../services/categoryService"; // ✅ Vérifiez le chemin
+} from "../services/categoryService";
 
-// Hook pour récupérer toutes les catégories
+/**
+ * Hook to fetch all categories.
+ */
 export const useCategories = () => {
   return useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
-    staleTime: 1000 * 60 * 10, // Cache de 10 min
+    staleTime: 1000 * 60 * 10, // 10 minutes cache
   });
 };
-console.log("ListCategorie rendering/refetching...");
-// Hook pour créer une catégorie
+
+/**
+ * Hook to create a new category.
+ */
 export const useCreateCategory = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createCategory, // Attend { name, emoji, description }
+    mutationFn: createCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
-    onError: (error) => console.error("Erreur création catégorie:", error),
+    onError: (error) => console.error("Create category failed:", error),
   });
 };
 
-// Hook pour mettre à jour une catégorie
+/**
+ * Hook to update a category.
+ */
 export const useUpdateCategory = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateCategory, // Attend { id, categoryData }
+    mutationFn: updateCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
-    onError: (error) => console.error("Erreur màj catégorie:", error),
+    onError: (error) => console.error("Update category failed:", error),
   });
 };
 
-// Hook pour supprimer une catégorie
+/**
+ * Hook to delete a category.
+ */
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteCategory, // Attend l'ID
+    mutationFn: deleteCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
-    onError: (error) => console.error("Erreur suppression catégorie:", error),
+    onError: (error) => console.error("Delete category failed:", error),
   });
 };

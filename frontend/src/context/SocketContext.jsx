@@ -7,62 +7,63 @@ import { API_BASE_URL } from "../slices/axiosInstance";
 
 const SOCKET_URL = API_BASE_URL.replace("/api", "");
 
-// Créer le contexte
 const SocketContext = createContext(null);
 
-// Ajout d'un nom d'affichage pour le débogage et le linting
 SocketContext.displayName = "SocketContext";
 
-// Hook pour consommer le contexte
+/**
+ * Hook to consume the socket context.
+ */
 export const useSocket = () => {
   return useContext(SocketContext);
 };
 
-// Fournisseur (Provider) qui gère la connexion
+/**
+ * Provider that manages the socket connection.
+ */
 export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
   const { token } = useSelector((state) => state.auth);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Si l'utilisateur est connecté mais que le socket n'est pas encore créé
+    // If user is logged in but socket is not created yet
     if (token && !socketRef.current) {
       const newSocket = io(SOCKET_URL, {
         auth: {
-          token: token, // Envoi du token JWT pour l'authentification
+          token: token,
         },
-        // transports: ["websocket"],
       });
 
       newSocket.on("connect", () => {
-        console.log("[Socket] Connecté au serveur");
+        console.log("[Socket] Connected to server");
       });
 
-      // ÉCOUTER les nouvelles notifications
+      // Listen for new notifications
       newSocket.on("new_notification", (notification) => {
-        console.log("[Socket] Nouvelle notification reçue:", notification);
+        console.log("[Socket] New notification received:", notification);
 
-        // Rafraîchir la liste des notifications
+        // Refresh notifications list
         queryClient.invalidateQueries({ queryKey: ["notifications"] });
       });
 
       newSocket.on("disconnect", () => {
-        console.log("[Socket] Déconnecté");
+        console.log("[Socket] Disconnected");
       });
 
       newSocket.on("connect_error", (err) => {
-        console.error("[Socket] Erreur de connexion:", err.message);
+        console.error("[Socket] Connection error:", err.message);
       });
 
       socketRef.current = newSocket;
     } else if (!token && socketRef.current) {
-      // Si l'utilisateur se déconnecte
+      // If user logs out
       socketRef.current.disconnect();
       socketRef.current = null;
-      console.log("[Socket] Déconnecté (logout)");
+      console.log("[Socket] Disconnected (logout)");
     }
 
-    // Nettoyage lors du démontage du composant
+    // Cleanup on component unmount
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();

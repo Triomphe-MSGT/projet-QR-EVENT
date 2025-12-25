@@ -6,7 +6,7 @@ import {
   useUpdateEvent,
   useEventDetails,
 } from "../../hooks/useEvents";
-import MainLayout from "../../components/layouts/MainLayout";
+import MainLayout from "../../components/layout/MainLayout";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Loader2, 

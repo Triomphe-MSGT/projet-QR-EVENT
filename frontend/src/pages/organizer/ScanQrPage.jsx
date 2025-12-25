@@ -1,7 +1,7 @@
 // src/pages/organizer/ScanQrPage.jsx
 import React, { useState } from "react";
-import MainLayout from "../../components/layouts/MainLayout";
-import QrScanner from "../../components/scanner/QrScanner";
+import MainLayout from "../../components/layout/MainLayout";
+import QrScanner from "../../features/events/components/QrScanner";
 import { useMyOrganizedEvents, useEvents } from "../../hooks/useEvents"; // Importer useEvents pour l'admin
 import { useUserProfile } from "../../hooks/useUserProfile"; // Pour obtenir le rôle
 import { Loader2, ArrowLeft } from "lucide-react";

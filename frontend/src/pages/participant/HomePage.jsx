@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { API_BASE_URL } from "../../slices/axiosInstance";
 
-import MainLayout from "../../components/layouts/MainLayout";
-import ListCategorie from "../../components/categories/CategoryList";
-import HeroSection from "../../components/home/HeroSection";
-import EventCard from "../../components/events/EventCard";
+import MainLayout from "../../components/layout/MainLayout";
+import ListCategorie from "../../features/events/components/CategoryList";
+import HeroSection from "../../features/events/components/HeroSection";
+import EventCard from "../../features/events/components/EventCard";
 import {
   MapPin,
   Loader2,
@@ -30,8 +30,8 @@ import Button from "../../components/ui/Button";
 import { useEvents } from "../../hooks/useEvents";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { useCategories } from "../../hooks/useCategories";
-import UpgradeToOrganizerModal from "../../components/dashboard/UpgradeToOrganizerModal";
-import NewsFeed from "../../components/NewsFeed";
+import UpgradeToOrganizerModal from "../../features/dashboard/components/UpgradeToOrganizerModal";
+import NewsFeed from "../../features/events/components/NewsFeed";
 
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 

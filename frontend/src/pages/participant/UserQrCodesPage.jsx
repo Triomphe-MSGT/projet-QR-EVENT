@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import MainLayout from "../../components/layouts/MainLayout";
-import QrCodeDisplay from "../../components/ui/QrCodeDisplay";
+import MainLayout from "../../components/layout/MainLayout";
+import QrCodeDisplay from "../../features/events/components/QrCodeDisplay";
 import { useUserEvents } from "../../hooks/useUserProfile";
 import { useUnregisterFromEvent } from "../../hooks/useEvents";
 import { Trash2, ArrowLeft, History, QrCode } from "lucide-react";

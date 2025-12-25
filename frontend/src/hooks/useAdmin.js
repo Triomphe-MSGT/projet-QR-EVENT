@@ -5,9 +5,11 @@ import {
   createUser,
   updateUser,
   deleteUser,
-} from "../services/adminService"; // ✅ Assurez-vous que le chemin est correct
+} from "../services/adminService";
 
-// Hook pour les stats admin (inchangé)
+/**
+ * Hook to fetch admin statistics.
+ */
 export const useAdminStats = () => {
   return useQuery({
     queryKey: ["adminStats"],
@@ -16,7 +18,9 @@ export const useAdminStats = () => {
   });
 };
 
-// Hook pour la liste de tous les utilisateurs (inchangé)
+/**
+ * Hook to fetch all users.
+ */
 export const useAllUsers = () => {
   return useQuery({
     queryKey: ["allUsers"],
@@ -25,48 +29,50 @@ export const useAllUsers = () => {
   });
 };
 
-// --- HOOKS DE MUTATION AJOUTÉS ---
+// --- Mutation Hooks ---
 
-// Hook pour CRÉER un utilisateur
+/**
+ * Hook to create a new user.
+ */
 export const useCreateUser = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createUser, // Fonction du service (POST /api/users)
+    mutationFn: createUser,
     onSuccess: () => {
-      // Rafraîchit la liste des utilisateurs et les stats après création
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       queryClient.invalidateQueries({ queryKey: ["adminStats"] });
     },
-    onError: (error) => console.error("Erreur création utilisateur:", error),
+    onError: (error) => console.error("Create user failed:", error),
   });
 };
 
-// Hook pour METTRE À JOUR un utilisateur
+/**
+ * Hook to update an existing user.
+ */
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateUser, // Fonction du service (PUT /api/users/:id)
+    mutationFn: updateUser,
     onSuccess: () => {
-      // Rafraîchit la liste des utilisateurs et les stats
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       queryClient.invalidateQueries({ queryKey: ["adminStats"] });
-      // Invalide aussi le cache du profil (au cas où l'admin se modifie lui-même)
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
-    onError: (error) => console.error("Erreur màj utilisateur:", error),
+    onError: (error) => console.error("Update user failed:", error),
   });
 };
 
-// Hook pour SUPPRIMER un utilisateur
+/**
+ * Hook to delete a user.
+ */
 export const useDeleteUser = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteUser, // Fonction du service (DELETE /api/users/:id)
+    mutationFn: deleteUser,
     onSuccess: () => {
-      // Rafraîchit la liste des utilisateurs et les stats
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       queryClient.invalidateQueries({ queryKey: ["adminStats"] });
     },
-    onError: (error) => console.error("Erreur suppression utilisateur:", error),
+    onError: (error) => console.error("Delete user failed:", error),
   });
 };

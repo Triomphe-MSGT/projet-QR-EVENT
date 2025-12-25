@@ -1,21 +1,19 @@
-import api from "../slices/axiosInstance"; // Votre client Axios configuré
+import api from "../slices/axiosInstance";
 
 const notificationService = {
   /**
-   * Récupère les notifications pour l'utilisateur connecté
+   * Fetch notifications for the logged-in user.
    */
   fetchNotifications: async () => {
     const { data } = await api.get("/notifications");
-
     return data;
   },
 
   /**
-   * Marque toutes les notifications comme lues
+   * Mark all notifications as read.
    */
   markNotificationsAsRead: async () => {
     const { data } = await api.post("/notifications/read");
-
     return data;
   },
 };

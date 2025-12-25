@@ -19,15 +19,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Intercepteur de RÉPONSE (pour gérer les erreurs)
+// Response interceptor (for error handling)
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    // Si on reçoit une erreur 401 ou 403
+    // Handle 401 or 403 errors
     if (error.response && [401, 403].includes(error.response.status)) {
-      console.log("Session expirée ou invalide. Déconnexion...");
+      console.log("Session expired or invalid. Logging out...");
       localStorage.removeItem("token");
       window.location.href = "/login";
     }

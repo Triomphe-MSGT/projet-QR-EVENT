@@ -1,7 +1,7 @@
 import React from "react";
 
 import { useUserProfile } from "../../slices/userprofilSlice";
-import ProfileHeader from "../../components/ui/ProfileHeader";
+import ProfileHeader from "../../features/user/components/ProfileHeader";
 
 const SwitchModeButton = () => (
   <button className="text-blue-500 font-semibold py-2 px-6 rounded-full transition duration-150 flex items-center justify-center mb-6">

@@ -11,7 +11,6 @@ const userProfileService = {
     return data;
   },
 
-  // Upload de l'avatar
   uploadAvatar: async (file) => {
     const formData = new FormData();
     formData.append("avatar", file);
@@ -24,7 +23,6 @@ const userProfileService = {
 
   getUserEvents: async () => {
     const { data } = await api.get("/users/me/events");
-    console.log("userProfileService: getUserEvents returned", data);
     return data;
   },
 
