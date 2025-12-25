@@ -306,11 +306,6 @@ const generateAdminReport = async (req, res, next) => {
     next(error);
   }
 };
-  } catch (error) {
-    console.error("❌ Erreur génération rapport admin:", error);
-    next(error);
-  }
-};
 
 module.exports = {
   getOrganizerStats,
