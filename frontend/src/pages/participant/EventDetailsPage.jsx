@@ -10,7 +10,7 @@ const EventDetailsPage = () => {
   const { data: event, isLoading, isError, error } = useEventDetails(id);
 
   return (
-    <MainLayout>
+    <MainLayout noPadding={true}>
       <div className="w-full">
         {isLoading && (
           <div className="text-center py-10 text-gray-500 dark:text-gray-400">

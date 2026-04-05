@@ -190,149 +190,129 @@ const EventDetails = ({ event }) => {
         user={user}
       />
 
-      <div className="min-h-screen bg-[#F0F2F5] dark:bg-gray-950 pb-32 md:pb-20 font-sans">
+      <div className="min-h-screen bg-slate-50 pb-32 md:pb-20 font-sans pt-28">
         {/* Hero Section */}
-        <div className="relative h-[40vh] md:h-[55vh] lg:h-[65vh] w-full overflow-hidden bg-gray-900">
+        <div className="relative h-[50vh] md:h-[60vh] lg:h-[70vh] w-full overflow-hidden bg-slate-900">
+          {/* Static Navigation Buttons */}
+          <div className="absolute top-6 left-0 right-0 z-[50] md:px-10 px-4 pointer-events-none">
+            <div className="max-w-7xl mx-auto flex justify-between items-center w-full">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-white hover:text-slate-900 transition-all border border-white/20 shadow-xl pointer-events-auto active:scale-90"
+                title="Retour"
+              >
+                <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
+              </button>
+              <button
+                onClick={handleShare}
+                className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-white hover:text-slate-900 transition-all border border-white/20 shadow-xl pointer-events-auto active:scale-90"
+                title="Partager"
+              >
+                <Share2 className="w-5 h-5 md:w-6 md:h-6" />
+              </button>
+            </div>
+          </div>
+
           {imageUrl ? (
             <div className="absolute inset-0">
               <img
                 src={imageUrl}
                 alt={event.name}
-                className="w-full h-full object-cover opacity-60 blur-[2px] scale-105"
+                className="w-full h-full object-cover opacity-50 scale-105"
               />
-              <div className="absolute inset-0 bg-black/40"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/30 to-transparent"></div>
             </div>
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-700 to-indigo-900"></div>
+            <div className="absolute inset-0 bg-slate-800"></div>
           )}
 
-          <div className="relative z-10 h-full max-w-7xl mx-auto px-4 flex flex-col justify-end pb-12 md:pb-20">
-            {/* Navigation Overlay */}
-            <div className="absolute top-6 left-4 right-4 flex justify-between items-center">
-              <button
-                onClick={() => navigate(-1)}
-                className="p-2.5 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all border border-white/20 shadow-lg"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={handleShare}
-                className="p-2.5 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all border border-white/20 shadow-lg"
-              >
-                <Share2 className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-              <div className="max-w-4xl space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
+          <div className="relative z-10 h-full max-w-7xl mx-auto px-4 flex flex-col justify-end pb-12 md:pb-24">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
+              <div className="max-w-4xl space-y-6">
+                <div className="flex flex-wrap items-center gap-3">
                   {event.category && (
-                    <span className="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full shadow-lg">
+                    <span className="px-5 py-2 bg-white text-slate-900 text-xs font-bold uppercase rounded-xl shadow-md border border-slate-100">
                       {event.category.emoji} {event.category.name}
                     </span>
                   )}
-                  <span className="px-4 py-1.5 bg-white/10 backdrop-blur-md text-white text-[10px] font-black rounded-full border border-white/10">
-                    {event.price === 0 ? "Gratuit" : `${event.price} FCFA`}
+                  <span className="px-5 py-2 bg-orange-500 text-white text-xs font-bold uppercase rounded-xl shadow-lg shadow-orange-500/20">
+                    {event.price === 0 ? "Billet Gratuit" : `${event.price.toLocaleString()} FCFA`}
                   </span>
-                  {canSeeParticipants && (
-                    <span
-                      className={`px-4 py-1.5 backdrop-blur-md text-white text-[10px] font-black rounded-full border border-white/10 ${
-                        event.visibility === "private"
-                          ? "bg-purple-600/50"
-                          : "bg-green-600/50"
-                      }`}
-                    >
-                      {event.visibility === "private" ? "Privé" : "Public"}
-                    </span>
-                  )}
                 </div>
 
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight drop-shadow-2xl">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight leading-tight [text-wrap:balance]">
                   {event.name}
                 </h1>
 
-                <div className="flex flex-wrap items-center gap-8 text-white/80 font-bold text-xs">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-blue-400" />
+                <div className="flex flex-wrap items-center gap-10 text-white/90 font-bold text-sm md:text-base">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-6 h-6 text-orange-400" />
                     <span>{dateInfo.full}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-blue-400" />
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-6 h-6 text-orange-400" />
                     <span>
                       {event.city}, {event.neighborhood || "Cameroun"}
                     </span>
                   </div>
                 </div>
               </div>
-
-              {/* Desktop Image Preview Card */}
-              <div className="hidden lg:block w-80 h-48 rounded-2xl overflow-hidden border-4 border-white/20 shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-blue-600 flex items-center justify-center text-white text-4xl font-black">
-                    {event.name?.charAt(0)}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
 
         {/* Main Content Grid */}
-        <div className="max-w-7xl mx-auto px-4 -mt-8 md:-mt-12 relative z-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+        <div className="max-w-7xl mx-auto px-4 -mt-12 md:-mt-20 relative z-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-14">
             {/* Left Column: Details & Info */}
-            <div className="lg:col-span-8 space-y-6">
+            <div className="lg:col-span-8 space-y-10">
               {/* About Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 md:p-10 shadow-sm border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
-                  <Info className="w-6 h-6 text-blue-600" />
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                    À propos de l'événement
+              <div className="bg-white rounded-[2.5rem] p-8 md:p-14 shadow-sm border border-slate-100">
+                <div className="flex items-center gap-4 mb-10">
+                  <div className="p-3 bg-slate-50 rounded-2xl">
+                    <Info className="w-6 h-6 text-slate-900" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                    Présentation de l'événement
                   </h2>
                 </div>
-                <div className="prose dark:prose-invert max-w-none">
-                  <p className="text-[#1C1E21] dark:text-gray-300 text-base md:text-lg leading-relaxed whitespace-pre-wrap font-normal">
+                <div className="prose prose-lg max-w-none">
+                  <p className="text-slate-800 text-lg md:text-xl leading-relaxed whitespace-pre-wrap font-book">
                     {event.description}
                   </p>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 pt-8 border-t border-gray-100 dark:border-gray-700">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <p className="text-[10px] font-black text-gray-400">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 pt-8 border-t border-slate-100">
+                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1">
                       Capacité
                     </p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    <p className="text-xl font-bold text-slate-800">
                       Illimitée
                     </p>
                   </div>
                   {canSeeParticipants && (
-                    <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <p className="text-[10px] font-black text-gray-400">
+                    <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 flex flex-col items-center text-center">
+                      <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1">
                         Inscrits
                       </p>
-                      <p className="text-lg font-bold text-blue-600">
+                      <p className="text-xl font-bold text-blue-600">
                         {event.participants?.length || 0}
                       </p>
                     </div>
                   )}
-                  <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <p className="text-[10px] font-black text-gray-400">
+                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1">
                       Format
                     </p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    <p className="text-xl font-bold text-slate-800">
                       {event.format || event.type || "Présentiel"}
                     </p>
                   </div>
-                  <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <p className="text-[10px] font-black text-gray-400">Heure</p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1">Heure</p>
+                    <p className="text-xl font-bold text-slate-800">
                       {event.time || "--:--"}
                     </p>
                   </div>
@@ -340,10 +320,12 @@ const EventDetails = ({ event }) => {
               </div>
 
               {/* Location Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 md:p-10 shadow-sm border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
-                  <MapPin className="w-6 h-6 text-blue-600" />
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+              <div className="bg-white rounded-3xl p-6 md:p-10 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100">
+                <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                  <div className="p-2 bg-orange-50 rounded-xl">
+                    <MapPin className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <h2 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
                     Lieu de l'événement
                   </h2>
                 </div>
@@ -357,9 +339,9 @@ const EventDetails = ({ event }) => {
                       </p>
                     </div>
                   ) : errorMap ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 dark:bg-red-900/10 p-6 text-center">
-                      <AlertTriangle className="h-10 w-10 text-red-500 mb-3" />
-                      <p className="text-red-600 font-semibold text-sm">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+                      <AlertTriangle className="h-10 w-10 text-slate-400 mb-3" />
+                      <p className="text-slate-500 font-semibold text-sm">
                         {errorMap}
                       </p>
                     </div>
@@ -373,23 +355,23 @@ const EventDetails = ({ event }) => {
                       }}
                     />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                      <p className="text-gray-500 font-bold text-[10px]">
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
+                      <p className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">
                         Carte non disponible
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="mt-6 flex items-center gap-4 p-5 bg-[#F0F2F5] dark:bg-gray-900/80 rounded-xl border border-gray-200 dark:border-gray-700">
-                  <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">
+                <div className="mt-6 flex items-center gap-5 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/30">
                     <MapPin className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-gray-900 dark:text-white font-black tracking-tight">
+                    <p className="text-slate-800 font-bold text-lg tracking-tight">
                       {event.city}
                     </p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                    <p className="text-slate-500 text-sm font-medium">
                       {event.neighborhood || "Quartier non spécifié"}, Cameroun
                     </p>
                   </div>
@@ -400,12 +382,12 @@ const EventDetails = ({ event }) => {
             {/* Right Column: Sidebar Actions */}
             <div className="lg:col-span-4 space-y-6">
               {/* Registration/Action Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 sticky top-24">
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+              <div className="bg-white rounded-3xl p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 sticky top-24">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold text-slate-800 mb-2">
                     Billetterie & Accès
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">
+                  <p className="text-slate-500 text-sm font-medium leading-relaxed">
                     Réservez votre place en quelques secondes
                   </p>
                 </div>
@@ -413,23 +395,23 @@ const EventDetails = ({ event }) => {
                 <div className="space-y-5">
                   {/* QR Code or Success State */}
                   {qrCodeData ? (
-                    <div className="flex flex-col items-center p-5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50">
-                      <div className="p-3 bg-white rounded-lg shadow-md mb-3">
+                    <div className="flex flex-col items-center p-6 bg-blue-50 rounded-2xl border border-blue-100">
+                      <div className="p-3 bg-white rounded-xl shadow-sm mb-4">
                         <QrCodeDisplay value={qrCodeData} size={160} />
                       </div>
-                      <p className="text-blue-600 dark:text-blue-400 font-black text-xs">
+                      <p className="text-blue-600 font-black text-xs uppercase tracking-widest">
                         Votre Billet QR est prêt
                       </p>
                     </div>
                   ) : isAlreadyRegistered ? (
-                    <div className="flex flex-col items-center p-6 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/50 text-center">
-                      <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-md mb-3">
-                        <CheckCircle className="w-6 h-6 text-white" />
+                    <div className="flex flex-col items-center p-6 bg-green-50 rounded-2xl border border-green-100 text-center">
+                      <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30 mb-4">
+                        <CheckCircle className="w-7 h-7 text-white" />
                       </div>
-                      <h4 className="text-green-700 dark:text-green-400 font-black tracking-tight mb-1">
+                      <h4 className="text-green-700 font-bold text-lg tracking-tight mb-1">
                         Inscrit avec succès
                       </h4>
-                      <p className="text-green-600/70 dark:text-green-400/70 text-xs font-medium">
+                      <p className="text-green-600/80 text-sm font-medium">
                         Vous participez à cet événement
                       </p>
                     </div>
@@ -484,10 +466,10 @@ const EventDetails = ({ event }) => {
                             registerMutation.isPending ||
                             isExpired
                           }
-                          className={`w-full py-5 rounded-2xl text-lg font-black tracking-widest shadow-xl transition-all transform active:scale-95 ${
+                          className={`w-full py-5 rounded-2xl text-lg font-bold shadow-xl transition-all transform active:scale-95 ${
                             !isAlreadyRegistered && !qrCodeData && !isExpired
-                              ? "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-400"
+                              ? "bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/30"
+                              : "bg-slate-100 text-slate-400"
                           }`}
                         >
                           {registerMutation.isPending ? (
@@ -502,18 +484,18 @@ const EventDetails = ({ event }) => {
                         </Button>
 
                         {isExpired && (
-                          <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800/50 flex items-center gap-2">
-                            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-                            <p className="text-red-600 dark:text-red-400 text-xs font-black tracking-tight">
+                          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-slate-500" />
+                            <p className="text-slate-600 text-xs font-bold uppercase tracking-widest">
                               Les inscriptions sont fermées
                             </p>
                           </div>
                         )}
 
                         {!isExpired && !isAlreadyRegistered && !qrCodeData && (
-                          <div className="flex items-center justify-center gap-2 text-gray-400">
+                          <div className="flex items-center justify-center gap-2 text-slate-400">
                             <Users className="w-4 h-4" />
-                            <span className="text-[10px] font-black">
+                            <span className="text-[11px] font-bold">
                               {canSeeParticipants
                                 ? `Rejoignez ${
                                     event.participants?.length || 0
@@ -529,23 +511,23 @@ const EventDetails = ({ event }) => {
               </div>
 
               {/* Organizer Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <p className="text-[10px] font-black text-gray-400 mb-4 uppercase tracking-widest">
+              <div className="bg-white rounded-3xl p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 mb-5 uppercase tracking-widest">
                   Organisé par
                 </p>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-lg font-bold text-blue-600 border border-blue-100 dark:border-blue-800/50">
+                  <div className="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-xl font-black text-slate-600 border border-slate-100">
                     {event.organizer?.name?.charAt(0) || "O"}
                   </div>
                   <div>
-                    <h4 className="text-[#1C1E21] dark:text-white font-bold text-sm flex items-center gap-1">
+                    <h4 className="text-slate-900 font-bold text-base flex items-center gap-1.5">
                       {event.organizer?.name || "Organisateur"}
                       {isCertified && (
-                        <ShieldCheck className="w-4 h-4 text-blue-500" />
+                        <ShieldCheck className="w-5 h-5 text-blue-500" />
                       )}
                     </h4>
-                    <div className="flex flex-col gap-0.5">
-                      <p className="text-gray-500 dark:text-gray-400 text-[11px] font-medium">
+                    <div className="flex flex-col gap-0.5 mt-1">
+                      <p className="text-slate-500 text-xs font-medium">
                         {isCertified
                           ? "Organisateur Certifié"
                           : "Organisateur Vérifié"}
@@ -562,11 +544,11 @@ const EventDetails = ({ event }) => {
         {similarEvents.length > 0 && (
           <div className="max-w-7xl mx-auto px-4 mt-16 pb-12">
             <div className="flex items-center justify-between mb-8">
-              <div className="space-y-1">
-                <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+              <div className="space-y-2">
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
                   Événements similaires
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                <p className="text-slate-500 text-base font-medium">
                   D'autres expériences qui pourraient vous plaire
                 </p>
               </div>
@@ -580,50 +562,50 @@ const EventDetails = ({ event }) => {
                     navigate(`/events/${similarEvent._id || similarEvent.id}`);
                     window.scrollTo(0, 0);
                   }}
-                  className="flex gap-4 bg-white dark:bg-gray-800 p-3 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-700/50 active:scale-[0.98] transition-transform cursor-pointer group"
+                  className="flex gap-4 bg-white p-4 rounded-3xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 active:scale-[0.98] transition-all cursor-pointer group hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] hover:-translate-y-1"
                 >
-                  <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 shadow-inner">
+                  <div className="w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-inner relative">
                     {similarEvent.imageUrl ? (
                       <img
                         src={getImageUrl(similarEvent.imageUrl)}
                         alt={similarEvent.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                        <span className="text-white font-black text-xl uppercase">
+                      <div className="w-full h-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
+                        <span className="text-white font-black text-2xl uppercase">
                           {similarEvent.name?.charAt(0) || "?"}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col justify-between py-1 flex-1 min-w-0">
-                    <div>
+                  <div className="flex flex-col justify-between py-1 flex-1 min-w-0 pr-2">
+                    <div className="space-y-1.5">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest">
-                          #{similarEvent.category?.name || "Événement"}
+                        <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[9px] font-black uppercase rounded-lg">
+                          {similarEvent.category?.name || "Événement"}
                         </span>
-                        <span className="text-[10px] font-black text-gray-900 dark:text-white">
+                        <span className="text-[10px] font-black text-slate-800">
                           {similarEvent.price === 0
                             ? "GRATUIT"
-                            : `${similarEvent.price} FCFA`}
+                            : `${similarEvent.price} F`}
                         </span>
                       </div>
-                      <h3 className="text-sm font-black text-gray-900 dark:text-white line-clamp-1 tracking-tight leading-tight group-hover:text-blue-600 transition-colors">
+                      <h3 className="text-base font-bold text-slate-900 line-clamp-1 tracking-tight group-hover:text-orange-500 transition-colors">
                         {similarEvent.name}
                       </h3>
-                      <div className="flex items-center gap-1 text-gray-400 text-[10px] mt-1 font-bold">
-                        <MapPin className="w-3 h-3 text-blue-500" />
+                      <div className="flex items-center gap-1.5 text-slate-400 text-xs font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-orange-400" />
                         <span className="truncate">{similarEvent.city}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">
-                        <Calendar className="w-3 h-3 text-blue-600" />
-                        <span className="text-blue-600 font-black text-[9px] uppercase tracking-tighter">
+                    <div className="flex items-center mt-2">
+                      <div className="flex items-center gap-1.5 text-slate-500">
+                        <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                        <span className="text-slate-600 font-bold text-[11px]">
                           {new Date(similarEvent.startDate).toLocaleDateString(
                             "fr-FR",
-                            { day: "numeric", month: "short" }
+                            { day: "numeric", month: "long" }
                           )}
                         </span>
                       </div>

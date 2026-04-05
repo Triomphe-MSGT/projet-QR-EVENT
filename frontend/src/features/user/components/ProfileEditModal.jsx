@@ -130,15 +130,21 @@ const ProfileEditModal = ({
             {/* Avatar Section */}
             <div className="flex flex-col items-center text-center space-y-6">
               <div className="relative group">
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] overflow-hidden border-4 border-blue-50 dark:border-gray-800 shadow-2xl relative">
-                  <img
-                    src={previewUrl}
-                    alt="Avatar"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] overflow-hidden border-4 border-slate-50 relative bg-orange-100 flex items-center justify-center">
+                  {(user?.image || selectedFile) ? (
+                    <img
+                      src={previewUrl}
+                      alt="Avatar"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    <span className="text-orange-600 font-bold text-5xl md:text-6xl">
+                      {user?.nom?.charAt(0).toUpperCase() || "?"}
+                    </span>
+                  )}
                   {isUpdating && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-md">
-                      <div className="w-10 h-10 border-4 border-t-blue-500 border-white/30 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm">
+                      <div className="w-10 h-10 border-4 border-t-orange-500 border-white/30 rounded-full animate-spin"></div>
                     </div>
                   )}
                 </div>

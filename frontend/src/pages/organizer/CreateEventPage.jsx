@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "../../services/categoryService";
 import {
@@ -10,24 +10,21 @@ import MainLayout from "../../components/layout/MainLayout";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Loader2, 
-  AlertTriangle, 
-  Save, 
-  PlusCircle, 
   MapPin, 
-  Calendar, 
-  Clock, 
-  Tag, 
-  Info, 
-  Image as ImageIcon,
-  Zap,
-  Globe,
-  Lock,
   ChevronRight,
   ArrowLeft,
   QrCode,
-  Users
+  Users,
+  Lock,
+  Zap,
+  Globe,
+  Image as ImageIcon,
+  CheckCircle2,
+  Calendar,
+  Clock,
+  Search,
+  Plus
 } from "lucide-react";
-import Button from "../../components/ui/Button";
 
 const cameroonianCities = [
   "Yaoundé", "Douala", "Garoua", "Bamenda", "Maroua", "Bafoussam", 
@@ -64,13 +61,20 @@ const EventForm = () => {
     image: null,
   });
 
-  const { data: categories, isLoading: isLoadingCategories, isError: isErrorCategories } = useQuery({ 
+  const [citySearch, setCitySearch] = useState("");
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const cityDropdownRef = useRef(null);
+
+  const { data: categories, isLoading: isLoadingCategories } = useQuery({ 
     queryKey: ["categories"], 
     queryFn: getCategories 
   });
 
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();
+
+  const [step, setStep] = useState(1);
+  const [showChoiceModal, setShowChoiceModal] = useState(!isEditMode && !searchParams.get("visibility"));
 
   useEffect(() => {
     if (isEditMode && existingEventData) {
@@ -90,6 +94,7 @@ const EventForm = () => {
         qrOption: existingEventData.qrOption || false,
         image: null,
       });
+      setCitySearch(existingEventData.city || "");
     }
   }, [isEditMode, existingEventData]);
 
@@ -101,54 +106,86 @@ const EventForm = () => {
     }));
   };
 
+  const nextStep = () => {
+    if (step === 1 && (!formData.name || !formData.category || !formData.description)) {
+      alert("Veuillez remplir l'identité.");
+      return;
+    }
+    if (step === 2 && (!formData.startDate || (!formData.city && formData.format !== "En ligne"))) {
+      alert("Veuillez remplir l'emplacement (choisissez une ville ou entrez la vôtre).");
+      return;
+    }
+    setStep(prev => prev + 1);
+  };
+
+  const prevStep = () => setStep(prev => prev - 1);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.startDate || !formData.city || !formData.category || !formData.description) {
       alert("Veuillez remplir tous les champs obligatoires (*)");
       return;
     }
-
     const dataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === "category" && typeof formData.category === "object" && formData.category !== null) {
         dataToSend.append("category", formData.category.id);
       } else if (key === "image" && formData.image) {
         dataToSend.append("image", formData.image);
-      } else if (key !== "image") {
+      } else {
         dataToSend.append(key, formData[key]);
       }
     });
 
     if (isEditMode) {
       updateEventMutation.mutate({ id: eventIdToEdit, formData: dataToSend }, {
-        onSuccess: () => {
-          alert("Événement mis à jour avec succès !");
-          navigate("/dashboard");
-        },
+        onSuccess: () => navigate("/dashboard"),
         onError: (error) => alert(`Erreur: ${error.response?.data?.error || error.message}`),
       });
     } else {
       createEventMutation.mutate(dataToSend, {
-        onSuccess: () => {
-          alert("Événement créé avec succès !");
-          navigate("/dashboard");
-        },
+        onSuccess: () => navigate("/dashboard"),
         onError: (error) => alert(`Erreur: ${error.response?.data?.error || error.message}`),
       });
     }
   };
 
+  const filteredCities = cameroonianCities.filter(c => 
+    c.toLowerCase().includes(citySearch.toLowerCase())
+  );
+
+  const handleCitySelect = (city) => {
+    setFormData(p => ({ ...p, city }));
+    setCitySearch(city);
+    setShowCityDropdown(false);
+  };
+
+  const handleCustomCity = () => {
+    if (citySearch.trim()) {
+      setFormData(p => ({ ...p, city: citySearch }));
+      setShowCityDropdown(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+        setShowCityDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const isLoading = isLoadingCategories || (isEditMode && isLoadingEventDetails);
   const isSubmitting = createEventMutation.isPending || updateEventMutation.isPending;
-
-  const [showChoiceModal, setShowChoiceModal] = useState(!isEditMode && !searchParams.get("visibility"));
 
   if (isLoading) {
     return (
       <MainLayout>
-        <div className="flex flex-col justify-center items-center h-[60vh] space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-          <p className="text-gray-500 font-medium animate-pulse">Préparation du formulaire...</p>
+        <div className="flex flex-col justify-center items-center h-[60vh]">
+          <Loader2 className="w-10 h-10 animate-spin text-orange-600 mb-4" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Préparation...</p>
         </div>
       </MainLayout>
     );
@@ -156,394 +193,214 @@ const EventForm = () => {
 
   return (
     <MainLayout>
-      {/* Choice Modal */}
-      {showChoiceModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300"></div>
+      {/* Studio Interface (Compact One-Screen) */}
+      <div className="bg-slate-50 md:h-[calc(100vh-64px)] flex flex-col items-center justify-center py-4 px-4 overflow-hidden">
+        <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden flex flex-col max-h-full transition-all">
           
-          {/* Modal Content */}
-          <div className="relative bg-white dark:bg-gray-900 w-full h-full md:h-auto md:max-w-2xl md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom md:zoom-in-95 duration-500">
-            <div className="flex-1 overflow-y-auto p-6 md:p-12 flex flex-col justify-center">
-              <div className="text-center space-y-4 mb-12">
-                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-6">
-                  <PlusCircle size={32} />
-                </div>
-                <h3 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
-                  Quel type d'événement <br /> <span className="text-blue-600">souhaitez-vous créer ?</span>
-                </h3>
-                <p className="text-base md:text-lg text-gray-500 dark:text-gray-400 font-medium max-w-md mx-auto">
-                  Choisissez la visibilité qui correspond le mieux à votre projet.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <button
-                  onClick={() => {
-                    setFormData(prev => ({ ...prev, visibility: "public" }));
-                    setShowChoiceModal(false);
-                  }}
-                  className="group p-8 bg-blue-50/50 dark:bg-blue-900/10 rounded-[2.5rem] border-2 border-transparent hover:border-blue-600 hover:bg-white dark:hover:bg-gray-800 transition-all text-left shadow-sm hover:shadow-xl"
-                >
-                  <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/20">
-                    <Users className="w-7 h-7" />
-                  </div>
-                  <h4 className="text-xl font-black text-gray-900 dark:text-white mb-2">Événement Public</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                    Visible par tous les utilisateurs sur la plateforme. Idéal pour les concerts, festivals ou conférences.
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setFormData(prev => ({ ...prev, visibility: "private" }));
-                    setShowChoiceModal(false);
-                  }}
-                  className="group p-8 bg-purple-50/50 dark:bg-purple-900/10 rounded-[2.5rem] border-2 border-transparent hover:border-purple-600 hover:bg-white dark:hover:bg-gray-800 transition-all text-left shadow-sm hover:shadow-xl"
-                >
-                  <div className="w-14 h-14 bg-purple-600 text-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20">
-                    <Lock className="w-7 h-7" />
-                  </div>
-                  <h4 className="text-xl font-black text-gray-900 dark:text-white mb-2">Événement Privé</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                    Uniquement accessible via un lien direct. Parfait pour les mariages, anniversaires ou réunions privées.
-                  </p>
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6 md:p-10 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
-              <button
-                onClick={() => navigate(-1)}
-                className="w-full py-4 text-sm font-black text-gray-400 hover:text-gray-900 dark:hover:text-white uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
-              >
-                <ArrowLeft size={16} /> Annuler et revenir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-gray-950 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-10">
-            <button 
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors font-bold text-sm uppercase tracking-widest"
-            >
-              <ArrowLeft className="w-4 h-4" /> Retour
-            </button>
-            <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 rounded-full text-blue-600 dark:text-blue-400 text-[10px] font-black tracking-widest uppercase border border-blue-100 dark:border-blue-800/50">
-              <Zap className="w-4 h-4" /> {isEditMode ? "Mode Édition" : "Nouvel Événement"}
-            </div>
+          <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
+             <div className="flex items-center gap-4">
+               <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400">
+                  <ArrowLeft size={20} />
+               </button>
+               <h2 className="text-xl font-black text-gray-900 tracking-tight tracking-tighter">Event Studio <span className="text-orange-600">Beta</span></h2>
+             </div>
+             
+             <div className="flex items-center gap-3">
+               {[1, 2, 3].map((s) => (
+                 <div key={s} className={`w-12 h-1.5 rounded-full transition-all duration-500 scale-x-100 ${step >= s ? "bg-orange-500" : "bg-slate-100"}`} />
+               ))}
+               <span className="ml-2 text-[10px] font-black text-orange-600 uppercase tracking-widest">Step {step}/3</span>
+             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-[3rem] shadow-2xl shadow-blue-600/5 border border-gray-100 dark:border-gray-800 overflow-hidden">
-            {/* Title Section */}
-            <div className="p-8 md:p-12 border-b border-gray-50 dark:border-gray-800 bg-gradient-to-r from-blue-600/5 to-purple-600/5">
-              <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter mb-4">
-                {isEditMode ? "Modifier votre" : "Créer un"} <br />
-                <span className="text-blue-600">événement mémorable</span>
-              </h1>
-              <p className="text-gray-500 dark:text-gray-400 font-medium max-w-xl">
-                Remplissez les détails ci-dessous pour publier votre événement et commencer à recevoir des inscriptions.
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-12">
+          {/* Form Content */}
+          <div className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar">
+            <form onSubmit={(e) => e.preventDefault()} className="h-full">
               
-              {/* Section 1: Informations Générales */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
-                    <Info className="w-5 h-5" />
-                  </div>
-                  <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Informations Générales</h2>
+              {step === 1 && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                   <div className="space-y-1">
+                      <h3 className="text-2xl font-black text-gray-900">Fondations du <span className="text-orange-600 underline decoration-4 decoration-orange-100 underline-offset-4">projet</span></h3>
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Identité visuelle & conceptuelle</p>
+                   </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Définition du titre *</label>
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Que se passe-t-il ?" className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-gray-900 shadow-sm transition-all" />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Catégorie thématique *</label>
+                        <select name="category" value={formData.category} onChange={handleChange} className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-gray-900 appearance-none cursor-pointer shadow-sm">
+                          <option value="">Sélectionner</option>
+                          {categories?.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.emoji} {cat.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                   </div>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Présentation narrative *</label>
+                      <textarea name="description" value={formData.description} onChange={handleChange} rows="4" className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-[1.5rem] outline-none font-bold text-gray-900 shadow-sm resize-none" placeholder="Donnez envie à votre audience..." />
+                   </div>
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nom de l'événement *</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Ex: Gala de Charité 2024"
-                      required
-                      className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-700 border-2 focus:border-blue-600 rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Catégorie *</label>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-700 border-2 focus:border-blue-600 rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white appearance-none"
-                    >
-                      <option value="">Sélectionner une catégorie</option>
-                      {categories?.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.emoji} {cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Description détaillée *</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows="5"
-                    required
-                    placeholder="Décrivez votre événement en quelques lignes..."
-                    className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-700 border-2 focus:border-blue-600 rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Section 2: Lieu & Date */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-600">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Lieu & Date</h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Format *</label>
-                    <div className="flex gap-2 p-1 bg-gray-50 dark:bg-gray-800 rounded-2xl">
+              {/* Step 2: Logistique (THE REVOLUTIONARY CITY SOLUTION) */}
+              {step === 2 && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                   <div className="space-y-1">
+                      <h3 className="text-2xl font-black text-gray-900">Emplacement & <span className="text-orange-600">Tempo</span></h3>
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Liberté totale géographique</p>
+                   </div>
+                   
+                   <div className="flex gap-4 p-2 bg-slate-100 rounded-[1.25rem]">
                       {["Présentiel", "En ligne"].map((f) => (
-                        <button
-                          key={f}
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, format: f }))}
-                          className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                            formData.format === f 
-                              ? "bg-white dark:bg-gray-700 text-blue-600 shadow-sm" 
-                              : "text-gray-400 hover:text-gray-600"
-                          }`}
-                        >
-                          {f}
+                        <button key={f} type="button" onClick={() => setFormData(p => ({ ...p, format: f }))} className={`flex-1 py-4 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${formData.format === f ? "bg-white text-orange-600 shadow-md scale-[1.02]" : "text-slate-400 hover:text-gray-900"}`}>{f}</button>
+                      ))}
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Searchable / Manual City Input */}
+                      <div className="space-y-3 relative" ref={cityDropdownRef}>
+                         <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Ville (Sélectionnez ou Tapez) *</label>
+                         <div className="relative">
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                            <input 
+                              type="text" 
+                              value={citySearch} 
+                              onChange={(e) => {
+                                setCitySearch(e.target.value);
+                                setFormData(p => ({ ...p, city: e.target.value }));
+                                setShowCityDropdown(true);
+                              }}
+                              onFocus={() => setShowCityDropdown(true)}
+                              disabled={formData.format === "En ligne"}
+                              placeholder="Tapez le nom de votre ville..." 
+                              className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-gray-900 shadow-sm disabled:opacity-40" 
+                            />
+                         </div>
+                         
+                         {showCityDropdown && formData.format !== "En ligne" && (
+                           <div className="absolute z-50 left-0 right-0 top-full mt-2 bg-white rounded-3xl shadow-2xl border border-slate-100 max-h-60 overflow-y-auto custom-scrollbar p-2 animate-in fade-in zoom-in-95 duration-200">
+                             {filteredCities.length > 0 ? (
+                               filteredCities.map((c) => (
+                                 <button 
+                                  key={c} 
+                                  onClick={() => handleCitySelect(c)}
+                                  className="w-full text-left px-6 py-4 hover:bg-orange-50 rounded-2xl font-bold text-gray-700 transition-colors flex items-center justify-between group"
+                                 >
+                                   {c}
+                                   <ChevronRight size={14} className="text-slate-300 group-hover:text-orange-600 transition-colors" />
+                                 </button>
+                               ))
+                             ) : (
+                               <div className="p-4 text-center space-y-4">
+                                  <p className="text-[11px] font-bold text-slate-400">Cette ville n'est pas dans notre liste de suggestions...</p>
+                                  <button 
+                                    onClick={handleCustomCity}
+                                    className="w-full py-4 bg-orange-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-orange-600/20 flex items-center justify-center gap-2"
+                                  >
+                                    <Plus size={14} /> Confirmer "{citySearch}"
+                                  </button>
+                               </div>
+                             )}
+                           </div>
+                         )}
+                      </div>
+
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Précision (Quartier/Lieu)</label>
+                         <div className="relative">
+                            <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                            <input type="text" name="neighborhood" value={formData.neighborhood} onChange={handleChange} disabled={formData.format === "En ligne"} placeholder="Ex: Akwa, Face Casino" className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-gray-900 shadow-sm disabled:opacity-40" />
+                         </div>
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Début du projet *</label>
+                         <div className="relative">
+                            <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                            <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-gray-900 shadow-sm" />
+                         </div>
+                      </div>
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Heure de lancement</label>
+                         <div className="relative">
+                            <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                            <input type="time" name="time" value={formData.time} onChange={handleChange} className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-gray-900 shadow-sm" />
+                         </div>
+                      </div>
+                   </div>
+                </div>
+              )}
+
+              {/* Step 3: Finalisation */}
+              {step === 3 && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                   <div className="space-y-1">
+                      <h3 className="text-2xl font-black text-gray-900">Diffusions & <span className="text-orange-600 underline underline-offset-8">Règles</span></h3>
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Contrôle d'accès & Billetterie</p>
+                   </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Prix par Ticket (FCFA) *</label>
+                        <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-gray-900 text-xl shadow-sm" />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Options Digitales</label>
+                        <button type="button" onClick={() => setFormData(p => ({ ...p, qrOption: !p.qrOption }))} className={`w-full py-5 px-8 rounded-2xl flex items-center justify-between border-2 transition-all ${formData.qrOption ? "border-orange-500 bg-orange-50 text-orange-600 shadow-md" : "border-slate-100 text-slate-400 bg-slate-50"}`}>
+                           <span className="text-xs font-black uppercase tracking-widest">Activer Scan QR</span>
+                           <QrCode size={24} className={formData.qrOption ? "animate-pulse" : ""} />
                         </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Ville *</label>
-                    <select
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
-                      required
-                      disabled={formData.format === "En ligne"}
-                      className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-700 border-2 focus:border-blue-600 rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white disabled:opacity-50"
-                    >
-                      <option value="">Choisir une ville</option>
-                      {cameroonianCities.map((ville) => (
-                        <option key={ville} value={ville}>{ville}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Quartier</label>
-                    <input
-                      type="text"
-                      name="neighborhood"
-                      value={formData.neighborhood}
-                      onChange={handleChange}
-                      disabled={formData.format === "En ligne"}
-                      placeholder="Ex: Bastos"
-                      className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-700 border-2 focus:border-blue-600 rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white disabled:opacity-50"
-                    />
-                  </div>
+                      </div>
+                   </div>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-1">Image Impactante (Couverture)</label>
+                      <input type="file" id="cov" name="image" className="hidden" onChange={handleChange} accept="image/*" />
+                      <label htmlFor="cov" className="flex flex-col items-center justify-center w-full h-44 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] cursor-pointer hover:bg-slate-100 transition-all overflow-hidden group border-spacing-4">
+                        {formData.image ? <div className="text-center font-black text-orange-600 flex flex-col items-center gap-2"><CheckCircle2 size={32} /><span className="text-[10px] uppercase">{formData.image.name}</span></div> : 
+                        <div className="text-center space-y-3">
+                          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto text-slate-300 group-hover:text-orange-500 transition-all shadow-sm">
+                            <ImageIcon size={28} />
+                          </div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliquer pour importer</span>
+                        </div>}
+                      </label>
+                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date de début *</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="date"
-                        name="startDate"
-                        value={formData.startDate}
-                        onChange={handleChange}
-                        required
-                        className="w-full pl-14 pr-6 py-4 bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-700 border-2 focus:border-blue-600 rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date de fin</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="date"
-                        name="endDate"
-                        value={formData.endDate}
-                        onChange={handleChange}
-                        min={formData.startDate}
-                        className="w-full pl-14 pr-6 py-4 bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-700 border-2 focus:border-blue-600 rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Heure</label>
-                    <div className="relative">
-                      <Clock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="time"
-                        name="time"
-                        value={formData.time}
-                        onChange={handleChange}
-                        className="w-full pl-14 pr-6 py-4 bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-700 border-2 focus:border-blue-600 rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 3: Options & Visibilité */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600">
-                    <Zap className="w-5 h-5" />
-                  </div>
-                  <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Options & Visibilité</h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Visibilité de l'événement</label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, visibility: "public" }))}
-                        className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all ${
-                          formData.visibility === "public"
-                            ? "bg-blue-50 dark:bg-blue-900/20 border-blue-600 text-blue-600"
-                            : "bg-gray-50 dark:bg-gray-800 border-transparent text-gray-400"
-                        }`}
-                      >
-                        <Globe className="w-5 h-5" />
-                        <span className="text-xs font-black uppercase tracking-widest">Public</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, visibility: "private" }))}
-                        className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all ${
-                          formData.visibility === "private"
-                            ? "bg-purple-50 dark:bg-purple-900/20 border-purple-600 text-purple-600"
-                            : "bg-gray-50 dark:bg-gray-800 border-transparent text-gray-400"
-                        }`}
-                      >
-                        <Lock className="w-5 h-5" />
-                        <span className="text-xs font-black uppercase tracking-widest">Privé</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Prix (FCFA)</label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleChange}
-                      min="0"
-                      className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-700 border-2 focus:border-blue-600 rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-6 bg-blue-50 dark:bg-blue-900/10 rounded-[2rem] border border-blue-100 dark:border-blue-900/30">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
-                      <QrCode className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Système de Tickets QR</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Générez des tickets uniques pour chaque participant.</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      name="qrOption"
-                      checked={formData.qrOption}
-                      onChange={handleChange}
-                      className="sr-only peer" 
-                    />
-                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Image de couverture</label>
-                  <div className="relative group">
-                    <input
-                      type="file"
-                      name="image"
-                      accept="image/*"
-                      onChange={handleChange}
-                      className="hidden"
-                      id="image-upload"
-                    />
-                    <label 
-                      htmlFor="image-upload"
-                      className="flex flex-col items-center justify-center w-full h-48 bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-[2rem] cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group-hover:border-blue-600"
-                    >
-                      {formData.image ? (
-                        <div className="flex items-center gap-3 text-blue-600 font-bold">
-                          <ImageIcon className="w-6 h-6" />
-                          <span>{formData.image.name}</span>
-                        </div>
-                      ) : (
-                        <>
-                          <ImageIcon className="w-10 h-10 text-gray-300 mb-4 group-hover:text-blue-600 transition-colors" />
-                          <span className="text-sm font-black text-gray-400 uppercase tracking-widest">Cliquez pour ajouter une image</span>
-                        </>
-                      )}
-                    </label>
-                    {isEditMode && existingEventData?.imageUrl && !formData.image && (
-                      <p className="text-[10px] text-gray-400 text-center mt-2 font-medium italic">Image actuelle conservée</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-8">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black text-lg uppercase tracking-[0.2em] shadow-2xl shadow-blue-600/20 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : isEditMode ? (
-                    <Save className="w-6 h-6" />
-                  ) : (
-                    <PlusCircle className="w-6 h-6" />
-                  )}
-                  {isSubmitting ? "Traitement..." : isEditMode ? "Enregistrer les modifications" : "Publier l'événement"}
-                </button>
-              </div>
+              )}
             </form>
           </div>
+
+          {/* Footer */}
+          <div className="px-8 py-8 border-t border-slate-50 bg-white flex items-center gap-6 shrink-0">
+             {step > 1 && (
+               <button type="button" onClick={prevStep} className="flex-1 py-6 px-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-[12px] uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95">Précédent</button>
+             )}
+             
+             {step < 3 ? (
+               <button type="button" onClick={nextStep} className="flex-[2] py-6 px-10 bg-orange-600 text-white rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-2xl shadow-orange-600/30 hover:bg-orange-700 transition-all flex items-center justify-center gap-3">
+                 Continuer <ChevronRight size={18} />
+               </button>
+             ) : (
+               <button onClick={handleSubmit} disabled={isSubmitting} className="flex-[2] py-6 px-10 bg-black text-white rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                 {isSubmitting ? <Loader2 size={24} className="animate-spin text-orange-500" /> : <Zap size={22} className="text-orange-500" />}
+                 {isSubmitting ? "Lancement..." : isEditMode ? "Enregistrer les modifications" : "Lancer mon événement"}
+               </button>
+             )}
+          </div>
+
         </div>
       </div>
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 20px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #F97316; }
+      `}</style>
     </MainLayout>
   );
 };

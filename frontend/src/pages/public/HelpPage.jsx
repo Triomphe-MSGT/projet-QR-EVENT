@@ -1,330 +1,151 @@
-import React, { useState } from "react";
+import React from "react";
 import MainLayout from "../../components/layout/MainLayout";
-import {
-  Search,
-  LogIn,
-  QrCode,
-  Edit,
-  BarChart3,
-  ScanLine,
-  Users,
-  User,
-  HelpCircle,
-  Download,
+import { 
+  BookOpen, 
+  Search, 
+  Zap, 
+  QrCode, 
+  ShieldCheck, 
+  Calendar, 
+  Users, 
+  FileText, 
   ArrowRight,
-  MessageCircle,
-  ShieldCheck,
-  Zap,
-  ChevronDown,
-  ChevronUp,
-  Mail,
-  Phone
+  HelpCircle,
+  Play,
+  CheckCircle,
+  Smartphone,
+  Globe
 } from "lucide-react";
-
-const HelpSection = ({ title, icon: Icon, children, id }) => (
-  <section id={id} className="scroll-mt-24 space-y-8">
-    <div className="flex items-center gap-4 border-b border-gray-100 dark:border-gray-800 pb-6">
-      <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-        <Icon className="w-6 h-6" />
-      </div>
-      <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight">
-        {title}
-      </h2>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {children}
-    </div>
-  </section>
-);
-
-const HelpCard = ({ icon: Icon, title, description, steps }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="group bg-white dark:bg-gray-800 rounded-[2rem] p-8 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-500">
-      <div className="flex items-start justify-between mb-6">
-        <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-400 group-hover:text-blue-600 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-all duration-500">
-          <Icon className="w-7 h-7" />
-        </div>
-        <button 
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-full hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-400 transition-colors"
-        >
-          {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-        </button>
-      </div>
-      
-      <h3 className="text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight group-hover:text-blue-600 transition-colors">
-        {title}
-      </h3>
-      <p className="text-gray-500 dark:text-gray-400 text-sm font-medium leading-relaxed mb-6">
-        {description}
-      </p>
-
-      {isOpen && (
-        <div className="space-y-4 animate-fade-in-down">
-          <div className="h-px bg-gray-50 dark:bg-gray-700 mb-6" />
-          <ul className="space-y-4">
-            {steps.map((step, idx) => (
-              <li key={idx} className="flex gap-4">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center">
-                  {idx + 1}
-                </span>
-                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium leading-relaxed">
-                  {step}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-};
+import { Link } from "react-router-dom";
 
 const HelpPage = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const quickLinks = [
-    { label: "Tickets", icon: QrCode, color: "text-blue-600", bg: "bg-blue-50", id: "participants" },
-    { label: "Organiser", icon: Edit, color: "text-purple-600", bg: "bg-purple-50", id: "organizers" },
-    { label: "Scanner", icon: ScanLine, color: "text-amber-600", bg: "bg-amber-50", id: "organizers" },
-    { label: "Support", icon: MessageCircle, color: "text-green-600", bg: "bg-green-50", id: "contact" },
+  const sections = [
+    {
+      title: "Expérience Participant",
+      icon: Users,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+      description: "Comment trouver et réserver vos places en un clin d'œil.",
+      steps: [
+        { icon: Search, title: "Explorer", text: "Découvrez des événements exclusifs via notre catalogue filtré par ville et catégorie." },
+        { icon: CheckCircle, title: "Réserver", text: "Inscrivez-vous instantanément avec votre adresse e-mail." },
+        { icon: QrCode, title: "Présenter", text: "Accédez à votre pass QR unique dans votre espace personnel." }
+      ]
+    },
+    {
+      title: "Expérience Organisateur",
+      icon: Calendar,
+      color: "text-orange-600",
+      bg: "bg-orange-50",
+      description: "Gérez vos événements comme un professionnel.",
+      steps: [
+        { icon: BookOpen, title: "Publier", text: "Créez votre page d'événement personnalisée en moins de 2 minutes." },
+        { icon: Smartphone, title: "Scanner", text: "Utilisez notre outil de scan mobile pour valider les entrées." },
+        { icon: FileText, title: "Analyser", text: "Suivez vos statistiques et téléchargez vos bilans PDF." }
+      ]
+    }
   ];
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 font-sans">
-        {/* Hero Header */}
-        <div className="relative bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 pt-20 pb-32 overflow-hidden">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[120px]"></div>
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-[100px]"></div>
-          
-          <div className="max-w-7xl mx-auto px-4 relative z-10 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 rounded-full text-blue-600 dark:text-blue-400 text-[10px] font-black tracking-widest uppercase mb-8 border border-blue-100 dark:border-blue-800/50">
-              <HelpCircle className="w-4 h-4" /> Centre d'aide
-            </div>
-            <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-[0.9] mb-8">
-              Comment pouvons-nous <br /> <span className="text-blue-600">vous aider ?</span>
-            </h1>
-            
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto relative group">
-              <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-                <Search className="h-6 w-6 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+      <div className="bg-slate-50 min-h-screen font-sans selection:bg-orange-100 selection:text-orange-900 pb-20">
+        
+        {/* HERO SECTION */}
+        <section className="bg-slate-900 pt-24 pb-20 md:pt-40 md:pb-32 relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-600 rounded-full blur-[140px] opacity-20 -mb-48"></div>
+           
+           <div className="max-w-5xl mx-auto px-6 text-center space-y-8 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full text-white font-black text-[9px] uppercase tracking-[0.3em]">
+                 <HelpCircle size={14} className="text-orange-500" />
+                 Base de Connaissances
               </div>
-              <input
-                type="text"
-                placeholder="Rechercher une réponse (ex: QR code, scanner, profil...)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-16 pr-8 py-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-100 dark:border-gray-700 rounded-[2.5rem] shadow-2xl shadow-blue-600/5 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-lg font-medium"
-              />
-            </div>
-
-            {/* Quick Links */}
-            <div className="flex flex-wrap justify-center gap-4 mt-12">
-              {quickLinks.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={`#${link.id}`}
-                  className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
-                >
-                  <div className={`w-8 h-8 rounded-lg ${link.bg} flex items-center justify-center ${link.color}`}>
-                    <link.icon className="w-4 h-4" />
-                  </div>
-                  <span className="text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest">{link.label}</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Content Sections */}
-        <div className="max-w-7xl mx-auto px-4 py-24 space-y-32">
-          
-          {/* Participant Section */}
-          <HelpSection id="participants" title="Pour les Participants" icon={User}>
-            <HelpCard 
-              icon={Search}
-              title="Explorer & Découvrir"
-              description="Trouvez les meilleurs événements au Cameroun sans même avoir besoin de compte."
-              steps={[
-                "Parcourez la page d'accueil pour voir les tendances.",
-                "Utilisez les filtres par catégorie ou par ville.",
-                "Consultez les détails complets (date, lieu, prix) en un clic."
-              ]}
-            />
-            <HelpCard 
-              icon={QrCode}
-              title="Obtenir mon Ticket QR"
-              description="Votre ticket d'entrée est généré instantanément et stocké en toute sécurité."
-              steps={[
-                "Connectez-vous à votre compte participant.",
-                "Cliquez sur 'Réserver ma place' sur l'événement de votre choix.",
-                "Retrouvez votre QR code unique dans 'Mes QR Codes'."
-              ]}
-            />
-            <HelpCard 
-              icon={ScanLine}
-              title="Accéder à l'événement"
-              description="Une entrée fluide et sans papier le jour de l'événement."
-              steps={[
-                "Ouvrez 'Mes QR Codes' sur votre téléphone à l'entrée.",
-                "Présentez votre QR code à l'organisateur.",
-                "Une fois scanné, votre accès est validé instantanément."
-              ]}
-            />
-            <HelpCard 
-              icon={ShieldCheck}
-              title="Sécurité & Confidentialité"
-              description="Vos données et vos billets sont protégés par notre technologie."
-              steps={[
-                "Chaque QR code est unique et infalsifiable.",
-                "Vos informations personnelles ne sont jamais partagées sans votre accord.",
-                "Réinitialisez votre mot de passe à tout moment via les paramètres."
-              ]}
-            />
-          </HelpSection>
-
-          {/* Organizer Section */}
-          <HelpSection id="organizers" title="Pour les Organisateurs" icon={Zap}>
-            <HelpCard 
-              icon={Edit}
-              title="Créer un Événement"
-              description="Publiez votre événement en quelques minutes et commencez à recevoir des inscrits."
-              steps={[
-                "Accédez à votre Dashboard Organisateur.",
-                "Remplissez le formulaire de création (nom, lieu, description).",
-                "Activez l'option QR Code pour sécuriser les entrées."
-              ]}
-            />
-            <HelpCard 
-              icon={ScanLine}
-              title="Scanner les Entrées"
-              description="Transformez votre smartphone en scanner professionnel."
-              steps={[
-                "Ouvrez l'outil de scan depuis votre Dashboard.",
-                "Visez le QR code du participant avec votre caméra.",
-                "Le système valide l'entrée en temps réel (Vert = OK, Rouge = Erreur)."
-              ]}
-            />
-            <HelpCard 
-              icon={Users}
-              title="Gérer les Participants"
-              description="Suivez qui est inscrit et qui est réellement présent."
-              steps={[
-                "Consultez la liste des inscrits en temps réel.",
-                "Voyez l'heure exacte de validation pour chaque participant.",
-                "Exportez la liste des présences pour vos rapports."
-              ]}
-            />
-            <HelpCard 
-              icon={BarChart3}
-              title="Analyses & Rapports"
-              description="Mesurez le succès de votre événement avec des données précises."
-              steps={[
-                "Visualisez le taux de remplissage sur votre dashboard.",
-                "Téléchargez des rapports PDF détaillés par événement.",
-                "Analysez les tendances pour vos futurs événements."
-              ]}
-            />
-          </HelpSection>
-
-          {/* FAQ Section */}
-          <section className="bg-white dark:bg-gray-900 rounded-[3.5rem] p-8 md:p-20 border border-gray-100 dark:border-gray-800 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[80px]"></div>
-            
-            <div className="relative z-10 max-w-3xl mx-auto text-center mb-16">
-              <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter mb-4">Questions Fréquentes</h2>
-              <p className="text-gray-500 dark:text-gray-400 font-medium">Tout ce que vous devez savoir pour une expérience parfaite.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-              <div className="space-y-4">
-                <h4 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-3">
-                  <HelpCircle className="w-5 h-5 text-blue-600" /> Mot de passe oublié ?
-                </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                  Cliquez sur "Mot de passe oublié" sur la page de connexion. Un lien de réinitialisation vous sera envoyé par e-mail instantanément.
-                </p>
-              </div>
-              <div className="space-y-4">
-                <h4 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-3">
-                  <HelpCircle className="w-5 h-5 text-blue-600" /> Rôles multiples ?
-                </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                  Un compte Organisateur peut participer à d'autres événements, mais un compte Participant doit demander un surclassement pour créer des événements.
-                </p>
-              </div>
-              <div className="space-y-4">
-                <h4 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-3">
-                  <HelpCircle className="w-5 h-5 text-blue-600" /> Problème de caméra ?
-                </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                  Assurez-vous d'utiliser une connexion HTTPS et d'avoir autorisé l'accès à la caméra dans les paramètres de votre navigateur.
-                </p>
-              </div>
-              <div className="space-y-4">
-                <h4 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-3">
-                  <HelpCircle className="w-5 h-5 text-blue-600" /> Validité des tickets ?
-                </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                  Chaque ticket est à usage unique. Une fois scanné, il ne peut plus être utilisé pour entrer, garantissant une sécurité maximale.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Contact Section */}
-          <section id="contact" className="text-center space-y-12 pb-20">
-            <div className="max-w-2xl mx-auto space-y-4">
-              <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter">
-                Encore des <span className="text-blue-600">questions ?</span>
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400 font-medium">
-                Notre équipe est là pour vous accompagner 7j/7.
+              <h1 className="text-4xl md:text-8xl font-black text-white tracking-tighter uppercase leading-none">
+                 Guide <span className="text-orange-500">Pratique</span>
+              </h1>
+              <p className="text-slate-400 font-bold text-base md:text-xl max-w-2xl mx-auto leading-relaxed">
+                 Apprenez à utiliser la plateforme QR-EVENT étape par étape.
               </p>
-            </div>
+           </div>
+        </section>
 
-            <div className="flex flex-wrap justify-center gap-6">
-              <a 
-                href="mailto:support@qrevent.cm"
-                className="flex items-center gap-4 px-8 py-6 bg-white dark:bg-gray-800 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-xl hover:-translate-y-2 transition-all group"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-                  <Mail className="w-6 h-6" />
+        {/* GUIDES CONTENT */}
+        <div className="max-w-7xl mx-auto px-6 -mt-12 md:-mt-20 relative z-20 space-y-24">
+           
+           {/* Section Cards */}
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+              {sections.map((section, idx) => (
+                <div key={idx} className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] p-10 md:p-20 shadow-2xl shadow-slate-200/50 border border-slate-50 flex flex-col justify-between group hover:border-orange-200 transition-all">
+                   <div className="space-y-12">
+                      <div className="space-y-4">
+                        <div className={`w-20 h-20 ${section.bg} ${section.color} rounded-3xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform`}>
+                           <section.icon size={44} />
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter">{section.title}</h2>
+                        <p className="text-slate-400 font-bold text-sm tracking-tight">{section.description}</p>
+                      </div>
+
+                      <div className="space-y-8">
+                         {section.steps.map((step, sIdx) => (
+                           <div key={sIdx} className="flex gap-6">
+                              <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center font-black text-sm shrink-0">
+                                 {sIdx + 1}
+                              </div>
+                              <div className="space-y-1.5">
+                                 <div className="flex items-center gap-3">
+                                    <step.icon size={16} className="text-orange-600" />
+                                    <h4 className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{step.title}</h4>
+                                 </div>
+                                 <p className="text-slate-400 font-bold text-[13px] leading-relaxed">{step.text}</p>
+                              </div>
+                           </div>
+                         ))}
+                      </div>
+                   </div>
                 </div>
-                <div className="text-left">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">support@qrevent.cm</p>
-                </div>
-              </a>
-              <a 
-                href="tel:+237600000000"
-                className="flex items-center gap-4 px-8 py-6 bg-white dark:bg-gray-800 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-xl hover:-translate-y-2 transition-all group"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
-                  <Phone className="w-6 h-6" />
-                </div>
-                <div className="text-left">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Téléphone</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">+237 6XX XX XX XX</p>
-                </div>
-              </a>
-            </div>
-          </section>
+              ))}
+           </div>
+
+           {/* FEATURES GRID */}
+           <section className="bg-white p-12 md:p-24 rounded-[3.5rem] border border-slate-100 shadow-sm space-y-16">
+              <div className="text-center space-y-4">
+                 <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter shrink-0">L'écosystème <span className="text-orange-600">QR-EVENT</span></h3>
+                 <p className="text-slate-400 font-bold text-xs uppercase tracking-widest leading-none">Une technologie conçue pour la performance</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                 {[
+                   { title: "Universalité", text: "Fonctionne sur tous les navigateurs et appareils mobiles.", icon: Globe },
+                   { title: "Sécurité", text: "QR Codes cryptés et uniques pour chaque réservation.", icon: ShieldCheck },
+                   { title: "Rapidité", text: "Validation des entrées en moins d'une seconde par participant.", icon: Zap }
+                 ].map((feat, i) => (
+                    <div key={i} className="text-center space-y-6">
+                       <div className="w-16 h-16 bg-slate-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner"><feat.icon size={28} /></div>
+                       <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">{feat.title}</h4>
+                       <p className="text-slate-400 font-bold text-sm leading-relaxed">{feat.text}</p>
+                    </div>
+                 ))}
+              </div>
+           </section>
+
+           {/* CTA */}
+           <div className="bg-orange-600 rounded-[3rem] md:rounded-[4rem] p-12 md:p-24 text-center space-y-10 shadow-3xl shadow-orange-600/30 overflow-hidden relative group">
+              <Zap size={240} className="absolute -right-20 -bottom-20 text-white/10 rotate-12 group-hover:scale-110 transition-transform" />
+              <div className="space-y-4 relative z-10">
+                 <h2 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none">L'aventure <br/>commence ici.</h2>
+                 <p className="text-orange-100 font-bold text-lg max-w-sm mx-auto">Prêt à transformer votre expérience événementielle ?</p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-10 pt-4">
+                 <Link to="/login" className="w-full sm:w-auto px-12 py-5 bg-white text-orange-600 font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-2xl hover:bg-slate-50 transition-all">
+                    Créer mon compte libre
+                 </Link>
+                 <Link to="/events" className="w-full sm:w-auto px-12 py-5 bg-orange-700 text-white font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-xl flex items-center justify-center gap-3 hover:bg-orange-800 transition-all">
+                    Explorer les Events <ArrowRight size={16} />
+                 </Link>
+              </div>
+           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes fade-in-down {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-down { animation: fade-in-down 0.3s ease-out forwards; }
-        html { scroll-behavior: smooth; }
-      `}</style>
     </MainLayout>
   );
 };

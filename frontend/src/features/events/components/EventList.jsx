@@ -13,10 +13,10 @@ const EventList = ({
   const handleDetails = (id) => navigate(`/events/${id}`);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-16 mt-8">
       {currentEvents?.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 animate-fade-in-up">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 animate-fade-in-up">
             {currentEvents.map((event) => (
               <EventCard
                 key={event._id || event.id}
@@ -27,19 +27,20 @@ const EventList = ({
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-4 pt-10">
+            <div className="flex justify-center items-center gap-6 pt-12 border-t border-slate-100">
               <button
                 onClick={() => {
                   setCurrentPage((p) => Math.max(p - 1, 1));
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 disabled={currentPage === 1}
-                className="p-3 rounded-2xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-700 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-white dark:disabled:hover:bg-gray-800 shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-500 hover:text-orange-600 border border-slate-200 rounded-xl transition-all disabled:opacity-20"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5" />
+                Précédent
               </button>
               
-              <div className="flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-1">
                 {[...Array(totalPages)].map((_, i) => (
                   <button
                     key={i}
@@ -47,10 +48,10 @@ const EventList = ({
                       setCurrentPage(i + 1);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${
+                    className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
                       currentPage === i + 1
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                        : "bg-white dark:bg-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-100 dark:border-gray-700"
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-500 hover:bg-slate-50"
                     }`}
                   >
                     {i + 1}
@@ -64,31 +65,27 @@ const EventList = ({
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 disabled={currentPage === totalPages}
-                className="p-3 rounded-2xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-700 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-white dark:disabled:hover:bg-gray-800 shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-500 hover:text-orange-600 border border-slate-200 rounded-xl transition-all disabled:opacity-20"
               >
-                <ChevronRight className="w-6 h-6" />
+                Suivant
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           )}
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 px-6 bg-white dark:bg-gray-800 rounded-[3rem] border border-dashed border-gray-200 dark:border-gray-700">
-          <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mb-6">
-            <CalendarOff className="w-10 h-10 text-gray-300" />
-          </div>
-          <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Aucun événement</h3>
-          <p className="text-gray-500 dark:text-gray-400 mt-2 text-center max-w-xs font-medium">
-            Nous n'avons trouvé aucun événement correspondant à vos critères de recherche.
-          </p>
+        <div className="flex flex-col items-center justify-center py-24 px-6 bg-white rounded-3xl border border-slate-100 italic">
+          <CalendarOff className="w-12 h-12 text-slate-200 mb-4" />
+          <p className="text-slate-400 font-medium">Aucun événement ne correspond à vos filtres.</p>
         </div>
       )}
       
       <style>{`
-        @keyframes fade-in-up {
+        @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in-up { animation: fade-in-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
       `}</style>
     </div>
   );

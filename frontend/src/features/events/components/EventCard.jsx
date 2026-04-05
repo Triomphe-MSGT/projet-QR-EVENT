@@ -72,106 +72,73 @@ const EventCard = ({ event, handleDetails }) => {
   const imageUrl = getImageUrl(event.imageUrl);
   const date = formatDate(event.startDate);
 
-  return (
-    <div
+  return (    <div
       onClick={handleDetails}
-      className="group relative bg-white dark:bg-gray-800 rounded-3xl md:rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border border-gray-100 dark:border-gray-700/50 flex flex-col h-full cursor-pointer"
+      className="group bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-orange-200 hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer h-full"
     >
-      {/* Image Section */}
-      <div className="relative h-48 md:h-64 overflow-hidden">
+      <div className="h-44 md:h-52 overflow-hidden relative bg-slate-100">
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={event.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          <img 
+            src={imageUrl} 
+            alt={event.name} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-5xl md:text-6xl">
+          <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400 font-bold text-4xl">
             {event.name?.charAt(0).toUpperCase() || "?"}
           </div>
         )}
+        <div className="absolute top-3 left-3 px-3 py-1 bg-white/95 backdrop-blur-md rounded-lg text-[10px] font-bold uppercase text-slate-900 border border-slate-100 shadow-sm">
+          {event.category?.name || "Événement"}
+        </div>
         
-        {/* Action Buttons Overlay */}
-        <div className="absolute top-3 md:top-4 right-3 md:right-4 flex flex-col gap-2 z-10">
+        <div className="absolute top-3 right-3 flex flex-col gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={handleLike}
-            className={`p-2 md:p-2.5 rounded-xl md:rounded-2xl backdrop-blur-md border border-white/20 shadow-lg transition-all active:scale-90 ${
+            className={`p-2 rounded-lg backdrop-blur-md border shadow-sm transition-all active:scale-90 ${
               isLiked
-                ? "bg-red-500 text-white border-red-400"
-                : "bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-red-500"
+                ? "bg-red-500 text-white border-red-500"
+                : "bg-white/90 text-slate-600 border-white hover:text-red-500"
             }`}
           >
-            <Heart size={16} className={isLiked ? "fill-current" : ""} />
+            <Heart size={14} className={isLiked ? "fill-current" : ""} />
           </button>
           <button
             onClick={handleShare}
-            className="p-2 md:p-2.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-white/20 rounded-xl md:rounded-2xl shadow-lg text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-all active:scale-90"
+            className="p-2 bg-white/90 backdrop-blur-md border border-white rounded-lg shadow-sm text-slate-600 hover:text-blue-600 transition-all active:scale-90"
           >
-            <Share2 size={16} />
+            <Share2 size={14} />
           </button>
         </div>
-
-        {/* Date Badge Overlay */}
-        <div className="absolute top-3 md:top-4 left-3 md:left-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl md:rounded-2xl p-1.5 md:p-2 min-w-[50px] md:min-w-[60px] text-center shadow-lg border border-white/20">
-          <span className="block text-xl md:text-2xl font-black text-blue-600 leading-none">{date.day}</span>
-          <span className="block text-[8px] md:text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest uppercase">{date.month}</span>
-        </div>
-
-        {/* Price Tag Overlay */}
-        <div className="absolute bottom-3 md:bottom-4 left-3 md:left-4">
-          <span className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[8px] md:text-[10px] font-black tracking-widest shadow-lg backdrop-blur-md border border-white/20 ${
-            event.price === 0 
-              ? "bg-green-500/90 text-white" 
-              : "bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-white"
-          }`}>
-            {event.price === 0 ? "GRATUIT" : `${event.price} FCFA`}
-          </span>
-        </div>
-
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       </div>
-
-      {/* Content Section */}
-      <div className="p-4 md:p-8 flex flex-col flex-grow relative">
-        {/* Category Tag & Likes */}
-        <div className="flex items-center justify-between mb-2 md:mb-4">
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 md:px-2.5 md:py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[8px] md:text-[10px] font-black rounded-full tracking-widest uppercase">
-              #{event.category?.name || "Événement"}
-            </span>
-            {event.qrOption && (
-              <span className="flex items-center gap-1 text-[8px] md:text-[10px] font-black text-amber-500 tracking-widest uppercase">
-                <Zap className="w-2.5 h-2.5 fill-current" /> QR
-              </span>
-            )}
-          </div>
-          {likesCount > 0 && (
-            <div className="flex items-center gap-1 text-[9px] md:text-[10px] font-bold text-gray-400">
-              <Heart size={8} className="fill-red-500 text-red-500" />
-              {likesCount}
+      
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        <div className="space-y-4">
+          <h3 className="text-base md:text-lg font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-orange-600 transition-colors">
+            {event.name}
+          </h3>
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
+              <Calendar size={14} className="text-orange-500 flex-shrink-0" />
+              <span>{date.day} {date.month} {date.year}</span>
             </div>
-          )}
+            <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
+              <MapPin size={14} className="text-orange-500 flex-shrink-0" />
+              <span className="truncate">{event.location || event.city || "Lieu à confirmer"}</span>
+            </div>
+          </div>
         </div>
 
-        <h3 className="text-base md:text-2xl font-black text-gray-900 dark:text-white mb-1 md:mb-3 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2 tracking-tight">
-          {event.name}
-        </h3>
-
-        <p className="text-gray-500 dark:text-gray-400 text-[10px] md:text-base line-clamp-2 mb-3 md:mb-6 font-medium leading-relaxed">
-          {event.description}
-        </p>
-
-        {/* Footer Info */}
-        <div className="mt-auto pt-3 md:pt-6 border-t border-gray-50 dark:border-gray-700/50 flex items-center justify-between">
-          <div className="flex items-center text-gray-400 dark:text-gray-500 text-[9px] md:text-xs font-bold">
-            <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 text-blue-500" />
-            <span className="truncate max-w-[80px] md:max-w-[150px]">{event.city}</span>
+        <div className="flex items-center justify-between pt-5 mt-5 border-t border-slate-50">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">À partir de</span>
+            <span className="text-lg font-bold text-slate-900">
+              {event.price > 0 ? `${event.price.toLocaleString()} FCFA` : "Gratuit"}
+            </span>
           </div>
-          
-          <div className="flex items-center gap-1 text-blue-600 font-black text-[10px] md:text-sm group/btn uppercase tracking-widest">
-            Détails 
-            <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5 transition-transform group-hover/btn:translate-x-1" />
+          <div className="flex items-center gap-1 text-orange-600 font-bold text-xs uppercase tracking-wider">
+            Réserver
+            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
       </div>

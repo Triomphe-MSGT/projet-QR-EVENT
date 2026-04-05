@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { 
   Search, 
   Filter, 
@@ -10,7 +10,7 @@ import {
   Check,
   ChevronDown,
   Calendar,
-  Sparkles
+  Laptop
 } from "lucide-react";
 import { useCategories } from "../../../hooks/useCategories";
 import { useSearchParams } from "react-router-dom";
@@ -20,33 +20,26 @@ const SearchAndFilter = ({
   setQuery,
   isFilterOpen,
   setIsFilterOpen,
-  setCurrentPage,
+  setCurrentPage
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories } = useCategories();
 
-  const cities = [
-    "Douala", "Yaoundé", "Garoua", "Bamenda", "Bafoussam", "Maroua", 
-    "Ngaoundéré", "Nkongsamba", "Kumba", "Édéa", "Loum", "Dschang", "Foumban", 
-    "Mbouda", "Limbé", "Ébolowa", "Kousséri", "Tiko", "Bafang", "Mbalmayo", 
-    "Guider", "Yagoua", "Bafia", "Buéa", "Kumbo", "Sangmélima", "Batouri", 
-    "Mokolo", "Meïganga", "Mora", "Wum", "Bangangté"
-  ];
-
-  const times = [
-    { label: "Matin", value: "08:00", icon: "🌅" },
-    { label: "Après-midi", value: "12:00", icon: "☀️" },
-    { label: "Soirée", value: "18:00", icon: "🌙" }
-  ];
+  const cities = ["Douala", "Yaoundé", "Garoua", "Bamenda", "Bafoussam", "Maroua", "Ngaoundéré", "Nkongsamba", "Kumba", "Édéa", "Limbé", "Ébolowa", "Autre"];
 
   const types = [
     { label: "Gratuit", value: "free" },
     { label: "Payant", value: "paid" }
   ];
 
+  const formats = [
+    { label: "Présentiel", value: "Présentiel", icon: <MapPin className="w-3.5 h-3.5" /> },
+    { label: "En ligne", value: "En ligne", icon: <Laptop className="w-3.5 h-3.5" /> }
+  ];
+
   const updateFilters = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
-    if (value === null || value === "" || (Array.isArray(value) && value.length === 0)) {
+    if (!value || value === "" || (Array.isArray(value) && value.length === 0)) {
       newParams.delete(key);
     } else {
       newParams.set(key, Array.isArray(value) ? value.join(",") : value);
@@ -63,13 +56,8 @@ const SearchAndFilter = ({
     } else {
       current.push(value);
     }
-    updateFilters(key, current);
+    updateFilters(key, current.filter(Boolean));
   };
-
-  const formats = [
-    { label: "Présentiel", value: "Présentiel", icon: "📍" },
-    { label: "En ligne", value: "En ligne", icon: "💻" }
-  ];
 
   const activeTypes = searchParams.get("types")?.split(",") || [];
   const activeFormats = searchParams.get("formats")?.split(",") || [];
@@ -77,234 +65,190 @@ const SearchAndFilter = ({
   const activeCategories = searchParams.get("categories")?.split(",") || [];
   const activeTime = searchParams.get("time") || "";
 
-  const clearAll = () => {
-    setSearchParams(new URLSearchParams());
-    setQuery("");
-    setCurrentPage(1);
-  };
+  const totalActive = activeTypes.length + activeFormats.length + activeCities.length + activeCategories.length + (activeTime ? 1 : 0) + (searchParams.get("day") ? 1 : 0);
 
   return (
-    <div className="w-full space-y-4 md:space-y-6">
-      <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-        {/* Search Bar */}
+    <div className="w-full bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+      {/* Search Bar */}
+      <div className="p-3 md:p-4 flex flex-col md:flex-row gap-3">
         <div className="relative flex-1 group">
-          <div className="absolute inset-y-0 left-0 pl-4 md:pl-5 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 md:h-5 md:w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-          </div>
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-orange-500 transition-colors" />
           <input
             type="text"
-            placeholder="Rechercher un événement..."
+            placeholder="Rechercher par nom, lieu..."
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-10 md:pl-14 pr-10 md:pr-12 py-3.5 md:py-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 border border-gray-100 dark:border-gray-700 rounded-xl md:rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm font-medium text-sm md:text-base"
+            className="w-full pl-12 pr-10 py-4 bg-slate-50 text-slate-900 placeholder-slate-400 border-none rounded-2xl focus:ring-2 focus:ring-orange-500/10 transition-all font-medium"
           />
           {query && (
-            <button 
-              onClick={() => setQuery("")}
-              className="absolute inset-y-0 right-0 pr-4 md:pr-5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-            >
-              <X className="h-4 w-4 md:h-5 md:w-5" />
+            <button onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
 
-        {/* Filter Toggle Button (Desktop Only) */}
         <button
           onClick={() => setIsFilterOpen(!isFilterOpen)}
-          className={`hidden md:flex items-center justify-center gap-3 px-8 py-5 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg border-2 ${
+          className={`flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-bold text-sm transition-all border ${
             isFilterOpen 
-              ? "bg-blue-600 border-blue-600 text-white shadow-blue-500/30 scale-105" 
-              : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-100 dark:border-gray-700 hover:border-blue-600/30"
+              ? "bg-slate-900 border-slate-900 text-white shadow-lg" 
+              : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
           }`}
         >
-          <Filter className={`h-4 w-4 ${isFilterOpen ? "animate-pulse" : ""}`} />
+          <Filter className="h-4 w-4" />
           <span>Filtres</span>
-          {(activeTypes.length + activeFormats.length + activeCities.length + activeCategories.length + (activeTime ? 1 : 0) + (searchParams.get("day") ? 1 : 0)) > 0 && (
-            <span className="flex items-center justify-center w-5 h-5 bg-white text-blue-600 rounded-full text-[10px] font-black">
-              {activeTypes.length + activeFormats.length + activeCities.length + activeCategories.length + (activeTime ? 1 : 0) + (searchParams.get("day") ? 1 : 0)}
+          {totalActive > 0 && (
+            <span className="flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-orange-500 text-white text-[10px] font-black">
+              {totalActive}
             </span>
           )}
+          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isFilterOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
-      {/* Expanded Filters Panel */}
-      {(isFilterOpen || window.innerWidth < 768) && (
-        <div className={`${isFilterOpen ? 'block' : 'hidden md:block'} p-0 md:p-10 bg-transparent md:bg-white md:dark:bg-gray-800 md:rounded-[3rem] md:border md:border-gray-100 md:dark:border-gray-700 md:shadow-2xl animate-fade-in-up space-y-8 md:space-y-10`}>
-          <div className="hidden md:flex items-center justify-between border-b border-gray-50 dark:border-gray-700 pb-6">
-            <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Filtres</h3>
-            <button 
-              onClick={clearAll}
-              className="text-xs font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest flex items-center gap-2"
-            >
-              <X className="w-4 h-4" /> Réinitialiser
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-5 md:gap-6">
-            {/* Day Filter */}
-            <div className="space-y-2 md:space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                <Calendar className="w-3 h-3 text-blue-500" /> Date
+      {/* Expanded Filters */}
+      {isFilterOpen && (
+        <div className="p-6 md:p-8 border-t border-slate-50 bg-white animate-slide-down">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+            
+            {/* Date */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Calendar className="w-3 h-3 text-orange-500" /> Date
               </label>
-              <div className="relative group/date">
-                <input 
-                  type="date"
-                  value={searchParams.get("day") || ""}
-                  onChange={(e) => updateFilters("day", e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 focus:border-blue-600 text-[11px] font-bold text-gray-700 dark:text-gray-200 transition-all outline-none appearance-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
-                />
-              </div>
+              <input 
+                type="date"
+                value={searchParams.get("day") || ""}
+                onChange={(e) => updateFilters("day", e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-orange-500 outline-none text-sm transition-all font-medium"
+              />
             </div>
 
-            {/* Type Filter */}
-            <div className="space-y-2 md:space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                <Zap className="w-3 h-3 text-amber-500" /> Accès
+            {/* Price */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Zap className="w-3 h-3 text-blue-500" /> Tarif
               </label>
-              <div className="grid grid-cols-2 md:flex md:flex-col gap-2">
-                {types.map(type => (
+              <div className="flex flex-col gap-2">
+                {types.map(t => (
                   <button
-                    key={type.value}
-                    onClick={() => toggleMultiFilter("types", type.value)}
-                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border-2 ${
-                      activeTypes.includes(type.value)
-                        ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                        : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:border-gray-200"
+                    key={t.value}
+                    onClick={() => toggleMultiFilter("types", t.value)}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium border transition-all ${
+                      activeTypes.includes(t.value)
+                        ? "bg-blue-600 border-blue-600 text-white"
+                        : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
                     }`}
                   >
-                    {type.label}
-                    {activeTypes.includes(type.value) && <Check className="w-3 h-3" />}
+                    {t.label}
+                    {activeTypes.includes(t.value) && <Check className="w-4 h-4" />}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Format Filter */}
-            <div className="space-y-2 md:space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                <Sparkles className="w-3 h-3 text-green-500" /> Format
+            {/* Format */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Laptop className="w-3 h-3 text-emerald-500" /> Format
               </label>
-              <div className="grid grid-cols-2 md:flex md:flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 {formats.map(f => (
                   <button
                     key={f.value}
                     onClick={() => toggleMultiFilter("formats", f.value)}
-                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border-2 ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium border transition-all ${
                       activeFormats.includes(f.value)
-                        ? "bg-green-600 border-green-600 text-white shadow-md"
-                        : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:border-gray-200"
+                        ? "bg-emerald-600 border-emerald-600 text-white"
+                        : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <span className="text-sm">{f.icon}</span>
-                      {f.label}
-                    </span>
-                    {activeFormats.includes(f.value) && <Check className="w-3 h-3" />}
+                    <span className="opacity-70">{f.icon}</span>
+                    <span className="flex-1 text-left">{f.label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* City Filter */}
-            <div className="space-y-2 md:space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                <MapPin className="w-3 h-3 text-red-500" /> Villes
+            {/* City */}
+            <div className="space-y-3 lg:col-span-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <MapPin className="w-3 h-3 text-red-500" /> Ville
               </label>
-              <div className="relative">
-                <select
-                  multiple
-                  value={activeCities}
-                  onChange={(e) => {
-                    const values = Array.from(e.target.selectedOptions, option => option.value);
-                    updateFilters("cities", values);
-                  }}
-                  className="w-full h-28 md:h-32 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl md:rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 no-scrollbar"
-                >
-                  {cities.map(city => (
-                    <option key={city} value={city} className="py-1.5 px-2 rounded-lg mb-1 checked:bg-blue-600 checked:text-white">
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Time Filter */}
-            <div className="space-y-2 md:space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                <Clock className="w-3 h-3 text-blue-500" /> Moment
-              </label>
-              <div className="grid grid-cols-3 md:flex md:flex-col gap-2">
-                {times.map(time => (
-                  <button
-                    key={time.value}
-                    onClick={() => updateFilters("time", activeTime === time.value ? "" : time.value)}
-                    className={`flex items-center justify-between px-3 md:px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border-2 ${
-                      activeTime === time.value
-                        ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                        : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:border-gray-200"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-base">{time.icon}</span>
-                      <span className="hidden md:inline">{time.label}</span>
-                    </span>
-                    {activeTime === time.value && <Check className="w-3 h-3" />}
-                  </button>
+              <select
+                multiple
+                value={activeCities}
+                onChange={(e) => {
+                  const values = Array.from(e.target.selectedOptions, opt => opt.value);
+                  updateFilters("cities", values);
+                }}
+                className="w-full h-32 p-3 bg-slate-50 border border-slate-100 rounded-xl text-sm outline-none custom-scrollbar font-medium"
+              >
+                {cities.map(c => (
+                  <option key={c} value={c} className="py-2 px-3 rounded-lg mb-1 checked:bg-orange-500 checked:text-white">
+                    {c}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
 
-            {/* Category Filter */}
-            <div className="space-y-2 md:space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            {/* Categories */}
+            <div className="space-y-3 lg:col-span-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Tag className="w-3 h-3 text-purple-500" /> Catégories
               </label>
-              <div className="h-28 md:h-32 overflow-y-auto pr-2 space-y-2 no-scrollbar">
+              <div className="flex flex-col gap-1.5 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                 {categories?.map(cat => (
-                  <button
-                    key={cat._id || cat.id}
-                    onClick={() => toggleMultiFilter("categories", cat._id || cat.id)}
-                    className={`w-full flex items-center justify-between px-4 py-2 rounded-xl text-[11px] font-bold transition-all border-2 ${
-                      activeCategories.includes(cat._id || cat.id)
-                        ? "bg-purple-600 border-purple-600 text-white shadow-md"
-                        : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:border-gray-200"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>{cat.emoji}</span>
-                      {cat.name}
-                    </span>
-                    {activeCategories.includes(cat._id || cat.id) && <Check className="w-3 h-3" />}
-                  </button>
+                  <label key={cat._id || cat.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={activeCategories.includes(cat._id || cat.id)}
+                      onChange={() => toggleMultiFilter("categories", cat._id || cat.id)}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${activeCategories.includes(cat._id || cat.id) ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-200'}`}>
+                      {activeCategories.includes(cat._id || cat.id) && <Check size={12} />}
+                    </div>
+                    <span className="text-xs font-medium text-slate-700">{cat.emoji} {cat.name}</span>
+                  </label>
                 ))}
               </div>
             </div>
+
           </div>
-          
-          {/* Mobile Reset Button */}
-          <div className="md:hidden pt-4">
+
+          <div className="mt-10 pt-6 border-t border-slate-50 flex justify-between items-center">
             <button 
-              onClick={clearAll}
-              className="w-full py-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border border-dashed border-gray-200 dark:border-gray-800 rounded-xl"
+              onClick={() => {
+                setSearchParams(new URLSearchParams());
+                setQuery("");
+                setCurrentPage(1);
+              }}
+              className="text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest flex items-center gap-2"
             >
-              Réinitialiser tous les filtres
+              <X className="w-3 h-3" /> Réinitialiser tout
+            </button>
+            <button 
+              onClick={() => setIsFilterOpen(false)}
+              className="px-8 py-3 bg-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-200 transition-all"
+            >
+              Fermer
             </button>
           </div>
         </div>
       )}
 
       <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .animate-slide-down { animation: slideDown 0.4s ease-out forwards; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
       `}</style>
     </div>
   );
