@@ -14,40 +14,69 @@ import {
 import { API_BASE_URL } from "../../slices/axiosInstance";
 import { useNotifications } from "../../hooks/useNotifications";
 
+// Configuration de l'URL de base pour les fichiers statiques (ex: images de profil)
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
+/**
+ * Composant Navbar : Gère la navigation principale, le profil utilisateur,
+ * les notifications et le menu mobile (hamburger) pour toute l'application.
+ */
 const Navbar = () => {
+  // --- Hooks de Routage et Redux ---
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
+
+  // --- État de l'Authentification ---
   const { token, user: reduxUser } = useSelector((state) => state.auth);
+  
+  // Récupération des données profil via React Query (si connecté)
   const { data: queryUser } = useUserProfile({ enabled: !!token });
-  const user = queryUser || reduxUser;
+  const user = queryUser || reduxUser; // Utilise le profil frais de l'API ou celui du store
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  // --- États Locaux UI ---
+  const [menuOpen, setMenuOpen] = useState(false); // État du menu hamburger (mobile)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false); // Menu déroulant profil
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false); // Menu déroulant notifications
+  const [scrolled, setScrolled] = useState(false); // Détecte si la page a défilé (pour le style)
 
+  // --- Notifications ---
   const { data: notifications } = useNotifications({ enabled: !!token });
+  // Calcul du nombre de notifications non lues
   const unreadCount = useMemo(() => notifications?.filter((n) => !n.isRead).length || 0, [notifications]);
 
+  // --- Effet : Gestion du défilement (Navbar translucide/réduite) ---
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 0);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // --- Effet : Stabilisation Menu Mobile (Verrouillage du scroll body) ---
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => { document.body.style.overflow = "unset"; };
+  }, [menuOpen]);
+
+  // --- Actions ---
   const handleLogout = () => {
-    dispatch(logout());
-    queryClient.clear();
+    dispatch(logout()); // Efface le token du store
+    queryClient.clear(); // Nettoie le cache React Query
     navigate("/login");
   };
 
+  // Vérifie si un lien est actif pour le style visuel
   const isActive = (path) => location.pathname === path;
+  
+  // Rôle de l'utilisateur (Participant par défaut)
   const role = user?.role || "Participant";
 
+  // Configuration des liens de navigation principaux
   const mainLinks = [
     { label: "Accueil", path: "/home", icon: Home },
     { label: "Événements", path: "/events", icon: Search },
@@ -55,18 +84,33 @@ const Navbar = () => {
     { label: "Guide d'usage", path: "/qrevent_help", icon: BookOpen },
   ];
 
+  // ==========================================
+  // RENDER : VUE PUBLIQUE (NON CONNECTÉ)
+  // ==========================================
   if (!token) {
     return (
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-lg py-2' : 'bg-white py-4'}`}>
         <div className="max-w-[1800px] mx-auto px-8 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-4 group text-white">
-            <img src="/logo.png" alt="QR Event Logo" className="w-20 h-20 md:w-24 md:h-24 object-contain transition-transform group-hover:scale-105" />
-            <div className="flex flex-col leading-none">
-              <span className="text-2xl md:text-3xl font-medium text-slate-900 tracking-tight">QR EVENT</span>
-              <span className="text-[10px] font-normal text-orange-500 tracking-[0.2em] uppercase">Ticketing Pro</span>
-            </div>
-          </Link>
+          <div className="flex items-center gap-4">
+            {/* Trigger Menu Mobile (Gauche) */}
+            <button 
+              onClick={() => setMenuOpen(true)} 
+              className="md:hidden p-3 bg-slate-50 text-slate-900 rounded-2xl hover:bg-slate-100 active:scale-95 transition-all shadow-sm"
+            >
+              <Menu size={28} />
+            </button>
+            
+            {/* Branding Logo */}
+            <Link to="/" className="flex items-center gap-2 group">
+              <img src="/logo.png" alt="QR Event Logo" className="w-12 h-12 md:w-20 md:h-20 object-contain transition-transform group-hover:rotate-6 shrink-0" />
+              <div className="flex flex-col leading-none">
+                <span className="text-xl md:text-3xl font-black text-slate-900 tracking-tight uppercase">QR <span className="text-orange-600">Event</span></span>
+                <span className="text-[7px] font-black text-orange-500 tracking-[0.3em] uppercase hidden sm:block">Ticketing Pro</span>
+              </div>
+            </Link>
+          </div>
           
+          {/* Liens Desktop (Mode Public) */}
           <div className="hidden md:flex items-center gap-10">
             <Link to="/events" className="text-lg font-medium text-slate-600 hover:text-orange-500 transition-colors">Explorer</Link>
             <Link to="/qrevent_help" className="text-lg font-medium text-slate-600 hover:text-orange-500 transition-colors">Guide</Link>
@@ -75,27 +119,34 @@ const Navbar = () => {
                Créer un compte
             </Link>
           </div>
-          
-          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-slate-900 p-2">
-            {menuOpen ? <X size={32} /> : <Menu size={32} />}
-          </button>
         </div>
       </nav>
     );
   }
 
+  // ==========================================
+  // RENDER : VUE MEMBRE (CONNECTÉ)
+  // ==========================================
   return (
     <nav className={`fixed top-0 w-full z-30 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-md py-1.5 border-b border-slate-100' : 'bg-white py-2.5 border-b border-transparent'}`}>
       <div className="max-w-[1800px] mx-auto px-8 flex items-center justify-between">
         
-        {/* Left Side: Brand & Main Navigation */}
-        <div className="flex items-center gap-10">
-          <Link to="/home" className="flex items-center gap-3 group">
-            <img src="/logo.png" alt="QR Event Logo" className="w-28 h-28 object-contain transition-transform group-hover:rotate-6" />
-            <span className="text-xl md:text-2xl font-medium text-slate-900 tracking-tight hidden xl:block">QR EVENT</span>
+        {/* Partie Gauche : Menu Mobile + Logo + Nav Desktop */}
+        <div className="flex items-center gap-4 md:gap-10">
+          {/* Trigger Menu Mobile (Géré avec z-index élevé) */}
+          <button 
+            onClick={() => setMenuOpen(true)} 
+            className="lg:hidden p-3 text-slate-900 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-slate-100 active:scale-95 transition-all shadow-sm"
+          >
+            <Menu size={26} />
+          </button>
+          
+          <Link to="/home" className="flex items-center gap-2 md:gap-3 group">
+            <img src="/logo.png" alt="QR Event Logo" className="w-12 h-12 md:w-16 md:h-16 object-contain transition-transform group-hover:rotate-6 shrink-0" />
+            <span className="text-lg md:text-2xl font-black text-slate-900 tracking-tight hidden sm:block uppercase">QR <span className="text-orange-600">Event</span></span>
           </Link>
 
-          {/* Desktop Navigation Links */}
+          {/* Navigation Horizontale Desktop */}
           <div className="hidden lg:flex items-center gap-2">
             {mainLinks.map((link) => (
               <Link 
@@ -110,10 +161,10 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Right Side: Role-specific Workspace + User Profile */}
+        {/* Partie Droite : Console Pro + Notifications + Profil */}
         <div className="flex items-center gap-4">
           
-          {/* Workspace Switcher (Pro View) */}
+          {/* Raccourcis Espace Professionnel (Admin/Organisateur) */}
           {(role === "Organisateur" || role === "Administrateur") && (
             <div className="hidden md:flex items-center bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
                <Link 
@@ -140,6 +191,7 @@ const Navbar = () => {
             </div>
           )}
 
+          {/* Badge Spécial Administrateur */}
           {role === "Administrateur" && (
             <Link to="/admin" className="hidden xl:flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
                <ShieldAlert size={16} className="text-red-500" />
@@ -149,7 +201,7 @@ const Navbar = () => {
 
           <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
 
-          {/* Notifications */}
+          {/* Gestion des Notifications Dropdown */}
           <div className="relative">
             <button 
               onClick={(e) => {
@@ -170,7 +222,7 @@ const Navbar = () => {
               )}
             </button>
 
-            {/* Notification Dropdown (NEW - WAS MISSING) */}
+            {/* Panneau Notifications Déroulant */}
             {notifDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-40 bg-black/5" onClick={() => setNotifDropdownOpen(false)}></div>
@@ -186,10 +238,7 @@ const Navbar = () => {
                     {notifications?.length > 0 ? (
                       <div className="divide-y divide-slate-50">
                         {notifications.map((notif) => (
-                          <div 
-                            key={notif._id} 
-                            className={`p-5 flex gap-4 hover:bg-slate-50 transition-all cursor-pointer group ${!notif.isRead ? 'bg-orange-50/30' : ''}`}
-                          >
+                          <div key={notif._id} className={`p-5 flex gap-4 hover:bg-slate-50 transition-all cursor-pointer group ${!notif.isRead ? 'bg-orange-50/30' : ''}`}>
                              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-orange-500 group-hover:text-white transition-all shrink-0">
                                 <Bell size={20} />
                              </div>
@@ -221,7 +270,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Avatar Dropdown */}
+          {/* Menu Profil / Avatar Dropdown */}
           <div className="hidden lg:block relative">
             <button 
               onClick={() => { setProfileDropdownOpen(!profileDropdownOpen); setNotifDropdownOpen(false); }}
@@ -239,7 +288,7 @@ const Navbar = () => {
               <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${profileDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Menu Déroulant Profil */}
             {profileDropdownOpen && (
               <div className="absolute top-full right-0 mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
                 <div className="p-6 bg-slate-50/50 border-b border-slate-100">
@@ -285,28 +334,24 @@ const Navbar = () => {
             )}
           </div>
           
-<button 
-  onClick={() => setMenuOpen(!menuOpen)} 
-  className="lg:hidden p-2 text-slate-900 bg-slate-50 border border-slate-100 rounded-xl hover:bg-slate-100 active:scale-95 transition-all"
->
-  {menuOpen ? <X size={26} /> : <Menu size={26} />}
-</button>
+          <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
         </div>
       </div>
 
-      {/* Mobile Nav Drawer */}
+      {/* ==========================================
+          MOBILE NAV DRAWER (Tiroir Latéral Gauche)
+          ========================================== */}
       {menuOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 z-[100] animate-in fade-in duration-300 pointer-events-auto" 
-        >
-          {/* Backdrop with Blur */}
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setMenuOpen(false)}></div>
+        <div className="lg:hidden fixed inset-0 z-[9999] animate-in fade-in duration-300 pointer-events-auto">
+          {/* Voile d'arrière-plan avec flou */}
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setMenuOpen(false)}></div>
           
+          {/* Panneau de contenu (Coulisse depuis la gauche) */}
           <div 
-            className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-[0_0_100px_rgba(0,0,0,0.2)] flex flex-col animate-in slide-in-from-right duration-500 ease-out z-[110]" 
+            className="absolute left-0 top-0 bottom-0 w-[280px] max-w-[85vw] bg-white shadow-[0_0_100px_rgba(0,0,0,0.2)] flex flex-col animate-in slide-in-from-left duration-500 ease-out z-[110]" 
             onClick={e => e.stopPropagation()}
           >
-            {/* Drawer Header with Logo */}
+            {/* Header du Drawer avec Logo */}
             <div className="p-8 border-b border-slate-50 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center p-0.5 shadow-lg shadow-orange-500/20">
@@ -325,7 +370,7 @@ const Navbar = () => {
               </button>
             </div>
 
-            {/* Profile Brief in Drawer */}
+            {/* Résumé Profil dans le Drawer (si connecté) */}
             {token && (
               <div className="p-8 bg-slate-50/50 border-b border-slate-100">
                 <div className="flex items-center gap-4">
@@ -348,9 +393,9 @@ const Navbar = () => {
               </div>
             )}
 
-            {/* Scrollable Navigation Area */}
+            {/* Zone de Navigation Scorable */}
             <div className="flex-1 overflow-y-auto px-6 py-10 space-y-12 custom-scrollbar">
-               {/* Main Links */}
+               {/* Liens Principaux */}
                <div className="space-y-2">
                   <p className="px-4 pb-2 text-[8px] font-black uppercase text-slate-300 tracking-[0.3em]">Navigation Principale</p>
                   {mainLinks.map((link) => (
@@ -369,7 +414,7 @@ const Navbar = () => {
                   ))}
                </div>
                
-               {/* Pro Workspace Links */}
+               {/* Console Pro Mobile */}
                {(role === "Organisateur" || role === "Administrateur") && (
                   <div className="space-y-2 bg-slate-900 p-6 rounded-[2.5rem] shadow-xl group">
                      <p className="px-2 pb-4 text-[8px] font-black uppercase text-slate-500 tracking-[0.3em]">Console Pro</p>
@@ -390,7 +435,7 @@ const Navbar = () => {
                   </div>
                )}
 
-               {/* Account Management */}
+               {/* Paramètres & Aide */}
                <div className="space-y-2">
                   <p className="px-4 pb-2 text-[8px] font-black uppercase text-slate-300 tracking-[0.3em]">Compte & Aide</p>
                   <Link to="/user-profile" className="flex items-center gap-4 p-4 text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-900 rounded-2xl transition-all" onClick={() => setMenuOpen(false)}>
@@ -402,7 +447,7 @@ const Navbar = () => {
                </div>
             </div>
 
-            {/* Logout/Login Bottom Area */}
+            {/* Pied de Menu Mobile (Déconnexion) */}
             <div className="p-8 border-t border-slate-50 sticky bottom-0 bg-white">
               {token ? (
                 <button 
