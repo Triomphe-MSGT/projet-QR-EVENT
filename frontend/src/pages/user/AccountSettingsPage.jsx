@@ -26,7 +26,6 @@ import {
 
 const AccountSettingsPage = () => {
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("security");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -69,7 +68,6 @@ const AccountSettingsPage = () => {
   };
 
   const tabs = [
-    { id: "appearance", label: "Apparence", icon: Palette, description: "Thème et style visuel" },
     { id: "security", label: "Sécurité", icon: ShieldCheck, description: "Mot de passe et accès" },
     { id: "notifications", label: "Notifications", icon: Bell, description: "Alertes et messages" },
     { id: "danger", label: "Danger", icon: AlertTriangle, description: "Actions irréversibles", color: "text-red-500" },
@@ -130,35 +128,6 @@ const AccountSettingsPage = () => {
               {/* SETTINGS CONTENT */}
               <main className="lg:col-span-8 bg-white rounded-[3rem] p-8 md:p-16 shadow-2xl shadow-slate-200/50 border border-slate-50 min-h-[500px]">
                  
-                 {/* APPEARANCE SECTION */}
-                 {activeTab === "appearance" && (
-                    <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
-                       <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
-                          <Palette className="text-orange-600" /> Style Visuel
-                       </h2>
-                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          <button 
-                            onClick={() => setTheme("light")}
-                            className={`p-10 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 ${theme === "light" ? 'border-orange-500 bg-orange-50/30' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'}`}
-                          >
-                             <div className={`w-20 h-20 rounded-3xl flex items-center justify-center shadow-inner ${theme === "light" ? 'bg-white text-orange-600' : 'bg-white text-slate-300'}`}>
-                                <Sun size={32} />
-                             </div>
-                             <span className="text-xs font-black uppercase tracking-widest">Mode Clair</span>
-                          </button>
-                          <button 
-                            onClick={() => setTheme("dark")}
-                            className={`p-10 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 ${theme === "dark" ? 'border-orange-500 bg-orange-50/30' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'}`}
-                          >
-                             <div className={`w-20 h-20 rounded-3xl flex items-center justify-center shadow-inner ${theme === "dark" ? 'bg-white text-orange-600' : 'bg-white text-slate-300'}`}>
-                                <Moon size={32} />
-                             </div>
-                             <span className="text-xs font-black uppercase tracking-widest">Mode Sombre</span>
-                          </button>
-                       </div>
-                    </div>
-                 )}
-
                  {/* SECURITY SECTION */}
                  {activeTab === "security" && (
                     <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500 text-slate-900">

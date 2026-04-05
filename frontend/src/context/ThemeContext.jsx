@@ -1,41 +1,34 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+/**
+ * ThemeContext: Force le mode "Clair" (Light Mode) dans toute l'application.
+ * Le mode sombre a été retiré à la demande de l'utilisateur.
+ */
 const ThemeContext = createContext({
-  theme: "system",
+  theme: "light",
   setTheme: () => {},
 });
 
 export const ThemeProvider = ({
   children,
-  defaultTheme = "system",
   storageKey = "app-theme",
 }) => {
-  const [theme, setThemeState] = useState(
-    localStorage.getItem(storageKey) || defaultTheme
-  );
+  // On ignore le localstorage et on force le mode light
+  const [theme] = useState("light");
 
-  // Apply theme to <html>
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
+    // On s'assure que seule la classe 'light' est présente et on retire 'dark'
+    root.classList.remove("dark");
+    root.classList.add("light");
+    
+    // On nettoie éventuellement le localStorage pour ne pas laisser de traces
+    localStorage.removeItem(storageKey);
+  }, [storageKey]);
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
-
-    localStorage.setItem(storageKey, theme);
-  }, [theme, storageKey]);
-
-  // Setter to change theme
-  const setTheme = (newTheme) => {
-    localStorage.setItem(storageKey, newTheme);
-    setThemeState(newTheme);
+  // Le setter ne fait plus rien car le mode dark est désactivé
+  const setTheme = () => {
+    console.warn("Le changement de thème est désactivé (Mode Clair forcé).");
   };
 
   return (

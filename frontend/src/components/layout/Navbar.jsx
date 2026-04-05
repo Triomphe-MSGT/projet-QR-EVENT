@@ -102,7 +102,7 @@ const Navbar = () => {
             
             {/* Branding Logo */}
             <Link to="/" className="flex items-center gap-2 group">
-              <img src="/logo.png" alt="QR Event Logo" className="w-12 h-12 md:w-20 md:h-20 object-contain transition-transform group-hover:rotate-6 shrink-0" />
+              <img src="/logo.png" alt="QR Event Logo" className="w-20 h-20 md:w-28 md:h-28 object-contain transition-transform group-hover:rotate-6 shrink-0" />
               <div className="flex flex-col leading-none">
                 <span className="text-xl md:text-3xl font-black text-slate-900 tracking-tight uppercase">QR <span className="text-orange-600">Event</span></span>
                 <span className="text-[7px] font-black text-orange-500 tracking-[0.3em] uppercase hidden sm:block">Ticketing Pro</span>
@@ -142,7 +142,7 @@ const Navbar = () => {
           </button>
           
           <Link to="/home" className="flex items-center gap-2 md:gap-3 group">
-            <img src="/logo.png" alt="QR Event Logo" className="w-12 h-12 md:w-16 md:h-16 object-contain transition-transform group-hover:rotate-6 shrink-0" />
+            <img src="/logo.png" alt="QR Event Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain transition-transform group-hover:rotate-6 shrink-0" />
             <span className="text-lg md:text-2xl font-black text-slate-900 tracking-tight hidden sm:block uppercase">QR <span className="text-orange-600">Event</span></span>
           </Link>
 
@@ -353,13 +353,13 @@ const Navbar = () => {
           >
             {/* Header du Drawer avec Logo */}
             <div className="p-8 border-b border-slate-50 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center p-0.5 shadow-lg shadow-orange-500/20">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center p-0.5 shadow-lg shadow-orange-500/20">
                   <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-lg font-black text-slate-900 leading-none">QR-EVENT</span>
-                  <span className="text-[7px] font-bold text-orange-500 uppercase tracking-widest leading-none mt-1">Version Mobile</span>
+                  <span className="text-xl font-black text-slate-900 leading-none">QR-EVENT</span>
+                  <span className="text-[8px] font-bold text-orange-500 uppercase tracking-[0.2em] leading-none mt-1.5">Version Mobile</span>
                 </div>
               </div>
               <button 
