@@ -87,11 +87,11 @@ const HomePage = () => {
             <Reveal direction="left">
             <div className="z-10 space-y-10 md:space-y-16">
               <div className="space-y-6 md:space-y-8 text-center lg:text-left">
-                <h1 className="text-5xl md:text-5xl lg:text-7xl font-bold text-slate-500 leading-[1.05] tracking-tight">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-slate-500 leading-[1.05] tracking-tight text-center lg:text-left">
                   Découvrez <br className="hidden sm:block" /> 
                   <span className="text-orange-500">Réservez</span> & Vivez.
                 </h1>
-                <p className="text-lg md:text-xl lg:text-2xl text-slate-500 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                <p className="text-base md:text-xl lg:text-2xl text-slate-500 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed text-center lg:text-left">
                   L'excellence technologique au service de vos sorties. Simplifiez votre billetterie avec notre système QR ultra-rapide.
                 </p>
               </div>
@@ -185,7 +185,7 @@ const HomePage = () => {
             <div className="flex flex-col md:flex-row items-center md:items-end justify-between mb-12 md:mb-20 gap-6 text-center md:text-left">
               <div className="space-y-4">
                
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-medium text-slate-700 tracking-tight leading-tight">
+                <h2 className="text-2xl sm:text-3xl md:text-5xl font-medium text-slate-700 tracking-tight leading-tight text-center lg:text-left">
                   Événements récemment ajoutés <br className="hidden sm:block" /> 
                   <span className="text-orange-500">Actualités</span>.
                 </h2>
@@ -214,7 +214,7 @@ const HomePage = () => {
                   .map((event, idx) => (
                   <div 
                     key={event._id || idx} 
-                    className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_4px_6px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-2 flex flex-col"
+                    className="group bg-white rounded-1xl md:rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 flex flex-col mx-auto w-full max-w-[220px] md:max-w-none"
                   >
                     <div className="h-48 md:h-60 overflow-hidden relative bg-slate-100 flex items-center justify-center">
                       {event.coverImage || event.imageUrl ? (
@@ -233,9 +233,9 @@ const HomePage = () => {
                       </div>
                     </div>
                     
-                    <div className="p-5 md:p-7 flex-1 flex flex-col justify-between">
-                      <div className="space-y-3 md:space-y-4">
-                        <h3 className="text-base md:text-lg font-medium text-slate-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+                    <div className="p-3 md:p-7 flex-1 flex flex-col justify-between">
+                      <div className="space-y-1.5 md:space-y-4">
+                        <h3 className="text-[12px] md:text-lg font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
                           {event.title}
                         </h3>
                         <div className="space-y-2">
@@ -250,16 +250,16 @@ const HomePage = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-5 md:pt-6 mt-5 md:mt-6 border-t border-slate-50">
+                      <div className="flex items-center justify-between pt-3 md:pt-6 mt-3 md:mt-6 border-t border-slate-50">
                         <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Ticket dès</span>
-                          <span className="text-lg md:text-xl font-medium text-slate-900">
+                          <span className="text-[7px] font-black text-slate-300 uppercase tracking-widest">Ticket dès</span>
+                          <span className="text-[13px] md:text-xl font-bold text-slate-900 leading-none mt-1">
                             {event.price > 0 ? `${event.price.toLocaleString()} F` : "Gratuit"}
                           </span>
                         </div>
                         <button 
                           onClick={() => navigate(`/events/${event._id}`)}
-                          className="px-5 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-all shadow-md active:scale-95"
+                          className="px-3 py-1.5 bg-slate-900 text-white text-[9px] md:text-xs font-bold rounded-lg md:rounded-xl hover:bg-blue-600 transition-all shadow-md active:scale-95"
                         >
                           Réserver
                         </button>
@@ -304,33 +304,33 @@ const HomePage = () => {
               <div className="space-y-8 lg:space-y-10 order-1 lg:order-2 text-center lg:text-left">
                 <div className="space-y-4 lg:space-y-6">
                   
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium leading-[1.1] text-slate-700 tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-medium leading-[1.1] text-slate-700 tracking-tight text-center lg:text-left">
                     L'innovation au service de <br className="hidden lg:block"/>
                     <span className="text-orange-500">votre événement.</span>
                   </h2>
-                  <p className="text-base md:text-lg text-slate-500 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+                  <p className="text-sm md:text-lg text-slate-500 max-w-lg mx-auto lg:mx-0 leading-relaxed text-center lg:text-left">
                     Nous remplaçons les files d'attente interminables et la billetterie complexe par une solution intelligente, sécurisée et instantanée.
                   </p>
                 </div>
 
                 <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <div className="mt-1 w-12 h-12 flex-shrink-0 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center">
+                  <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4">
+                    <div className="w-12 h-12 flex-shrink-0 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center">
                       <QrCode size={24} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-medium text-slate-900 mb-2">Billets QR 100% Numériques</h3>
-                      <p className="text-slate-500">Fini le papier. Recevez un QR code unique infalsifiable directement sur votre smartphone.</p>
+                      <h3 className="text-lg md:text-xl font-medium text-slate-900 mb-2">Billets QR 100% Numériques</h3>
+                      <p className="text-sm text-slate-500">Fini le papier. Recevez un QR code unique infalsifiable directement sur votre smartphone.</p>
                     </div>
                   </div>
                   
-                  <div className="flex gap-4">
-                    <div className="mt-1 w-12 h-12 flex-shrink-0 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center">
+                  <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4">
+                    <div className="w-12 h-12 flex-shrink-0 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center">
                       <Zap size={24} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-medium text-slate-900 mb-2">Check-in Ultra Rapide</h3>
-                      <p className="text-slate-500">Un scan prend moins d'une seconde. Fluidifiez les entrées et éliminez complètement les files d'attente à la porte.</p>
+                      <h3 className="text-lg md:text-xl font-medium text-slate-900 mb-2">Check-in Ultra Rapide</h3>
+                      <p className="text-sm text-slate-500">Un scan prend moins d'une seconde. Fluidifiez les entrées et éliminez complètement les files d'attente à la porte.</p>
                     </div>
                   </div>
                 </div>
@@ -361,7 +361,7 @@ const HomePage = () => {
                 <Globe size={14} />
                 En Temps Réel
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-medium text-slate-700 tracking-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-medium text-slate-700 tracking-tight">
                 <span className="text-orange-500">Restez Informé.</span> <br className="hidden sm:block"/>
                 Actualités Tech & IT
               </h2>
@@ -453,11 +453,11 @@ const HomePage = () => {
                 <Settings size={14} />
                 Espace Organisateur
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-6xl font-medium tracking-tight text-white leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-6xl font-medium tracking-tight text-white leading-tight">
                 Créez, Vendez et Gérez <br className="hidden sm:block"/>
                 <span className="text-blue-400">sans effort.</span>
               </h2>
-              <p className="text-base md:text-xl text-slate-400 leading-relaxed px-4">
+              <p className="text-sm md:text-xl text-slate-400 leading-relaxed px-4">
                 Rejoignez les créateurs qui font confiance à notre Dashboard Pro pour piloter leurs événements et décupler leurs ventes.
               </p>
             </div>

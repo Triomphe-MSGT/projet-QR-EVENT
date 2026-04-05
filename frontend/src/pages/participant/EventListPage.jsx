@@ -21,7 +21,7 @@ const EventListPage = () => {
   if (isLoading)
     return (
       <MainLayout>
-        <div className="max-w-[1900px] mx-auto px-8 py-50 text-center">
+        <div className="max-w-7xl mx-auto px-4 py-32 text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto mb-6"></div>
           <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Chargement des événements...</p>
         </div>
@@ -125,11 +125,11 @@ const EventListPage = () => {
               </div>
 
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-2">
-                  <h1 className="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight leading-none">
+                <div className="space-y-3 text-center md:text-left">
+                  <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-slate-900 tracking-tight leading-none">
                     {getTitle()}
                   </h1>
-                  <p className="text-sm md:text-base text-slate-500 max-w-xl font-medium">
+                  <p className="text-sm md:text-base text-slate-500 max-w-xl font-medium mx-auto md:mx-0">
                     Parcourez notre sélection exclusive pour vos prochaines expériences professionnelles.
                   </p>
                 </div>

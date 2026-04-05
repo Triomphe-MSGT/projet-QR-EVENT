@@ -72,11 +72,12 @@ const EventCard = ({ event, handleDetails }) => {
   const imageUrl = getImageUrl(event.imageUrl);
   const date = formatDate(event.startDate);
 
-  return (    <div
+  return (
+    <div
       onClick={handleDetails}
-      className="group bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-orange-200 hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer h-full"
+      className="group bg-white rounded-xl md:rounded-2xl overflow-hidden border border-slate-200 hover:border-orange-200 hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer h-full mx-auto w-full max-w-[220px] md:max-w-none"
     >
-      <div className="h-44 md:h-52 overflow-hidden relative bg-slate-100">
+      <div className="h-32 md:h-52 overflow-hidden relative bg-slate-100">
         {imageUrl ? (
           <img 
             src={imageUrl} 
@@ -112,9 +113,9 @@ const EventCard = ({ event, handleDetails }) => {
         </div>
       </div>
       
-      <div className="p-5 flex-1 flex flex-col justify-between">
-        <div className="space-y-4">
-          <h3 className="text-base md:text-lg font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-orange-600 transition-colors">
+      <div className="p-3 md:p-5 flex-1 flex flex-col justify-between">
+        <div className="space-y-2 md:space-y-4">
+          <h3 className="text-[12px] md:text-lg font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-orange-600 transition-colors">
             {event.name}
           </h3>
           <div className="space-y-2.5">
@@ -131,8 +132,8 @@ const EventCard = ({ event, handleDetails }) => {
 
         <div className="flex items-center justify-between pt-5 mt-5 border-t border-slate-50">
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">À partir de</span>
-            <span className="text-lg font-bold text-slate-900">
+            <span className="text-[7px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">À partir de</span>
+            <span className="text-[13px] md:text-lg font-bold text-slate-900 leading-none mt-1">
               {event.price > 0 ? `${event.price.toLocaleString()} FCFA` : "Gratuit"}
             </span>
           </div>
