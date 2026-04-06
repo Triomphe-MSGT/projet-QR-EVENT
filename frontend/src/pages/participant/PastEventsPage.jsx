@@ -69,7 +69,7 @@ const PastEventsPage = () => {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h2 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">Historique</h2>
+        <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white">Historique</h2>
         <div className="w-9"></div> {/* Spacer for balance */}
       </div>
 
@@ -109,7 +109,7 @@ const PastEventsPage = () => {
             <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
               <History className="w-10 h-10 text-gray-300" />
             </div>
-            <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Aucun historique</h2>
+            <h2 className="text-xl font-black text-slate-500 dark:text-white tracking-tight">Aucun historique</h2>
             <p className="text-gray-500 mt-2 font-medium">Les événements terminés apparaîtront ici automatiquement.</p>
           </div>
         ) : (
@@ -118,7 +118,7 @@ const PastEventsPage = () => {
               <section key={month} className="animate-fade-in-up">
                 <div className="flex items-center gap-4 mb-8 md:mb-12">
                   <div className="w-1.5 h-8 bg-blue-600 rounded-full"></div>
-                  <h2 className="text-xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter uppercase">
+                  <h2 className="text-xl md:text-3xl font-black text-slate-500 dark:text-white tracking-tighter uppercase">
                     {month}
                   </h2>
                   <div className="h-px flex-1 bg-gradient-to-r from-gray-200 dark:from-gray-700 to-transparent"></div>

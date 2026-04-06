@@ -72,13 +72,13 @@ const UserFormModal = ({
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
+          className="absolute top-3 right-3 text-gray-500 hover:text-slate-500 dark:text-gray-400 dark:hover:text-white"
           aria-label="Fermer"
         >
           <X size={24} />
         </button>
 
-        <h2 className="text-xl font-semibold mb-5 text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold mb-5 text-slate-500 dark:text-gray-100">
           {initialData ? "Modifier l'utilisateur" : "Ajouter un utilisateur"}
         </h2>
 
@@ -87,7 +87,7 @@ const UserFormModal = ({
           <div>
             <label
               htmlFor="nom"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="block text-sm font-medium text-slate-500 dark:text-gray-300"
             >
               Nom complet
             </label>
@@ -106,7 +106,7 @@ const UserFormModal = ({
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="block text-sm font-medium text-slate-500 dark:text-gray-300"
             >
               Email
             </label>
@@ -126,7 +126,7 @@ const UserFormModal = ({
             <div>
               <label
                 htmlFor="role"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-slate-500 dark:text-gray-300"
               >
                 Rôle
               </label>
@@ -149,7 +149,7 @@ const UserFormModal = ({
             <div>
               <label
                 htmlFor="sexe"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-slate-500 dark:text-gray-300"
               >
                 Sexe
               </label>
@@ -173,7 +173,7 @@ const UserFormModal = ({
           <div>
             <label
               htmlFor="profession"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="block text-sm font-medium text-slate-500 dark:text-gray-300"
             >
               Profession
             </label>
@@ -191,7 +191,7 @@ const UserFormModal = ({
           <div>
             <label
               htmlFor="phone"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="block text-sm font-medium text-slate-500 dark:text-gray-300"
             >
               Téléphone
             </label>

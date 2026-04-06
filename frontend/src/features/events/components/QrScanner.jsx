@@ -132,52 +132,62 @@ const QrScanner = ({ eventName }) => {
   const getFeedbackStyle = () => {
     switch (feedback.status) {
       case "validating":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-200";
+        return "bg-amber-50 text-amber-600 border-amber-100";
       case "success":
-        return "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/50 dark:text-green-200";
+        return "bg-green-50 text-green-600 border-green-100 px-6";
       case "error":
-        return "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-200";
+        return "bg-red-50 text-red-500 border-red-100 px-6";
       case "scanning":
-        return "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-200";
+        return "bg-slate-50 text-slate-400 border-slate-100";
       default:
-        return "bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-700 dark:text-gray-300";
+        return "bg-slate-50 text-slate-400 border-slate-100";
     }
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border dark:border-gray-700">
-      {/* Zone vidéo */}
-      <div
-        id="qr-reader-element"
-        className="relative w-full aspect-square border dark:border-gray-600 rounded-md overflow-hidden mb-4"
-      ></div>
+    <div className="w-full space-y-6">
+      {/* Zone vidéo Studio Style */}
+      <div className="relative group/scanner">
+        <div
+          id="qr-reader-element"
+          className="relative w-full aspect-square bg-slate-900 rounded-[2rem] overflow-hidden shadow-inner border-[8px] border-slate-50"
+        ></div>
+        
+        {/* Overlay Decoration */}
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-white/20 rounded-[2rem] m-8 group-hover:border-orange-500/30 transition-colors"></div>
+        
+        {feedback.status === "scanning" && (
+          <div className="absolute top-4 right-4 flex items-center gap-2 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-lg text-[8px] font-black uppercase text-white tracking-[0.2em]">
+             <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+             Live Studio
+          </div>
+        )}
+      </div>
 
       {/* Message de feedback */}
       <div
-        className={`p-3 rounded-md border text-center font-medium text-sm transition-all ${getFeedbackStyle()}`}
+        className={`p-5 rounded-2xl border text-center font-black text-[10px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 ${getFeedbackStyle()}`}
       >
         {feedback.status === "validating" && (
-          <Loader2 className="inline-block animate-spin mr-2" size={16} />
+          <Loader2 className="animate-spin" size={14} />
         )}
         {feedback.status === "success" && (
-          <CheckCircle className="inline-block mr-2" size={16} />
+          <CheckCircle size={14} className="fill-current" />
         )}
         {feedback.status === "error" && (
-          <AlertTriangle className="inline-block mr-2" size={16} />
+          <AlertTriangle size={14} className="fill-current" />
         )}
-        {feedback.message}
+        <span>{feedback.message}</span>
       </div>
 
       {/* Bouton de reprise du scan */}
       {["success", "error"].includes(feedback.status) && (
         <button
           onClick={handleNextScan}
-          className="w-full mt-4 py-3 px-4 flex items-center justify-center
-                     bg-blue-600 text-white font-semibold rounded-lg
-                     shadow-md hover:bg-blue-700 transition-colors"
+          className="w-full py-5 px-6 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.25em] rounded-2xl shadow-xl shadow-slate-900/10 hover:bg-orange-600 hover:shadow-orange-600/30 transition-all flex items-center justify-center gap-3 animate-in slide-in-from-bottom-2"
         >
-          <ScanLine className="mr-2" size={20} />
-          Scanner le ticket suivant
+          <ScanLine size={18} className="text-orange-500" />
+          Suivant
         </button>
       )}
     </div>

@@ -72,7 +72,7 @@ const UserManagement = () => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold text-slate-500 dark:text-gray-100">
           Gestion des Utilisateurs ({users.length})
         </h2>
         <Button
@@ -121,7 +121,7 @@ const UserManagement = () => {
                 key={user._id || user.id}
                 className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
-                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-500 dark:text-gray-100">
                   {user.nom}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">

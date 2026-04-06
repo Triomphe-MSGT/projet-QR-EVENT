@@ -31,7 +31,7 @@ const ForgotPasswordPage = () => {
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-green-400 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20 mb-4 transform -rotate-6">
             <ShieldCheck className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">
+          <h1 className="text-4xl font-black tracking-tighter text-slate-500 dark:text-white uppercase">
             Qr-Event<span className="text-blue-500">.</span>
           </h1>
         </div>
@@ -50,13 +50,13 @@ const ForgotPasswordPage = () => {
               <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/20">
                 <CheckCircle2 className="w-10 h-10 text-green-500" />
               </div>
-              <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight mb-3">Email envoyé !</h2>
+              <h2 className="text-2xl font-black text-slate-500 dark:text-white tracking-tight mb-3">Email envoyé !</h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm font-medium leading-relaxed mb-8">
                 Si un compte existe avec cette adresse, vous recevrez un email avec les instructions pour réinitialiser votre mot de passe.
               </p>
               <Link
                 to="/login"
-                className="inline-block w-full py-4 bg-gray-100 dark:bg-[#3A3B3C] hover:bg-gray-200 dark:hover:bg-[#4E4F50] text-gray-900 dark:text-white font-black rounded-2xl transition-all uppercase tracking-widest text-sm"
+                className="inline-block w-full py-4 bg-gray-100 dark:bg-[#3A3B3C] hover:bg-gray-200 dark:hover:bg-[#4E4F50] text-slate-500 dark:text-white font-black rounded-2xl transition-all uppercase tracking-widest text-sm"
               >
                 Retour à la connexion
               </Link>
@@ -64,7 +64,7 @@ const ForgotPasswordPage = () => {
           ) : (
             <>
               <div className="mb-8">
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Mot de passe oublié ?</h2>
+                <h2 className="text-2xl font-black text-slate-500 dark:text-white tracking-tight">Mot de passe oublié ?</h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Entrez votre email pour recevoir un lien de récupération.</p>
               </div>
 
@@ -77,7 +77,7 @@ const ForgotPasswordPage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Adresse e-mail"
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-[#3A3B3C] border border-gray-200 dark:border-[#3E4042] rounded-2xl text-gray-900 dark:text-[#E4E6EB] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-[#3A3B3C] border border-gray-200 dark:border-[#3E4042] rounded-2xl text-slate-500 dark:text-[#E4E6EB] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
                   />
                 </div>
 

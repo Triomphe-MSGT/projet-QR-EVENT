@@ -92,102 +92,200 @@ const HomePage = () => {
         {/* ==========================================
             SECTION 1: HERO (ACCUEIL & RECHERCHE)
             ========================================== */}
-        <section className="relative pt-40 pb-20 md:pt-60 md:pb-72 overflow-hidden font-sans bg-gradient-to-tr from-sky-100 via-white to-blue-50">
-          {/* Saturated Decorative Elements for Depth */}
-          <div className="absolute -top-32 -right-32 w-[900px] h-[900px] bg-sky-400/20 blur-[180px] rounded-full -z-10 animate-pulse hidden md:block"></div>
-          <div className="absolute bottom-0 -left-24 w-[700px] h-[700px] bg-blue-300/30 blur-[150px] rounded-full -z-10 hidden md:block"></div>
+        {/* ==========================================
+            SECTION 1: HERO (ACCUEIL & RECHERCHE)
+            ========================================== */}
+        <section className={`relative overflow-hidden font-sans ${isMobile ? 'pt-20 pb-10 bg-white' : 'pt-40 pb-20 md:pt-60 md:pb-72 bg-gradient-to-tr from-sky-100 via-white to-blue-50'}`}>
           
-          <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center">
-            
-            <Reveal direction="left">
-            <div className="z-10 space-y-10 md:space-y-16">
-              <div className="space-y-6 md:space-y-8 text-center lg:text-left">
-                <h1 className="text-5xl md:text-5xl lg:text-7xl font-bold text-slate-500 leading-[1.05] tracking-tight">
-                  Découvrez <br className="hidden sm:block" /> 
-                  <span className="text-orange-500">Réservez</span> & Vivez.
-                </h1>
-                <p className="text-lg md:text-xl lg:text-2xl text-slate-500 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                  L'excellence technologique au service de vos sorties. Simplifiez votre billetterie avec notre système QR ultra-rapide.
-                </p>
-              </div>
+          {!isMobile && (
+            <>
+              {/* Saturated Decorative Elements for Desktop */}
+              <div className="absolute -top-32 -right-32 w-[900px] h-[900px] bg-sky-400/20 blur-[180px] rounded-full -z-10 animate-pulse hidden md:block"></div>
+              <div className="absolute bottom-0 -left-24 w-[700px] h-[700px] bg-blue-300/30 blur-[150px] rounded-full -z-10 hidden md:block"></div>
+            </>
+          )}
 
-              {/* Pro Search Bar - Glassmorphism */}
-              <form 
-                onSubmit={handleSearch}
-                className="bg-white/80 p-2 md:p-3 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl shadow-orange-900/5 border border-white flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-3 backdrop-blur-xl"
-              >
-                <div className="flex-1 flex items-center px-4 md:px-6 border-b md:border-b-0 md:border-r border-slate-100/80">
-                  <Search className="w-5 h-5 text-orange-400 mr-2 md:mr-3 flex-shrink-0" />
-                  <input 
-                    type="text" 
-                    placeholder="Quel événement ?" 
-                    className="w-full h-12 md:h-14 border-none border-transparent focus:border-transparent focus:ring-0 focus:outline-none outline-none text-slate-500 font-medium placeholder:text-slate-400 bg-transparent text-sm md:text-base"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <div className="flex-1 flex items-center px-4 md:px-6">
-                  <MapPin className="w-5 h-5 text-orange-400 mr-2 md:mr-3 flex-shrink-0" />
-                  <input 
-                    type="text" 
-                    placeholder="Ville ou Lieu" 
-                    className="w-full h-12 md:h-14 border-none border-transparent focus:border-transparent focus:ring-0 focus:outline-none outline-none text-slate-500 font-medium placeholder:text-slate-400 bg-transparent text-sm md:text-base"
-                    value={locationQuery}
-                    onChange={(e) => setLocationQuery(e.target.value)}
-                  />
-                </div>
-                <button 
-                  type="submit"
-                  className="px-6 md:px-10 py-4 md:py-5 bg-orange-500 text-white font-black rounded-2xl md:rounded-3xl hover:bg-orange-600 transition-all shadow-xl shadow-orange-500/20 active:scale-95 whitespace-nowrap text-sm md:text-base"
-                >
-                  Trouver
-                </button>
-              </form>
-
-              {/* Social Proof */}
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10 pt-2 sm:pt-4 justify-center lg:justify-start">
-                <div className="flex -space-x-3">
-                  {[1,2,3,4].map(i => (
-                    <div key={i} className="w-10 h-10 md:w-12 md:h-12 rounded-full border-4 border-white bg-slate-100 overflow-hidden shadow-sm">
-                      <img src={`https://i.pravatar.cc/100?img=${i+30}`} alt="User" />
-                    </div>
+          <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8">
+            {isMobile ? (
+              /* --- MOBILE VIEW: YOUTUBE STYLE IMMERSIVE HERO --- */
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                {/* Category Chips Scroll (Top) */}
+                <div className="flex gap-2.5 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
+                  <button className="px-5 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest flex-shrink-0">
+                    Tout
+                  </button>
+                  {categories?.map((cat, idx) => (
+                    <Link 
+                      key={cat._id || cat.id || idx} 
+                      to={`/categories/${cat.name}`}
+                      className="px-5 py-2 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest flex-shrink-0 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                    >
+                      {cat.name}
+                    </Link>
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm font-medium text-slate-400">
-                  <span className="text-slate-500 font-black">+2,000 organisateurs</span> utilisent QR EVENT
-                </p>
-              </div>
-            </div>
-            </Reveal>
 
-            {/* Illustration Section - Minimal & Integrated */}
-            <Reveal direction="right" delay={200}>
-            <div className="relative flex justify-center items-center">
-              {/* Only a very subtle glow to keep it 'pro' */}
-              <div className="absolute w-[400px] h-[400px] bg-orange-200/5 blur-[120px] rounded-full pointer-events-none"></div>
-              
-              <img 
-                src="/assets/hero_picture.png" 
-                alt="QR Event Experience" 
-                className="relative z-10 w-full max-w-xl mx-auto object-contain animate-slow-beat drop-shadow-[0_20px_40px_rgba(0,0,0,0.08)]" 
-              />
-              
-              {/* Levitation Floating Icons - Placed Directly 'Over' the Screen Area */}
-              <div className="absolute top-[53%] right-[50%] z-20 bg-white p-3.5 rounded-2xl shadow-xl border border-white/50 animate-levitate hidden xl:block" style={{ animationDelay: '0s' }}>
-                  <Mail size={24} className="text-red-500" />
-              </div>
-              <div className="absolute top-[78%] right-[15%] z-20 bg-white p-3.5 rounded-2xl shadow-xl border border-white/50 animate-levitate hidden xl:block" style={{ animationDelay: '0.8s' }}>
-                  <MessageCircle size={24} className="text-emerald-500" />
-              </div>
-              <div className="absolute bottom-[48%] right-[28%] z-20 bg-white p-3.5 rounded-2xl shadow-xl border border-white/50 animate-levitate hidden xl:block" style={{ animationDelay: '1.6s' }}>
-                  <Smartphone size={24} className="text-blue-500" />
-              </div>
+                {/* Featured Content Card - Most Imminent Event */}
+                {(() => {
+                  const upcomingEvents = events?.filter(e => new Date(e.startDate) >= new Date().setHours(0,0,0,0))
+                                               .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+                  const featuredEvent = upcomingEvents?.[0];
 
-              <div className="absolute top-[25%] left-[20%] z-20 bg-white p-3.5 rounded-2xl shadow-xl border border-white/50 animate-levitate hidden xl:block" style={{ animationDelay: '2.4s' }}>
-                  <QrCode size={24} className="text-orange-500" />
+                  if (eventsLoading) return <div className="w-full aspect-[16/9] bg-slate-100 rounded-[2.5rem] animate-pulse"></div>;
+                  if (!featuredEvent) return null;
+
+                  return (
+                    <div 
+                      onClick={() => navigate(`/events/${featuredEvent._id}`)}
+                      className="relative w-full aspect-[16/9] rounded-[2.5rem] overflow-hidden shadow-2xl group active:scale-[0.98] transition-transform"
+                    >
+                      {featuredEvent.coverImage || featuredEvent.imageUrl ? (
+                        <img 
+                          src={featuredEvent.coverImage || featuredEvent.imageUrl} 
+                          alt="Featured" 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-orange-500 via-orange-600 to-amber-700 flex items-center justify-center">
+                          <span className="text-white font-black text-8xl drop-shadow-2xl opacity-40 italic">
+                            {(featuredEvent.title || featuredEvent.name)?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                      
+                      <div className="absolute top-5 left-5 flex gap-2">
+                         <span className="px-3 py-1 bg-red-600 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                            À L'Affiche
+                         </span>
+                      </div>
+
+                      <div className="absolute bottom-6 left-6 right-6 space-y-3">
+                         <h2 className="text-2xl font-black text-white uppercase tracking-tighter leading-tight italic">
+                           {featuredEvent.title || featuredEvent.name}
+                         </h2>
+                         <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-300">
+                               <Calendar size={12} className="text-orange-500" />
+                               <span>{new Date(featuredEvent.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                            </div>
+                            <button className="px-5 py-2 bg-white text-slate-900 rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl">
+                               Vivre l'Expérience
+                            </button>
+                         </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Search Bar - Integrated & Mobile Optimized */}
+                <form 
+                  onSubmit={handleSearch}
+                  className="bg-slate-50 p-2 rounded-[2rem] border border-slate-100 flex items-center gap-2"
+                >
+                  <div className="flex-1 flex items-center px-4">
+                    <Search className="w-4 h-4 text-orange-400 mr-2 flex-shrink-0" />
+                    <input 
+                      type="text" 
+                      placeholder="Chercher une expérience..." 
+                      className="w-full h-10 border-none bg-transparent focus:ring-0 focus:outline-none text-slate-600 font-bold placeholder:text-slate-400 text-xs"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <button className="w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+                     <ArrowRight size={16} />
+                  </button>
+                </form>
               </div>
-            </div>
-            </Reveal>
+            ) : (
+              /* --- DESKTOP VIEW: ORIGINAL SOPHISTICATED HERO --- */
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center">
+                <Reveal direction="left">
+                <div className="z-10 space-y-10 md:space-y-16">
+                  <div className="space-y-6 md:space-y-8 text-center lg:text-left">
+                    <h1 className="text-5xl md:text-5xl lg:text-7xl font-bold text-slate-500 leading-[1.05] tracking-tight">
+                      Découvrez <br className="hidden sm:block" /> 
+                      <span className="text-orange-500">Réservez</span> & Vivez.
+                    </h1>
+                    <p className="text-lg md:text-xl lg:text-2xl text-slate-500 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                      L'excellence technologique au service de vos sorties. Simplifiez votre billetterie avec notre système QR ultra-rapide.
+                    </p>
+                  </div>
+
+                  <form 
+                    onSubmit={handleSearch}
+                    className="bg-white/80 p-2 md:p-3 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl shadow-orange-900/5 border border-white flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-3 backdrop-blur-xl"
+                  >
+                    <div className="flex-1 flex items-center px-4 md:px-6 border-b md:border-b-0 md:border-r border-slate-100/80">
+                      <Search className="w-5 h-5 text-orange-400 mr-2 md:mr-3 flex-shrink-0" />
+                      <input 
+                        type="text" 
+                        placeholder="Quel événement ?" 
+                        className="w-full h-12 md:h-14 border-none border-transparent focus:border-transparent focus:ring-0 focus:outline-none outline-none text-slate-500 font-medium placeholder:text-slate-400 bg-transparent text-sm md:text-base"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1 flex items-center px-4 md:px-6">
+                      <MapPin className="w-5 h-5 text-orange-400 mr-2 md:mr-3 flex-shrink-0" />
+                      <input 
+                        type="text" 
+                        placeholder="Ville ou Lieu" 
+                        className="w-full h-12 md:h-14 border-none border-transparent focus:border-transparent focus:ring-0 focus:outline-none outline-none text-slate-500 font-medium placeholder:text-slate-400 bg-transparent text-sm md:text-base"
+                        value={locationQuery}
+                        onChange={(e) => setLocationQuery(e.target.value)}
+                      />
+                    </div>
+                    <button 
+                      type="submit"
+                      className="px-6 md:px-10 py-4 md:py-5 bg-orange-500 text-white font-black rounded-2xl md:rounded-3xl hover:bg-orange-600 transition-all shadow-xl shadow-orange-500/20 active:scale-95 whitespace-nowrap text-sm md:text-base"
+                    >
+                      Trouver
+                    </button>
+                  </form>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10 pt-2 sm:pt-4 justify-center lg:justify-start">
+                    <div className="flex -space-x-3">
+                      {[1,2,3,4].map(i => (
+                        <div key={i} className="w-10 h-10 md:w-12 md:h-12 rounded-full border-4 border-white bg-slate-100 overflow-hidden shadow-sm">
+                          <img src={`https://i.pravatar.cc/100?img=${i+30}`} alt="User" />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs sm:text-sm font-medium text-slate-400">
+                      <span className="text-slate-500 font-black">+2,000 organisateurs</span> utilisent QR EVENT
+                    </p>
+                  </div>
+                </div>
+                </Reveal>
+
+                {!isMobile && (
+                  <Reveal direction="right" delay={200}>
+                    <div className="relative flex justify-center items-center">
+                      <div className="absolute w-[400px] h-[400px] bg-orange-200/5 blur-[120px] rounded-full pointer-events-none"></div>
+                      <img 
+                        src="/assets/hero_picture.png" 
+                        alt="QR Event Experience" 
+                        className="relative z-10 w-full max-w-xl mx-auto object-contain animate-slow-beat drop-shadow-[0_20px_40px_rgba(0,0,0,0.08)]" 
+                      />
+                      <div className="absolute top-[53%] right-[50%] z-20 bg-white p-3.5 rounded-2xl shadow-xl border border-white/50 animate-levitate hidden xl:block" style={{ animationDelay: '0s' }}>
+                          <Mail size={24} className="text-red-500" />
+                      </div>
+                      <div className="absolute top-[78%] right-[15%] z-20 bg-white p-3.5 rounded-2xl shadow-xl border border-white/50 animate-levitate hidden xl:block" style={{ animationDelay: '0.8s' }}>
+                          <MessageCircle size={24} className="text-emerald-500" />
+                      </div>
+                      <div className="absolute bottom-[48%] right-[28%] z-20 bg-white p-3.5 rounded-2xl shadow-xl border border-white/50 animate-levitate hidden xl:block" style={{ animationDelay: '1.6s' }}>
+                          <Smartphone size={24} className="text-blue-500" />
+                      </div>
+                      <div className="absolute top-[25%] left-[20%] z-20 bg-white p-3.5 rounded-2xl shadow-xl border border-white/50 animate-levitate hidden xl:block" style={{ animationDelay: '2.4s' }}>
+                          <QrCode size={24} className="text-orange-500" />
+                      </div>
+                    </div>
+                  </Reveal>
+                )}
+              </div>
+            )}
           </div>
         </section>
 

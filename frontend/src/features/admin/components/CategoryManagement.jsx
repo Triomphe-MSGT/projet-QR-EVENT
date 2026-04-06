@@ -97,7 +97,7 @@ const CategoryManagement = () => {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       {/* En-tête avec titre et bouton Ajouter */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold text-slate-500 dark:text-gray-100">
           Gestion des Catégories ({categories.length})
         </h2>
         <Button
@@ -136,7 +136,7 @@ const CategoryManagement = () => {
                 className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
                 <td className="px-4 py-3 text-xl">{cat.emoji || "❓"}</td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-500 dark:text-gray-100">
                   {cat.name}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">

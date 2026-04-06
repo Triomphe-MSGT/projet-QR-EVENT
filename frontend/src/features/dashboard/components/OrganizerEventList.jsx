@@ -103,7 +103,7 @@ const OrganizerEventList = ({ events }) => {
                <div className="w-20 h-20 bg-orange-50 rounded-[2rem] flex items-center justify-center mx-auto text-orange-600 shadow-inner">
                   <TrendingUp size={40} />
                </div>
-               <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
+               <h3 className="text-3xl font-black text-slate-500 tracking-tighter">
                  Nouveau <span className="text-orange-600">Projet</span>
                </h3>
                <p className="text-slate-400 font-bold max-w-sm mx-auto">Choisissez la visibilité broadcast pour votre prochain événement.</p>
@@ -117,7 +117,7 @@ const OrganizerEventList = ({ events }) => {
                 <div className="w-14 h-14 bg-black text-white rounded-2xl flex items-center justify-center mb-6 group-hover:bg-orange-600 transition-colors">
                   <span className="font-black text-xl">01</span>
                 </div>
-                <h4 className="text-xl font-black text-gray-900 mb-2">Public</h4>
+                <h4 className="text-xl font-black text-slate-500 mb-2">Public</h4>
                 <p className="text-xs text-slate-400 font-bold leading-relaxed">Visible par toute la communauté sur le hub principal.</p>
               </button>
 
@@ -128,14 +128,14 @@ const OrganizerEventList = ({ events }) => {
                 <div className="w-14 h-14 bg-black text-white rounded-2xl flex items-center justify-center mb-6 group-hover:bg-orange-600 transition-colors">
                   <span className="font-black text-xl">02</span>
                 </div>
-                <h4 className="text-xl font-black text-gray-900 mb-2">Privé</h4>
+                <h4 className="text-xl font-black text-slate-500 mb-2">Privé</h4>
                 <p className="text-xs text-slate-400 font-bold leading-relaxed">Uniquement accessible via un lien de diffusion direct.</p>
               </button>
             </div>
 
             <button
               onClick={() => setIsChoiceModalOpen(false)}
-              className="mt-10 w-full py-4 text-[10px] font-black text-slate-300 hover:text-gray-900 uppercase tracking-widest transition-colors"
+              className="mt-10 w-full py-4 text-[10px] font-black text-slate-300 hover:text-slate-500 uppercase tracking-widest transition-colors"
             >
               Fermer la fenêtre
             </button>
@@ -146,7 +146,7 @@ const OrganizerEventList = ({ events }) => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-2 gap-4">
           <div>
-             <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Gestion Locative</h2>
+             <h2 className="text-xl font-black text-slate-500 uppercase tracking-tighter">Gestion Locative</h2>
              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Contrôle complet de vos interfaces</p>
           </div>
           <button
@@ -190,7 +190,7 @@ const OrganizerEventList = ({ events }) => {
                             <span className="truncate">{event.city || "Multi-site"}</span>
                          </div>
                       </div>
-                      <h3 className="text-xl font-black text-gray-900 truncate tracking-tight">{event.name}</h3>
+                      <h3 className="text-xl font-black text-slate-500 truncate tracking-tight">{event.name}</h3>
                       <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400">
                          <div className="flex items-center gap-1.5"><CalendarDays size={14} className="text-orange-500/50" /> {formatDate(event.startDate)}</div>
                          <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
@@ -224,7 +224,7 @@ const OrganizerEventList = ({ events }) => {
 
                     <button
                       onClick={() => handleEdit(event._id || event.id)}
-                      className="p-3.5 text-slate-400 hover:text-gray-900 hover:bg-slate-100 rounded-xl transition-all"
+                      className="p-3.5 text-slate-400 hover:text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
                     >
                       <Edit size={18} />
                     </button>

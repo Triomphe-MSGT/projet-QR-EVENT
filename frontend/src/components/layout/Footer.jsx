@@ -22,59 +22,38 @@ const Footer = () => {
   return (
     <>
 
-      {/* Mobile Navigation Bar - Pro Floating Design */}
-      <div className="fixed bottom-6 left-5 right-5 z-[100] lg:hidden">
-        <nav className="bg-white/90 backdrop-blur-2xl border border-slate-200/50 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] flex justify-between items-center h-20 px-2 relative">
-          
-          {/* Main Links (Left Side) */}
-          <div className="flex flex-1 justify-around items-center">
-            {navItems.slice(0, 2).map((item) => {
-              const active = isActive(item.path);
-              return (
+      {/* Mobile Navigation Bar - YouTube Style */}
+      <div className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <nav className="bg-white flex justify-around items-center h-14 px-1">
+          {navItems.map((item, index) => {
+            const active = isActive(item.path);
+            
+            // On insère le bouton "Plus" au milieu pour les créateurs
+            const showPlus = index === 2 && isCreator;
+            
+            return (
+              <React.Fragment key={item.label}>
+                {showPlus && (
+                  <Link
+                    to="/createevent"
+                    className="flex flex-col items-center justify-center p-1 -mt-6"
+                  >
+                    <div className="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-xl shadow-slate-900/40 border-4 border-white active:scale-95 transition-transform">
+                      <Plus size={24} strokeWidth={3} />
+                    </div>
+                    <span className="text-[7px] font-bold uppercase tracking-tighter mt-1 text-slate-400">Créer</span>
+                  </Link>
+                )}
                 <Link
-                  key={item.label}
                   to={item.path}
-                  className={`relative flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 ${active ? "text-orange-500" : "text-slate-400 group"}`}
+                  className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${active ? "text-orange-500" : "text-slate-400"}`}
                 >
-                  <item.icon className={`w-6 h-6 transition-transform ${active ? "scale-110" : "group-hover:scale-110"}`} strokeWidth={active ? 2.5 : 2} />
-                  <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 transition-opacity ${active ? "opacity-100" : "opacity-0"}`}>{item.label}</span>
-                  {active && <div className="absolute -bottom-1 w-1 h-1 bg-orange-500 rounded-full" />}
+                  <item.icon className={`w-5 h-5 ${active ? "fill-orange-50" : ""}`} strokeWidth={active ? 2.5 : 2} />
+                  <span className="text-[8px] font-black uppercase tracking-tighter mt-1">{item.label}</span>
                 </Link>
-              );
-            })}
-          </div>
-
-          {/* Central Pro Action (Creators) or Aesthetic Divider */}
-          {isCreator ? (
-            <div className="relative -top-6">
-              <Link
-                to="/createevent"
-                className="w-16 h-16 bg-orange-500 text-white rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-orange-500/40 hover:bg-orange-600 transition-all border-[6px] border-slate-50/50 active:scale-95"
-              >
-                <Plus size={32} strokeWidth={3} />
-              </Link>
-            </div>
-          ) : (
-            <div className="w-12" aria-hidden="true"></div>
-          )}
-
-          {/* Main Links (Right Side) */}
-          <div className="flex flex-1 justify-around items-center">
-            {navItems.slice(2).map((item) => {
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.label}
-                  to={item.path}
-                  className={`relative flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 ${active ? "text-orange-500" : "text-slate-400 group"}`}
-                >
-                  <item.icon className={`w-6 h-6 transition-transform ${active ? "scale-110" : "group-hover:scale-110"}`} strokeWidth={active ? 2.5 : 2} />
-                  <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 transition-opacity ${active ? "opacity-100" : "opacity-0"}`}>{item.label}</span>
-                  {active && <div className="absolute -bottom-1 w-1 h-1 bg-orange-500 rounded-full" />}
-                </Link>
-              );
-            })}
-          </div>
+              </React.Fragment>
+            );
+          })}
         </nav>
       </div>
 

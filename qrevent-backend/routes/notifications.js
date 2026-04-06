@@ -5,6 +5,7 @@ const { userExtractor } = require("../utils/middleware");
 const {
   getMyNotifications,
   markAllAsRead,
+  markOneAsRead,
   deleteNotification,
   deleteAllNotifications,
 } = require("../controllers/notificationController");
@@ -12,8 +13,11 @@ const {
 // Récupérer les notifications
 router.get("/", userExtractor, getMyNotifications);
 
-// Marquer comme lues
+// Marquer toutes comme lues
 router.post("/read", userExtractor, markAllAsRead);
+
+// Marquer une notification spécifique comme lue
+router.post("/:id/read", userExtractor, markOneAsRead);
 
 // Supprimer toutes les notifications
 router.delete("/all", userExtractor, deleteAllNotifications);

@@ -13,6 +13,7 @@ import {
   CheckSquare as QrCode,
   Loader2,
   Download,
+  ShieldAlert,
 } from "lucide-react";
 import UserCards from "./UserCards";
 import Button from "../../../components/ui/Button";
@@ -61,126 +62,122 @@ const AdminDashboard = () => {
 
   return (
     <MainLayout>
-      <div className="p-4 sm:p-6 bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100 font-sans">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-6">
-          Tableau de Bord Administrateur
-        </h1>
+      <div className="bg-slate-50 min-h-screen font-sans selection:bg-orange-100 pb-20">
+        
+        {/* DASHBOARD HERO */}
+        <section className="bg-slate-900 pt-20 pb-16 md:pt-32 md:pb-24 relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5"></div>
+           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-600 rounded-full blur-[120px] -ml-48 -mt-24 opacity-10"></div>
+           
+           <div className="max-w-7xl mx-auto px-6 relative z-10">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                 <div className="text-center md:text-left space-y-6">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/10 rounded-full text-white font-black text-[9px] uppercase tracking-widest">
+                       <ShieldAlert size={12} className="text-blue-500" />
+                       Centre de Commande Admin
+                    </div>
+                    <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter uppercase leading-none">
+                       Dashboard <span className="text-blue-500">Pro</span>
+                    </h1>
+                    <p className="text-slate-400 font-bold text-sm md:text-lg max-w-xl">
+                       Supervision globale de l'écosystème QR. Gérez les flux d'utilisateurs et la performance des événements en temps réel.
+                    </p>
+                 </div>
+                 
+                 <div className="flex justify-center md:justify-end gap-3">
+                    <button 
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className="px-6 py-4 md:px-8 md:py-5 bg-white/10 backdrop-blur-md text-white rounded-2xl font-black text-[10px] uppercase tracking-widest border border-white/10 hover:bg-white/20 transition-all flex items-center gap-3"
+                    >
+                      {isDownloading ? <Loader2 className="animate-spin" size={16} /> : <Download size={16} className="text-blue-500" />}
+                      Rapport Global
+                    </button>
+                 </div>
+              </div>
+           </div>
+        </section>
 
-        {/* Tabs Navigation */}
-        <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
-          <nav
-            className="-mb-px flex space-x-4 sm:space-x-6 overflow-x-auto"
-            aria-label="Tabs"
-          >
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center gap-2 ${
-                  activeTab === tab.id
-                    ? "border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600"
-                }`}
-                aria-current={activeTab === tab.id ? "page" : undefined}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 -mt-8 md:-mt-12 relative z-20">
+           
+           {/* PREMIUM TAB NAVIGATION */}
+           <div className="bg-white rounded-3xl md:rounded-[2.5rem] p-2 shadow-2xl shadow-slate-900/5 mb-12 flex flex-wrap gap-2 md:gap-4 overflow-x-auto custom-scrollbar border border-slate-100">
+              {TABS.map((tab) => (
+                 <button
+                   key={tab.id}
+                   onClick={() => setActiveTab(tab.id)}
+                   className={`flex-1 min-w-fit flex items-center justify-center gap-3 px-6 py-4 md:py-6 rounded-2xl md:rounded-[2rem] font-black text-[10px] md:text-[11px] uppercase tracking-widest transition-all ${
+                     activeTab === tab.id 
+                     ? 'bg-slate-900 text-white shadow-xl translate-y-[-2px]' 
+                     : 'text-slate-400 hover:bg-slate-50'
+                   }`}
+                 >
+                   <tab.icon size={18} className={activeTab === tab.id ? "text-blue-500" : "text-slate-300"} />
+                   <span>{tab.label}</span>
+                 </button>
+              ))}
+           </div>
 
-        {/* Tab Content */}
-        <div className="mt-4">
-          {activeTab === "stats" && (
-            <section className="space-y-8 animate-fade-in">
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">
-                    Statistiques Globales
-                  </h2>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleDownload}
-                    disabled={isDownloading}
-                  >
-                    {isDownloading ? (
-                      <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                    ) : (
-                      <Download className="w-4 h-4 mr-2" />
-                    )}
-                    Télécharger le Rapport (.csv)
-                  </Button>
+           {/* MAIN TAB CONTENT */}
+           <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+              {activeTab === "stats" && (
+                <div className="space-y-12">
+                   {/* STATS MODULES */}
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {isLoadingStats ? (
+                        [...Array(4)].map((_, i) => (
+                          <div key={i} className="h-40 bg-slate-100 rounded-[2rem] animate-pulse"></div>
+                        ))
+                      ) : isStatsError ? (
+                        <div className="lg:col-span-4 p-8 bg-red-50 text-red-500 rounded-3xl border border-red-100 font-bold">
+                           Erreur: {statsError?.message}
+                        </div>
+                      ) : (
+                        <>
+                          <StatCard title="Événements" value={stats?.totalEvents} icon={Calendar} theme="blue" description="Total actifs" />
+                          <StatCard title="Inscriptions" value={stats?.totalRegistrations} icon={Users} theme="purple" description="Volume global" />
+                          <StatCard title="Validés" value={stats?.qrValidated} icon={QrCode} theme="emerald" description="Tickets scannés" />
+                          <StatCard title="Engagement" value={`${Number(stats?.avgPerEvent || 0).toFixed(1)}%`} icon={BarChart3} theme="orange" description="Performance moy." />
+                        </>
+                      )}
+                   </div>
+
+                   {/* USER SEGMENTS */}
+                   <div className="space-y-8">
+                      <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
+                         <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 shadow-sm">
+                            <Users size={22} />
+                         </div>
+                         <div>
+                            <h2 className="text-xl md:text-2xl font-black text-slate-500 uppercase tracking-tighter">Répartition Utilisateurs</h2>
+                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Segmentation par rôles</p>
+                         </div>
+                      </div>
+                      <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-xl border border-slate-50">
+                        <UserCards />
+                      </div>
+                   </div>
                 </div>
+              )}
 
-                {isLoadingStats ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
-                    <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                    <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                    <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                    <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                  </div>
-                ) : isStatsError ? (
-                  <p className="text-red-500">
-                    Erreur stats: {statsError?.message}
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard
-                      title="Total Événements"
-                      value={stats?.totalEvents}
-                      color="bg-blue-600"
-                      icon={Calendar}
-                    />
-                    <StatCard
-                      title="Total Inscriptions"
-                      value={stats?.totalRegistrations}
-                      color="bg-purple-600"
-                      icon={Users}
-                    />
-                    <StatCard
-                      title="Tickets Validés"
-                      value={stats?.qrValidated}
-                      color="bg-green-600"
-                      icon={QrCode}
-                    />
-                    <StatCard
-                      title="Moy. Inscr./Évén."
-                      value={stats?.avgPerEvent}
-                      color="bg-orange-500"
-                      icon={BarChart3}
-                    />
-                  </div>
-                )}
-              </div>
+              {activeTab === "users" && (
+                <div className="bg-white rounded-[3rem] p-6 md:p-10 shadow-xl border border-slate-50 min-h-[600px] text-slate-500">
+                   <UserManagement />
+                </div>
+              )}
 
-              <div>
-                <h2 className="text-xl font-semibold mb-4 mt-8">
-                  Statistiques Utilisateurs
-                </h2>
-                <UserCards />
-              </div>
-            </section>
-          )}
+              {activeTab === "events" && (
+                <div className="bg-white rounded-[3rem] p-6 md:p-10 shadow-xl border border-slate-50 min-h-[600px] text-slate-500">
+                   <EventManagement />
+                </div>
+              )}
 
-          {activeTab === "users" && (
-            <section className="animate-fade-in">
-              <UserManagement />
-            </section>
-          )}
-
-          {activeTab === "events" && (
-            <section className="animate-fade-in">
-              <EventManagement />
-            </section>
-          )}
-
-          {activeTab === "categories" && (
-            <section className="animate-fade-in">
-              <CategoryManagement />
-            </section>
-          )}
+              {activeTab === "categories" && (
+                <div className="bg-white rounded-[3rem] p-6 md:p-10 shadow-xl border border-slate-50 min-h-[600px] text-slate-500">
+                   <CategoryManagement />
+                </div>
+              )}
+           </div>
         </div>
       </div>
     </MainLayout>

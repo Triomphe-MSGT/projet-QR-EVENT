@@ -91,7 +91,7 @@ const ParticipationFormModal = ({
         <div className="relative p-6 md:p-10 border-b border-gray-50 dark:border-gray-800 bg-gradient-to-r from-blue-600/5 to-purple-600/5">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-slate-500 dark:hover:text-white transition-colors"
           >
             <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
@@ -105,7 +105,7 @@ const ParticipationFormModal = ({
             </div>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-500 dark:text-white tracking-tighter leading-tight">
             Confirmer votre <br />
             <span className="text-blue-600">participation</span>
           </h2>
@@ -133,7 +133,7 @@ const ParticipationFormModal = ({
                   value={formData.fullName}
                   onChange={handleChange}
                   placeholder="Votre nom"
-                  className={`w-full pl-11 sm:pl-12 pr-4 sm:pr-6 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-800 border-2 rounded-xl sm:rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white text-xs sm:text-sm ${
+                  className={`w-full pl-11 sm:pl-12 pr-4 sm:pr-6 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-800 border-2 rounded-xl sm:rounded-2xl transition-all outline-none font-bold text-slate-500 dark:text-white text-xs sm:text-sm ${
                     errors.fullName
                       ? "border-red-500"
                       : "border-transparent focus:border-blue-600 focus:bg-white dark:focus:bg-gray-700"
@@ -160,7 +160,7 @@ const ParticipationFormModal = ({
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="votre@email.com"
-                  className={`w-full pl-11 sm:pl-12 pr-4 sm:pr-6 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-800 border-2 rounded-xl sm:rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white text-xs sm:text-sm ${
+                  className={`w-full pl-11 sm:pl-12 pr-4 sm:pr-6 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-800 border-2 rounded-xl sm:rounded-2xl transition-all outline-none font-bold text-slate-500 dark:text-white text-xs sm:text-sm ${
                     errors.email
                       ? "border-red-500"
                       : "border-transparent focus:border-blue-600 focus:bg-white dark:focus:bg-gray-700"
@@ -187,7 +187,7 @@ const ParticipationFormModal = ({
                   value={formData.profession}
                   onChange={handleChange}
                   placeholder="Votre profession"
-                  className={`w-full pl-11 sm:pl-12 pr-4 sm:pr-6 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-800 border-2 rounded-xl sm:rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white text-xs sm:text-sm ${
+                  className={`w-full pl-11 sm:pl-12 pr-4 sm:pr-6 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-800 border-2 rounded-xl sm:rounded-2xl transition-all outline-none font-bold text-slate-500 dark:text-white text-xs sm:text-sm ${
                     errors.profession
                       ? "border-red-500"
                       : "border-transparent focus:border-blue-600 focus:bg-white dark:focus:bg-gray-700"
@@ -211,7 +211,7 @@ const ParticipationFormModal = ({
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className={`w-full px-4 sm:px-6 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-800 border-2 rounded-xl sm:rounded-2xl transition-all outline-none font-bold text-gray-900 dark:text-white text-xs sm:text-sm appearance-none ${
+                  className={`w-full px-4 sm:px-6 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-800 border-2 rounded-xl sm:rounded-2xl transition-all outline-none font-bold text-slate-500 dark:text-white text-xs sm:text-sm appearance-none ${
                     errors.gender
                       ? "border-red-500"
                       : "border-transparent focus:border-blue-600 focus:bg-white dark:focus:bg-gray-700"
@@ -239,7 +239,7 @@ const ParticipationFormModal = ({
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h4 className="text-[9px] sm:text-[10px] font-black text-gray-900 dark:text-white uppercase tracking-widest">
+                <h4 className="text-[9px] sm:text-[10px] font-black text-slate-500 dark:text-white uppercase tracking-widest">
                   Notifications
                 </h4>
                 <p className="text-[8px] sm:text-[10px] text-gray-500 dark:text-gray-400 font-medium">

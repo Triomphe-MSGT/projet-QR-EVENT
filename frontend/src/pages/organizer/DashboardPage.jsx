@@ -30,6 +30,8 @@ import {
   X
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import { useNotifications, useMarkAsRead } from "../../hooks/useNotifications";
+import { StatCard } from "../../features/dashboard/components/StatCard";
 import OrganizerEventList from "../../features/dashboard/components/OrganizerEventList";
 import { 
   AreaChart, 
@@ -58,11 +60,9 @@ const DashboardPage = () => {
     queryFn: getMyOrganizedEvents,
   });
 
-  const notifications = [
-    { id: 1, text: "Nouveau participant inscrit à 'Gala 2024'", time: "5 min", icon: Users },
-    { id: 2, text: "Bilan PDF prêt", time: "2h", icon: FileText },
-    { id: 3, text: "Système à jour", time: "Hier", icon: Zap },
-  ];
+  const { data: notifications } = useNotifications({ enabled: !!user });
+  const markAsReadMutation = useMarkAsRead();
+  const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
 
   const trendData = [
     { time: "01 Avr", participants: 150 },
@@ -96,7 +96,7 @@ const DashboardPage = () => {
       <div className="p-8">
         <Link to="/" className="flex items-center gap-2">
           <Zap size={24} className="text-orange-600 fill-current" />
-          <span className="text-xl font-bold text-gray-900">QR-EVENT</span>
+          <span className="text-xl font-bold text-slate-500">QR-EVENT</span>
         </Link>
       </div>
       <div className="flex-1 px-4 space-y-2">
@@ -152,7 +152,7 @@ const DashboardPage = () => {
         <header className="h-20 bg-white border-b border-gray-100 px-6 md:px-10 flex items-center justify-between sticky top-0 z-40">
            <div className="flex items-center gap-4">
               <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-gray-400 p-2"><Menu size={24} /></button>
-              <h1 className="text-xl font-black text-gray-900 uppercase">Espace <span className="text-orange-600">Pro</span></h1>
+              <h1 className="text-xl font-black text-slate-500 uppercase">Espace <span className="text-orange-600">Pro</span></h1>
            </div>
 
            <div className="flex items-center gap-6">
@@ -185,7 +185,7 @@ const DashboardPage = () => {
                                <div key={n.id} className="p-4 flex gap-4 border-b border-gray-50 hover:bg-gray-50 transition-colors">
                                   <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center shrink-0"><n.icon size={18} /></div>
                                   <div className="space-y-1">
-                                     <p className="text-[11px] font-bold text-gray-800">{n.text}</p>
+                                     <p className="text-[11px] font-bold text-slate-500">{n.text}</p>
                                      <span className="text-[9px] text-gray-400 font-bold uppercase">{n.time}</span>
                                   </div>
                                </div>
@@ -207,18 +207,9 @@ const DashboardPage = () => {
            {activeTab === "overview" && (
              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-10">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                   <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-6">
-                      <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center"><Calendar size={24} /></div>
-                      <div><p className="text-[10px] font-bold text-gray-400 uppercase">Events</p><h3 className="text-2xl font-black">{stats?.totalEvents || 0}</h3></div>
-                   </div>
-                   <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-6">
-                      <div className="w-12 h-12 bg-gray-50 text-gray-400 rounded-xl flex items-center justify-center"><Users size={24} /></div>
-                      <div><p className="text-[10px] font-bold text-gray-400 uppercase">Inscrits</p><h3 className="text-2xl font-black">{stats?.totalRegistrations || 0}</h3></div>
-                   </div>
-                   <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-6">
-                      <div className="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center"><CheckSquare size={24} /></div>
-                      <div><p className="text-[10px] font-bold text-gray-400 uppercase">Validés</p><h3 className="text-2xl font-black">{stats?.qrValidated || 0}</h3></div>
-                   </div>
+                   <StatCard title="Événements" value={stats?.totalEvents || 0} icon={Calendar} theme="blue" description="Total actifs" />
+                   <StatCard title="Inscriptions" value={stats?.totalRegistrations || 0} icon={Users} theme="purple" description="Participants inscrits" />
+                   <StatCard title="Tickets Validés" value={stats?.qrValidated || 0} icon={CheckSquare} theme="emerald" description="Accès confirmés" />
                 </div>
                 <div className="bg-white rounded-3xl border border-gray-100 p-2 md:p-6 shadow-sm">
                    <OrganizerEventList events={organizedEvents} />

@@ -42,12 +42,12 @@ const EditProfileForm = () => {
       onSubmit={handleSubmit}
       className="p-4 border border-gray-200 rounded-lg shadow-inner mt-4 space-y-3 w-full max-w-sm mx-auto"
     >
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+      <h3 className="text-lg font-semibold text-slate-500 mb-4">
         Éditer le Profil
       </h3>
 
       <div className="flex flex-col space-y-1">
-        <label className="text-sm font-medium text-gray-700">Nom:</label>
+        <label className="text-sm font-medium text-slate-500">Nom:</label>
         <input
           type="text"
           value={name}
@@ -57,7 +57,7 @@ const EditProfileForm = () => {
       </div>
 
       <div className="flex flex-col space-y-1">
-        <label className="text-sm font-medium text-gray-700">Email:</label>
+        <label className="text-sm font-medium text-slate-500">Email:</label>
         <input
           type="email"
           value={email}
@@ -76,7 +76,7 @@ const EditProfileForm = () => {
         <button
           type="button"
           onClick={() => setIsFormVisible(false)}
-          className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 rounded-lg transition duration-200"
+          className="flex-1 bg-gray-300 hover:bg-gray-400 text-slate-500 font-semibold py-2 rounded-lg transition duration-200"
         >
           Annuler
         </button>

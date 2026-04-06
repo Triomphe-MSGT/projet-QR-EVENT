@@ -45,7 +45,7 @@ const ResetPasswordPage = () => {
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-green-400 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20 mb-4 transform -rotate-6">
             <ShieldCheck className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">
+          <h1 className="text-4xl font-black tracking-tighter text-slate-500 dark:text-white uppercase">
             Qr-Event<span className="text-blue-500">.</span>
           </h1>
         </div>
@@ -56,7 +56,7 @@ const ResetPasswordPage = () => {
               <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/20">
                 <CheckCircle2 className="w-10 h-10 text-green-500" />
               </div>
-              <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight mb-3">Mot de passe modifié !</h2>
+              <h2 className="text-2xl font-black text-slate-500 dark:text-white tracking-tight mb-3">Mot de passe modifié !</h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm font-medium leading-relaxed mb-8">
                 Votre mot de passe a été réinitialisé avec succès. Vous allez être redirigé vers la page de connexion...
               </p>
@@ -70,7 +70,7 @@ const ResetPasswordPage = () => {
           ) : (
             <>
               <div className="mb-8">
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Nouveau mot de passe</h2>
+                <h2 className="text-2xl font-black text-slate-500 dark:text-white tracking-tight">Nouveau mot de passe</h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Choisissez un mot de passe sécurisé pour votre compte.</p>
               </div>
 
@@ -83,7 +83,7 @@ const ResetPasswordPage = () => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Nouveau mot de passe"
-                    className="w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-[#3A3B3C] border border-gray-200 dark:border-[#3E4042] rounded-2xl text-gray-900 dark:text-[#E4E6EB] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
+                    className="w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-[#3A3B3C] border border-gray-200 dark:border-[#3E4042] rounded-2xl text-slate-500 dark:text-[#E4E6EB] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
                   />
                   <button
                     type="button"
@@ -102,7 +102,7 @@ const ResetPasswordPage = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirmer le mot de passe"
-                    className="w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-[#3A3B3C] border border-gray-200 dark:border-[#3E4042] rounded-2xl text-gray-900 dark:text-[#E4E6EB] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
+                    className="w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-[#3A3B3C] border border-gray-200 dark:border-[#3E4042] rounded-2xl text-slate-500 dark:text-[#E4E6EB] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
                   />
                   <button
                     type="button"

@@ -63,6 +63,32 @@ const deleteNotification = async (req, res, next) => {
   }
 };
 
+// --- Marquer une seule notification comme lue ---
+const markOneAsRead = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    const { id } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentification requise" });
+    }
+
+    const notification = await Notification.findOneAndUpdate(
+      { _id: id, user: userId },
+      { isRead: true },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({ error: "Notification non trouvée" });
+    }
+
+    return res.status(200).json(notification);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // --- Supprimer toutes les notifications ---
 const deleteAllNotifications = async (req, res, next) => {
   try {
@@ -82,6 +108,7 @@ const deleteAllNotifications = async (req, res, next) => {
 module.exports = {
   getMyNotifications,
   markAllAsRead,
+  markOneAsRead,
   deleteNotification,
   deleteAllNotifications,
 };

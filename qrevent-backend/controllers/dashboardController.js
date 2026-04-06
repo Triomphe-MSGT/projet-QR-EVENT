@@ -44,7 +44,7 @@ const getAdminStats = async (req, res, next) => {
     const totalRegistrations = await Inscription.countDocuments();
     const qrValidated = await Inscription.countDocuments({ isValidated: true });
 
-    const avgPerEvent = totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : 0;
+    const avgPerEvent = totalEvents > 0 ? (totalRegistrations / totalEvents) : 0;
 
     res.json({
       totalUsers,
@@ -81,7 +81,7 @@ const generateAdminReport = async (req, res, next) => {
     const qrValidated = await Inscription.countDocuments({ isValidated: true });
 
     const avgPerEvent =
-      totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : 0;
+      totalEvents > 0 ? (totalRegistrations / totalEvents) : 0;
 
     // --- 2. Utilisateurs avec statistiques ---
     const usersRaw = await User.find({})

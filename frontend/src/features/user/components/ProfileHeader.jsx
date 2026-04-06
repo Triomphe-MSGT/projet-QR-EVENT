@@ -11,7 +11,7 @@ const ProfileHeader = ({ name, role, avatarUrl, children }) => {
           className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
         />
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">{name}</h1>
+          <h1 className="text-2xl font-bold text-slate-500">{name}</h1>
           {role && <p className="text-gray-500">{role}</p>}
         </div>
       </div>

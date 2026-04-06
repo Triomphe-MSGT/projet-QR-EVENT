@@ -40,7 +40,7 @@ const UpgradeToOrganizerModal = ({ onClose }) => {
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 sm:p-8 w-full max-w-md mx-auto animate-slide-in-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-2xl font-bold text-slate-500 dark:text-white mb-4">
           Devenir Organisateur
         </h2>
         <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -65,7 +65,7 @@ const UpgradeToOrganizerModal = ({ onClose }) => {
             <div>
               <label
                 htmlFor="profession"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-slate-500 dark:text-gray-300"
               >
                 Profession ou Domaine d'activité
               </label>
@@ -83,7 +83,7 @@ const UpgradeToOrganizerModal = ({ onClose }) => {
             <div>
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-slate-500 dark:text-gray-300"
               >
                 Numéro de téléphone
               </label>
@@ -101,7 +101,7 @@ const UpgradeToOrganizerModal = ({ onClose }) => {
             <div>
               <label
                 htmlFor="sexe"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-slate-500 dark:text-gray-300"
               >
                 Sexe
               </label>

@@ -53,13 +53,13 @@ const CategoryFormModal = ({
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
+          className="absolute top-3 right-3 text-gray-500 hover:text-slate-500 dark:text-gray-400 dark:hover:text-white"
           aria-label="Fermer"
         >
           <X size={24} />
         </button>
 
-        <h2 className="text-xl font-semibold mb-5 text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold mb-5 text-slate-500 dark:text-gray-100">
           {initialData ? "Modifier la catégorie" : "Ajouter une catégorie"}
         </h2>
 
@@ -68,7 +68,7 @@ const CategoryFormModal = ({
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="block text-sm font-medium text-slate-500 dark:text-gray-300"
             >
               Nom de la catégorie
             </label>
@@ -88,7 +88,7 @@ const CategoryFormModal = ({
           <div>
             <label
               htmlFor="emoji"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="block text-sm font-medium text-slate-500 dark:text-gray-300"
             >
               Emoji (Optionnel)
             </label>
@@ -108,7 +108,7 @@ const CategoryFormModal = ({
           <div>
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="block text-sm font-medium text-slate-500 dark:text-gray-300"
             >
               Description (Optionnel)
             </label>

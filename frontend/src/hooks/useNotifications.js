@@ -13,6 +13,11 @@ const markNotificationsAsRead = async () => {
   await api.post("/notifications/read");
 };
 
+const markOneAsRead = async (id) => {
+  const { data } = await api.post(`/notifications/${id}/read`);
+  return data;
+};
+
 const deleteNotification = async (id) => {
   await api.delete(`/notifications/${id}`);
 };
@@ -48,6 +53,21 @@ export const useMarkAsRead = () => {
         oldData ? oldData.map((n) => ({ ...n, isRead: true })) : []
       );
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+};
+
+/**
+ * Hook to mark a specific notification as read.
+ */
+export const useMarkSingleAsRead = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: markOneAsRead,
+    onSuccess: (updatedNotif) => {
+      queryClient.setQueryData(["notifications"], (oldData) =>
+        oldData ? oldData.map((n) => n._id === updatedNotif._id ? updatedNotif : n) : []
+      );
     },
   });
 };

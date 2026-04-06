@@ -50,17 +50,17 @@ const HelpPage = () => {
     <MainLayout>
       <div className="bg-slate-50 min-h-screen font-sans selection:bg-orange-100 selection:text-orange-900 pb-20">
         
-        {/* HERO SECTION */}
-        <section className="bg-slate-900 pt-24 pb-20 md:pt-40 md:pb-32 relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-600 rounded-full blur-[140px] opacity-20 -mb-48"></div>
+        {/* HERO SECTION - Light SaaS Style */}
+        <section className="bg-white pt-24 pb-20 md:pt-40 md:pb-32 relative overflow-hidden border-b border-slate-50">
+           <div className="absolute top-0 right-0 w-full h-full bg-slate-50/30 opacity-50"></div>
+           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-50 rounded-full blur-[140px] opacity-20 -mb-48"></div>
            
            <div className="max-w-5xl mx-auto px-6 text-center space-y-8 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full text-white font-black text-[9px] uppercase tracking-[0.3em]">
-                 <HelpCircle size={14} className="text-orange-500" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-orange-50 rounded-full text-orange-600 font-black text-[9px] uppercase tracking-[0.3em]">
+                 <HelpCircle size={14} />
                  Base de Connaissances
               </div>
-              <h1 className="text-4xl md:text-8xl font-black text-white tracking-tighter uppercase leading-none">
+              <h1 className="text-4xl md:text-8xl font-black text-slate-500 tracking-tighter uppercase leading-none">
                  Guide <span className="text-orange-500">Pratique</span>
               </h1>
               <p className="text-slate-400 font-bold text-base md:text-xl max-w-2xl mx-auto leading-relaxed">

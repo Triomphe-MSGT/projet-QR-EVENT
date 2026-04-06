@@ -109,7 +109,7 @@ const ParticipantManagementModal = ({ event, onClose }) => {
         >
           <X size={24} />
         </button>
-        <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold mb-1 text-slate-500 dark:text-gray-100">
           Gérer les Inscrits
         </h2>
         <p className="text-sm text-blue-600 dark:text-blue-400 mb-4">
@@ -118,7 +118,7 @@ const ParticipantManagementModal = ({ event, onClose }) => {
 
         {/* Add Participant Section */}
         <div className="mb-4">
-          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <h3 className="text-lg font-medium text-slate-500 dark:text-gray-300 mb-2">
             Ajouter un Participant
           </h3>
           <div className="relative">
@@ -187,7 +187,7 @@ const ParticipantManagementModal = ({ event, onClose }) => {
         </div>
 
         {/* Participants List */}
-        <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mt-6 mb-2">
+        <h3 className="text-lg font-medium text-slate-500 dark:text-gray-300 mt-6 mb-2">
           Participants Inscrits ({participants.length})
         </h3>
         <div
@@ -223,7 +223,7 @@ const ParticipantManagementModal = ({ event, onClose }) => {
                   return (
                     <tr key={participantId}>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-sm text-gray-800 dark:text-gray-100">
+                        <p className="font-medium text-sm text-slate-500 dark:text-gray-100">
                           {p.nom}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">

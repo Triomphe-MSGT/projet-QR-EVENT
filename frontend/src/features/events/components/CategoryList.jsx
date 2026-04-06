@@ -22,7 +22,7 @@ const CategoryCard = ({ category }) => {
         <span className="text-3xl sm:text-5xl mb-3 sm:mb-4 transition-transform duration-500 group-hover:scale-125 group-hover:rotate-6">
           {category.emoji || "📁"}
         </span>
-        <p className="font-bold text-center text-xs sm:text-base text-gray-800 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate w-full">
+        <p className="font-bold text-center text-xs sm:text-base text-slate-500 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate w-full">
           {category.name}
         </p>
         <div className="mt-2 w-0 group-hover:w-full h-0.5 bg-blue-500 transition-all duration-500 rounded-full"></div>

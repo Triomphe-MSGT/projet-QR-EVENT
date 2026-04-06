@@ -71,7 +71,7 @@ const FeaturedNewsCarousel = () => {
             <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
             <span className="text-blue-600 text-xs font-black uppercase tracking-widest">Live Tech Pulse</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-500 dark:text-white uppercase">
             L'ACTU <span className="text-blue-600">PREMIUM</span>
           </h2>
         </div>
@@ -180,7 +180,7 @@ const FeaturedNewsCarousel = () => {
                 <span className={`text-[9px] lg:text-[10px] font-black uppercase tracking-widest mb-0.5 lg:mb-1 ${activeIndex === index ? 'text-white/80' : 'text-blue-600'}`}>
                   #{article.tags.split(",")[0]}
                 </span>
-                <h4 className={`font-bold text-xs lg:text-sm line-clamp-2 leading-tight ${activeIndex === index ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                <h4 className={`font-bold text-xs lg:text-sm line-clamp-2 leading-tight ${activeIndex === index ? 'text-white' : 'text-slate-500 dark:text-white'}`}>
                   {article.title}
                 </h4>
               </div>

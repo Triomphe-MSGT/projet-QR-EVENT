@@ -8,7 +8,7 @@ const EventItem = ({ event }) => (
       {event.category}
     </div>
     <div className="flex-grow">
-      <h3 className="text-lg font-semibold text-gray-800">{event.title}</h3>
+      <h3 className="text-lg font-semibold text-slate-500">{event.title}</h3>
       <p className="text-sm text-gray-500">{event.date}</p>
     </div>
   </div>

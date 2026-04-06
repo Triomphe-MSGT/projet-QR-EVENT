@@ -78,61 +78,61 @@ const AccountSettingsPage = () => {
       <div className="bg-slate-50 min-h-screen pb-20 font-sans selection:bg-orange-100">
         
         {/* HEADER */}
-        <header className="bg-white border-b border-slate-100 pt-16 md:pt-24 pb-12">
+        <header className="bg-white border-b border-slate-100 pt-10 md:pt-24 pb-8 md:pb-12">
            <div className="max-w-7xl mx-auto px-6">
               <button 
                 onClick={() => navigate(-1)}
-                className="group flex items-center gap-2 text-slate-400 hover:text-orange-600 transition-all mb-8 font-bold text-[10px] tracking-widest uppercase"
+                className="group flex items-center gap-2 text-slate-400 hover:text-orange-600 transition-all mb-6 md:mb-8 font-bold text-[10px] tracking-widest uppercase"
               >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Retour
               </button>
-              <div className="flex items-center gap-4 mb-4">
-                 <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center shadow-inner">
-                    <SettingsIcon size={24} />
+              <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+                 <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-100 text-orange-600 rounded-xl md:rounded-2xl flex items-center justify-center shadow-inner">
+                    <SettingsIcon size={20} md:size={24} />
                  </div>
-                 <h1 className="text-3xl md:text-5xl font-black text-slate-500 tracking-tighter uppercase">Paramètres</h1>
+                 <h1 className="text-2xl md:text-5xl font-black text-slate-500 tracking-tighter uppercase">Paramètres</h1>
               </div>
-              <p className="text-slate-400 font-bold ml-1">Gérez vos préférences et la sécurité de votre compte <span className="text-orange-600 font-black tracking-widest uppercase text-[10px] ml-2">Eco-Système QR</span></p>
+              <p className="text-slate-400 font-bold text-xs md:text-sm ml-1 leading-relaxed">Gérez vos préférences et la sécurité de votre compte <span className="text-orange-600 font-black tracking-widest uppercase text-[8px] md:text-[10px] ml-2 block sm:inline mt-1 sm:mt-0">Eco-Système QR</span></p>
            </div>
         </header>
 
-        <div className="max-w-7xl mx-auto px-6 py-12">
-           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-12">
+           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
               
-              {/* SIDEBAR TABS */}
-              <aside className="lg:col-span-4 space-y-2">
+              {/* SIDEBAR TABS (Horizontal on Mobile) */}
+              <aside className="lg:col-span-4 flex lg:flex-col overflow-x-auto lg:overflow-x-visible pb-4 lg:pb-0 gap-3 md:gap-2 custom-scrollbar scroll-smooth snap-x">
                  {tabs.map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center justify-between p-6 rounded-[2rem] transition-all group ${
+                      className={`flex lg:flex-row items-center justify-between p-4 md:p-6 rounded-2xl md:rounded-[2rem] transition-all group shrink-0 lg:shrink snap-start ${
                         activeTab === tab.id 
-                        ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/20 translate-x-2' 
-                        : 'bg-white text-slate-500 hover:bg-white/80 hover:translate-x-1'
+                        ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20 lg:translate-x-2' 
+                        : 'bg-white text-slate-500 border border-slate-100 lg:border-transparent hover:bg-white/80'
                       }`}
                     >
-                       <div className="flex items-center gap-5">
-                          <div className={`p-3 rounded-xl transition-colors ${activeTab === tab.id ? 'bg-orange-500 text-white' : 'bg-slate-50 text-slate-400 group-hover:text-slate-500'}`}>
-                             <tab.icon size={20} className={tab.color} />
+                       <div className="flex items-center gap-4 md:gap-5">
+                          <div className={`p-2.5 md:p-3 rounded-lg md:rounded-xl transition-colors ${activeTab === tab.id ? 'bg-orange-500 text-white' : 'bg-slate-50 text-slate-400 group-hover:text-slate-500'}`}>
+                             <tab.icon size={18} md:size={20} className={tab.color} />
                           </div>
                           <div className="text-left">
-                             <p className={`text-[11px] font-black uppercase tracking-widest ${activeTab === tab.id ? 'text-white' : 'text-slate-500'}`}>{tab.label}</p>
-                             <p className={`text-[9px] font-bold uppercase tracking-tighter ${activeTab === tab.id ? 'text-slate-400' : 'text-slate-400'}`}>{tab.description}</p>
+                             <p className={`text-[10px] md:text-[11px] font-black uppercase tracking-widest ${activeTab === tab.id ? 'text-white' : 'text-slate-500'}`}>{tab.label}</p>
+                             <p className="hidden md:block text-[9px] font-bold uppercase tracking-tighter text-slate-400">{tab.description}</p>
                           </div>
                        </div>
-                       <ChevronRight size={16} className={`transition-all ${activeTab === tab.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} />
+                       <ChevronRight size={14} className={`hidden lg:block transition-all ${activeTab === tab.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} />
                     </button>
                  ))}
               </aside>
 
               {/* SETTINGS CONTENT */}
-              <main className="lg:col-span-8 bg-white rounded-[3rem] p-8 md:p-16 shadow-2xl shadow-slate-200/50 border border-slate-50 min-h-[500px]">
+              <main className="lg:col-span-8 bg-white rounded-3xl md:rounded-[3rem] p-6 sm:p-10 md:p-16 shadow-xl border border-slate-50 min-h-[400px]">
                  
                  {/* SECURITY SECTION */}
                  {activeTab === "security" && (
-                    <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500 text-slate-500">
-                       <h2 className="text-2xl font-black text-slate-500 uppercase tracking-tighter flex items-center gap-3">
-                          <ShieldCheck className="text-orange-600" /> Protection du Compte
+                    <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-right-4 duration-500 text-slate-500">
+                       <h2 className="text-xl md:text-2xl font-black text-slate-500 uppercase tracking-tighter flex items-center gap-3">
+                          <ShieldCheck className="text-orange-600" /> Sécurité
                        </h2>
                        <form onSubmit={handlePasswordSubmit} className="space-y-8 max-w-md">
                           <div className="space-y-6">

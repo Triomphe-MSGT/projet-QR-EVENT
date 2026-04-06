@@ -35,39 +35,19 @@ const UserCards = () => {
     "p-4 bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 text-center flex-1";
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mb-6">
-      <div className={cardStyle}>
-        <h3 className="text-gray-500 dark:text-gray-400 font-semibold uppercase text-xs">
-          Total Utilisateurs
-        </h3>
-        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-          {totalUsers}
-        </p>
-      </div>
-      <div className={cardStyle}>
-        <h3 className="text-gray-500 dark:text-gray-400 font-semibold uppercase text-xs">
-          Participants
-        </h3>
-        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-          {participantCount}
-        </p>
-      </div>
-      <div className={cardStyle}>
-        <h3 className="text-gray-500 dark:text-gray-400 font-semibold uppercase text-xs">
-          Organisateurs
-        </h3>
-        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-          {organizerCount}
-        </p>
-      </div>
-      <div className={cardStyle}>
-        <h3 className="text-gray-500 dark:text-gray-400 font-semibold uppercase text-xs">
-          Admins
-        </h3>
-        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-          {adminCount}
-        </p>
-      </div>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+       {[
+         { label: "Total", count: totalUsers, color: "bg-blue-500" },
+         { label: "Participants", count: participantCount, color: "bg-emerald-500" },
+         { label: "Organisateurs", count: organizerCount, color: "bg-purple-500" },
+         { label: "Admins", count: adminCount, color: "bg-red-500" }
+       ].map((item, i) => (
+         <div key={i} className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 flex flex-col items-center justify-center text-center space-y-2 hover:bg-white hover:shadow-xl transition-all group">
+            <div className={`w-2 h-2 rounded-full ${item.color} mb-2 shadow-lg shadow-${item.color.split('-')[1]}-500/20`}></div>
+            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{item.label}</p>
+            <p className="text-3xl font-black text-slate-500 group-hover:text-slate-900 transition-colors uppercase tracking-tighter">{item.count}</p>
+         </div>
+       ))}
     </div>
   );
 };

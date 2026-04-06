@@ -32,7 +32,7 @@ const LocalisationCart = ({ location }) => {
   return (
     <div className="space-y-4">
       {/* Display the unified full address */}
-      <div className="text-gray-700 dark:text-gray-300">
+      <div className="text-slate-500 dark:text-gray-300">
         <p className="text-lg font-medium flex items-center">
           <MapPin className="w-5 h-5 mr-2 text-gray-500 shrink-0" />
           {fullAddress || "Address not specified"}

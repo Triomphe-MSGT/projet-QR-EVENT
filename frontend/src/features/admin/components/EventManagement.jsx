@@ -48,7 +48,7 @@ const EventManagement = () => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold text-slate-500 dark:text-gray-100">
           Gestion des Événements ({events.length})
         </h2>
         <Link to="/createevent">
@@ -85,7 +85,7 @@ const EventManagement = () => {
                 key={event._id || event.id}
                 className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
               >
-                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-500 dark:text-gray-100">
                   <Link
                     to={`/events/${event._id || event.id}`}
                     className="hover:text-blue-600"
