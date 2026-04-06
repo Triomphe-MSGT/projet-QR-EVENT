@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { queryClient } from "../main";
+import { queryClient } from "../app/queryClient";
 
 const user = JSON.parse(localStorage.getItem("user"));
 const token = localStorage.getItem("token");

@@ -2,14 +2,14 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import MainLayout from "../../components/layout/MainLayout";
 import { QrCode, Search, MapPin, Calendar, ArrowRight, Sparkles,
- Zap,
- Globe,
- Settings,
- User as UserIcon,
- Plus,
- Mail,
- MessageCircle,
- Smartphone
+  Zap,
+  Globe,
+  Settings,
+  User as UserIcon,
+  Plus,
+  Mail,
+  MessageCircle,
+  Smartphone
 } from "lucide-react";
 import { useEvents } from "../../hooks/useEvents";
 import { useUserProfile } from "../../hooks/useUserProfile";
@@ -23,28 +23,44 @@ const HomePage = () => {
   const { data: categories } = useCategories();
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const [dateQuery, setDateQuery] = useState("");
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   const [liveNews, setLiveNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const scrollRef = useRef(null);
 
-  // Auto-scroll logic that allows manual scrolling
+  // Auto-scroll logic (Desktop: Horizontal | Mobile: Vertical)
   useEffect(() => {
     let scrollInterval;
     if (!newsLoading && scrollRef.current) {
       scrollInterval = setInterval(() => {
         if (scrollRef.current && !scrollRef.current.matches(':hover')) {
-          scrollRef.current.scrollLeft += 0.5;
-          // Reset scroll when reaching the halfway point (due to duplicated items array)
-          if (scrollRef.current.scrollLeft >= (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) / 2) {
-            scrollRef.current.scrollLeft = 0;
+          if (isMobile) {
+            // Vertical scroll for mobile list
+            scrollRef.current.scrollTop += 0.5;
+            if (scrollRef.current.scrollTop >= (scrollRef.current.scrollHeight - scrollRef.current.clientHeight) / 2) {
+              scrollRef.current.scrollTop = 0;
+            }
+          } else {
+            // Horizontal scroll for desktop marquee
+            scrollRef.current.scrollLeft += 0.5;
+            if (scrollRef.current.scrollLeft >= (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) / 2) {
+              scrollRef.current.scrollLeft = 0;
+            }
           }
         }
       }, 30); // 0.5px every 30ms -> super slow and smooth
     }
     return () => clearInterval(scrollInterval);
-  }, [newsLoading, liveNews]);
+  }, [newsLoading, liveNews, isMobile]);
 
   // Fetch real-time tech events/news from DEV.to API
   useEffect(() => {
@@ -63,11 +79,10 @@ const HomePage = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchQuery) params.append("search", searchQuery);
+    if (searchQuery) params.append("query", searchQuery);
     if (locationQuery) params.append("city", locationQuery);
     navigate(`/events?${params.toString()}`);
   };
-
 
 
   return (
@@ -201,83 +216,135 @@ const HomePage = () => {
             </Reveal>
 
             <Reveal direction="up" delay={200}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-8">
-              {eventsLoading ? (
-                [1, 2, 3, 4, 5].map((idx) => (
-                  <div key={idx} className="h-[480px] bg-white border border-slate-100 animate-pulse rounded-3xl shadow-sm"></div>
-                ))
-              ) : events?.filter(ev => new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0)).length > 0 ? (
-                events
-                  .filter(ev => new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0))
-                  .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-                  .slice(0, 5)
-                  .map((event, idx) => (
-                  <div 
-                    key={event._id || idx} 
-                    className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_4px_6px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-2 flex flex-col mx-auto w-full max-w-[280px] md:max-w-none"
-                  >
-                    <div className="h-40 md:h-60 overflow-hidden relative bg-slate-100 flex items-center justify-center">
-                      {event.coverImage || event.imageUrl ? (
-                        <img 
-                          src={event.coverImage || event.imageUrl} 
-                          alt={event.title || event.name} 
-                          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-500 to-amber-600 text-white font-black text-5xl md:text-6xl group-hover:scale-105 transition-transform duration-1000">
-                          {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}
-                        </div>
-                      )}
-                      <div className="absolute top-4 left-4 px-3 md:px-4 py-1.5 md:py-2 bg-white/95 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-orange-600 shadow-sm border border-orange-50">
-                        {event.category?.name || "Événement"}
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 md:p-7 flex-1 flex flex-col justify-between">
-                      <div className="space-y-3 md:space-y-4">
-                        <h3 className="text-sm md:text-lg font-medium text-slate-900 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
-                          {event.title}
-                        </h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2.5 text-xs font-medium text-slate-400">
-                            <Calendar size={14} className="text-blue-500 flex-shrink-0" />
-                            <span>{new Date(event.startDate || event.date).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long' })}</span>
-                          </div>
-                          <div className="flex items-center gap-2.5 text-xs font-medium text-slate-400">
-                            <MapPin size={14} className="text-blue-500 flex-shrink-0" />
-                            <span className="truncate">{event.location || event.city || "Lieu à confirmer"}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-4 md:pt-6 mt-4 md:mt-6 border-t border-slate-50">
-                        <div className="flex flex-col">
-                          <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Ticket dès</span>
-                          <span className="text-base md:text-xl font-medium text-slate-900">
-                            {event.price > 0 ? `${event.price.toLocaleString()} F` : "Gratuit"}
-                          </span>
-                        </div>
-                        <button 
-                          onClick={() => navigate(`/events/${event._id}`)}
-                          className="px-4 py-2 bg-slate-900 text-white text-[10px] md:text-xs font-bold rounded-lg md:rounded-xl hover:bg-blue-600 transition-all shadow-md active:scale-95"
+              <div className={isMobile ? "space-y-4" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-8"}>
+                {eventsLoading ? (
+                  [1, 2, 3, 4, 5].map((idx) => (
+                    <div key={idx} className={isMobile ? "h-28 bg-white border border-slate-100 animate-pulse rounded-2xl" : "h-[480px] bg-white border border-slate-100 animate-pulse rounded-3xl"}></div>
+                  ))
+                ) : events?.filter(ev => new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0)).length > 0 ? (
+                  events
+                    .filter(ev => new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0))
+                    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                    .slice(0, 5)
+                    .map((event, idx) => (
+                      isMobile ? (
+                        /* Mobile Premium Card */
+                        <div 
+                          key={event._id || idx} 
+                          onClick={() => navigate(`/events/${event._id}`)} 
+                          className="group bg-white p-4 rounded-[1.5rem] flex gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 active:scale-[0.98] transition-all"
                         >
-                          Réserver
-                        </button>
+                          <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center relative">
+                            {event.coverImage || event.imageUrl ? (
+                              <img src={event.coverImage || event.imageUrl} className="w-full h-full object-cover" alt={event.title} />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center">
+                                <span className="text-white font-black text-4xl drop-shadow-md">
+                                  {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}
+                                </span>
+                              </div>
+                            )}
+                            <div className="absolute top-1 right-1 px-2 py-1 bg-white/95 backdrop-blur-md rounded-lg text-[9px] font-black text-slate-900 shadow-sm border border-slate-200">
+                              {event.price > 0 ? `${event.price.toLocaleString()} F` : 'GRATUIT'}
+                            </div>
+                          </div>
+
+                          <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
+                            <div className="space-y-1.5 text-left">
+                               <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[8px] font-black uppercase rounded-md border border-orange-100 tracking-wider inline-block">
+                                 {event.category?.name || "Événement"}
+                               </span>
+                               <h3 className="text-[15px] font-black text-slate-900 truncate leading-tight">
+                                 {event.title || event.name}
+                               </h3>
+                               <div className="flex flex-col gap-1">
+                                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 text-left">
+                                    <Calendar size={12} className="text-orange-500" strokeWidth={3} />
+                                    <span>{new Date(event.startDate || event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</span>
+                                 </div>
+                                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 text-left">
+                                    <MapPin size={12} className="text-blue-500" strokeWidth={3} />
+                                    <span className="truncate">{event.location || event.city || "Abidjan, CI"}</span>
+                                 </div>
+                               </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-end mt-2">
+                               <div className="p-1 px-3 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest active:bg-orange-600">
+                                  Réserver
+                               </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Desktop Grid Card */
+                        <div 
+                          key={event._id || idx} 
+                          className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_4px_6px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-2 flex flex-col mx-auto w-full max-w-[280px] md:max-w-none"
+                        >
+                          <div className="h-40 md:h-60 overflow-hidden relative bg-slate-100 flex items-center justify-center">
+                            {event.coverImage || event.imageUrl ? (
+                              <img 
+                                src={event.coverImage || event.imageUrl} 
+                                alt={event.title || event.name} 
+                                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                              />
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-500 to-amber-600 text-white font-black text-5xl md:text-6xl group-hover:scale-105 transition-transform duration-1000">
+                                {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}
+                              </div>
+                            )}
+                            <div className="absolute top-4 left-4 px-3 md:px-4 py-1.5 md:py-2 bg-white/95 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-orange-600 shadow-sm border border-orange-50">
+                              {event.category?.name || "Événement"}
+                            </div>
+                          </div>
+                          
+                          <div className="p-4 md:p-7 flex-1 flex flex-col justify-between">
+                            <div className="space-y-3 md:space-y-4">
+                              <h3 className="text-sm md:text-lg font-medium text-slate-900 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+                                {event.title}
+                              </h3>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2.5 text-xs font-medium text-slate-400">
+                                  <Calendar size={14} className="text-blue-500 flex-shrink-0" />
+                                  <span>{new Date(event.startDate || event.date).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long' })}</span>
+                                </div>
+                                <div className="flex items-center gap-2.5 text-xs font-medium text-slate-400">
+                                  <MapPin size={14} className="text-blue-500 flex-shrink-0" />
+                                  <span className="truncate">{event.location || event.city || "Lieu à confirmer"}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-4 md:pt-6 mt-4 md:mt-6 border-t border-slate-50">
+                              <div className="flex flex-col">
+                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Ticket dès</span>
+                                <span className="text-base md:text-xl font-medium text-slate-900">
+                                  {event.price > 0 ? `${event.price.toLocaleString()} F` : "Gratuit"}
+                                </span>
+                              </div>
+                              <button 
+                                onClick={() => navigate(`/events/${event._id}`)}
+                                className="px-4 py-2 bg-slate-900 text-white text-[10px] md:text-xs font-bold rounded-lg md:rounded-xl hover:bg-blue-600 transition-all shadow-md active:scale-95"
+                              >
+                                Réserver
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    ))
+                ) : (
+                  <div className="col-span-full py-20 text-center bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                    <div className="max-w-xs mx-auto space-y-4">
+                      <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto text-slate-300">
+                        <Sparkles size={32} />
                       </div>
+                      <p className="text-slate-500 font-medium italic">Plus d'événements bientôt disponibles...</p>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="col-span-full py-20 text-center bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
-                  <div className="max-w-xs mx-auto space-y-4">
-                    <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto text-slate-300">
-                      <Sparkles size={32} />
-                    </div>
-                    <p className="text-slate-500 font-medium italic">Plus d'événements bientôt disponibles...</p>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             </Reveal>
           </div>
         </section>
@@ -285,66 +352,98 @@ const HomePage = () => {
         {/* ==========================================
             SECTION 3: POURQUOI NOUS CHOISIR ? (QR TECH)
             ========================================== */}
-        <section className="py-20 md:py-32 relative overflow-hidden bg-slate-50 border-y border-slate-100">
+        <section className="py-20 md:py-40 relative overflow-hidden bg-slate-50 border-y border-slate-100">
           <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
               
-              {/* Visual Side */}
-              <Reveal direction="left">
-              <div className="relative order-2 lg:order-1 mt-10 lg:mt-0">
-                <div className="absolute inset-0 bg-gradient-to-tr from-orange-200/20 to-blue-200/20 blur-2xl lg:blur-3xl rounded-[2rem] lg:rounded-[3rem] -z-10 transform -rotate-6"></div>
-                <div className="bg-white p-6 sm:p-8 md:p-12 rounded-[2rem] lg:rounded-[3rem] shadow-xl border border-slate-100">
-                  <img src="./assets/picture_of_choose.png" alt="Expérience QR Check-in" className="w-full max-w-sm lg:max-w-lg mx-auto object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
-                </div>
-              </div>
-              </Reveal>
-
-              {/* Content Side */}
-              <Reveal direction="right" delay={200}>
-              <div className="space-y-8 lg:space-y-10 order-1 lg:order-2 text-center lg:text-left">
-                <div className="space-y-4 lg:space-y-6">
-                  
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium leading-[1.1] text-slate-700 tracking-tight">
-                    L'innovation au service de <br className="hidden lg:block"/>
+              {/* 1. Header (Mobile Only) */}
+              <div className="lg:hidden text-center space-y-4 mb-8">
+                <Reveal direction="up">
+                  <h2 className="text-4xl font-black leading-[1.1] text-slate-800 tracking-tight">
+                    L'innovation au service de <br/>
                     <span className="text-orange-500">votre événement.</span>
                   </h2>
-                  <p className="text-base md:text-lg text-slate-500 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-                    Nous remplaçons les files d'attente interminables et la billetterie complexe par une solution intelligente, sécurisée et instantanée.
+                  <p className="text-slate-500 text-lg max-w-lg mx-auto leading-relaxed">
+                    Nous remplaçons les files d'attente interminables par une solution intelligente et instantanée.
                   </p>
-                </div>
+                </Reveal>
+              </div>
 
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <div className="mt-1 w-12 h-12 flex-shrink-0 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center">
-                      <QrCode size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-medium text-slate-900 mb-2">Billets QR 100% Numériques</h3>
-                      <p className="text-slate-500">Fini le papier. Recevez un QR code unique infalsifiable directement sur votre smartphone.</p>
+              {/* 2. Visual Side (Middle on Mobile, Left Column on Desktop) */}
+              <div className="w-full lg:order-1 relative">
+                <Reveal direction="left">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-orange-300/30 to-blue-300/30 blur-3xl rounded-full -z-10 transform scale-110"></div>
+                  <div className="bg-white p-5 sm:p-10 rounded-[3rem] shadow-2xl border border-white/50 relative overflow-hidden group">
+                    <img src="./assets/picture_of_choose.png" alt="Expérience QR Check-in" className="w-full max-w-sm lg:max-w-lg mx-auto object-contain drop-shadow-2xl group-hover:scale-105 transition-transform duration-700" />
+                    {/* Floating Info Tag on Mobile */}
+                    <div className="absolute bottom-6 left-6 right-6 bg-slate-900/90 backdrop-blur-xl p-4 rounded-2xl border border-white/10 lg:hidden text-left">
+                       <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white">
+                             <Zap size={20} />
+                          </div>
+                          <p className="text-white text-xs font-bold leading-tight">Scanner Ultra-Rapide <br/><span className="text-white/50 font-normal text-[10px]">Moins de 1s par billet</span></p>
+                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex gap-4">
-                    <div className="mt-1 w-12 h-12 flex-shrink-0 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center">
-                      <Zap size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-medium text-slate-900 mb-2">Check-in Ultra Rapide</h3>
-                      <p className="text-slate-500">Un scan prend moins d'une seconde. Fluidifiez les entrées et éliminez complètement les files d'attente à la porte.</p>
-                    </div>
-                  </div>
+                </Reveal>
+              </div>
+
+              {/* 3. Content Side (Bottom on Mobile, Right Column on Desktop) */}
+              <div className="w-full lg:order-2 space-y-10 lg:space-y-12">
+                <div className="hidden lg:block space-y-6">
+                  <Reveal direction="right">
+                    <h2 className="text-5xl lg:text-7xl font-black leading-[1.1] text-slate-800 tracking-tight">
+                      L'innovation au service de <br className="hidden lg:block"/>
+                      <span className="text-orange-500">votre événement.</span>
+                    </h2>
+                    <p className="text-lg lg:text-xl text-slate-500 max-w-xl leading-relaxed font-medium">
+                      Nous remplaçons les files d'attente interminables et la billetterie complexe par une solution intelligente, sécurisée et instantanée.
+                    </p>
+                  </Reveal>
                 </div>
 
-                <div className="pt-4">
-                  <button onClick={() => navigate('/events')}
-                    className="group px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/20 flex items-center gap-3"
-                  >
-                    Voir comment ça marche
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
+                <div className="grid grid-cols-1 gap-6 sm:gap-10">
+                  {[
+                    {
+                      icon: QrCode,
+                      title: "Billets QR 100% Numériques",
+                      desc: "Fini le papier. Recevez un QR code unique infalsifiable directement sur votre smartphone.",
+                      color: "text-blue-500",
+                      bg: "bg-blue-50"
+                    },
+                    {
+                      icon: Zap,
+                      title: "Check-in Ultra Rapide",
+                      desc: "Un scan prend moins d'une seconde. Fluidifiez les entrées et éliminez les attentes.",
+                      color: "text-orange-500",
+                      bg: "bg-orange-50"
+                    }
+                  ].map((item, idx) => (
+                    <Reveal key={idx} direction="up" delay={200 + (idx * 100)}>
+                      <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 lg:gap-8 group">
+                        <div className={`w-16 h-16 shrink-0 ${item.bg} ${item.color} rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform`}>
+                          <item.icon size={32} strokeWidth={2.5} />
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{item.title}</h3>
+                          <p className="text-base lg:text-lg text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+                        </div>
+                      </div>
+                    </Reveal>
+                  ))}
+                </div>
+
+                <div className="pt-6 text-center lg:text-left">
+                  <Reveal direction="up" delay={500}>
+                    <button onClick={() => navigate('/events')}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 bg-slate-900 text-white rounded-2xl lg:rounded-[2rem] font-black text-lg hover:bg-slate-800 transition-all shadow-[0_20px_40px_-10px_rgba(15,23,42,0.3)] hover:-translate-y-1 group"
+                    >
+                      Explorer les Événements
+                      <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </Reveal>
                 </div>
               </div>
-              </Reveal>
               
             </div>
           </div>
@@ -372,68 +471,113 @@ const HomePage = () => {
             </Reveal>
 
             <Reveal direction="up" delay={200}>
-            {/* Overflow hidden container for Marquee */}
-            <div className="relative overflow-hidden group">
-              
-              {/* Fade masks for smooth edges */}
-              <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
-              <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+            {isMobile ? (
+               <div 
+                 ref={scrollRef}
+                 className="space-y-4 px-2 h-[500px] overflow-y-auto no-scrollbar scroll-smooth"
+                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+               >
+                 {newsLoading ? (
+                   [1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-50 rounded-2xl animate-pulse" />)
+                 ) : liveNews.length > 0 ? (
+                   [...liveNews, ...liveNews].map((news, idx) => (
+                     <a 
+                       key={`${news.id}-${idx}`} 
+                       href={news.url} 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       className="group/card bg-white p-4 rounded-[1.5rem] flex gap-4 shadow-sm border border-slate-100 active:scale-[0.98] transition-all"
+                     >
+                       <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center relative">
+                         <img 
+                           src={news.cover_image || news.social_image || "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=60"} 
+                           alt={news.title}
+                           className="w-full h-full object-cover transition-transform group-hover/card:scale-105"
+                         />
+                       </div>
+                       <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
+                         <div className="space-y-1.5 text-left">
+                            <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[8px] font-black uppercase rounded-md border border-blue-100 tracking-wider inline-block">
+                               Tech News
+                            </span>
+                            <h3 className="text-[14px] font-black text-slate-900 line-clamp-2 leading-tight">
+                              {news.title}
+                            </h3>
+                         </div>
+                         <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 mt-2">
+                            <div className="flex items-center gap-1"><Calendar size={12} className="text-orange-500" /><span>{new Date(news.published_at).toLocaleDateString()}</span></div>
+                            <div className="flex items-center gap-1 text-orange-500 underline decoration-orange-500/30"><span>Détails</span></div>
+                         </div>
+                       </div>
+                     </a>
+                   ))
+                 ) : (
+                   <div className="text-center py-10 text-slate-400 italic text-xs">Aucune actualité disponible</div>
+                 )}
+               </div>
+            ) : (
+              <div className="relative overflow-hidden group">
+                
+                {/* Fade masks for smooth edges */}
+                <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+                <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
 
-              {newsLoading ? (
-                <div className="flex gap-8 overflow-x-hidden no-scrollbar">
-                  {[1, 2, 3, 4, 5].map((idx) => (
-                    <div key={idx} className="w-[350px] shrink-0 h-80 bg-slate-50 animate-pulse rounded-3xl border border-slate-100"></div>
-                  ))}
-                </div>
-              ) : liveNews.length > 0 ? (
-                <div 
-                  ref={scrollRef}
-                  className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto no-scrollbar pb-6 cursor-grab active:cursor-grabbing scroll-smooth"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // Inline fallback for hiding scrollbars
-                >
-                  {/* We duplicate the list for a seamless loop */}
-                  {[...liveNews, ...liveNews].map((news, idx) => (
-                    <a 
-                      key={`${news.id}-${idx}`} 
-                      href={news.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="w-[280px] sm:w-[320px] md:w-[350px] shrink-0 group/card bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
-                    >
-                      <div className="h-40 md:h-48 bg-slate-100 relative overflow-hidden">
-                        <img 
-                          src={news.cover_image || news.social_image || "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=60"} 
-                          alt={news.title}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-700"
-                          onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=60" }}
-                        />
-                        <div className="absolute top-4 left-4 px-3 py-1 bg-white/95 backdrop-blur-md rounded-xl shadow-sm text-[9px] md:text-[10px] font-black uppercase text-slate-900 border border-slate-200">
-                          {news.published_at ? new Date(news.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : "À venir"}
+                {newsLoading ? (
+                  <div className="flex gap-8 overflow-x-hidden no-scrollbar">
+                    {[1, 2, 3, 4, 5].map((idx) => (
+                      <div key={idx} className="w-[350px] shrink-0 h-80 bg-slate-50 animate-pulse rounded-3xl border border-slate-100"></div>
+                    ))}
+                  </div>
+                ) : liveNews.length > 0 ? (
+                  <div 
+                    ref={scrollRef}
+                    className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto no-scrollbar pb-6 cursor-grab active:cursor-grabbing scroll-smooth"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // Inline fallback for hiding scrollbars
+                  >
+                    {/* We duplicate the list for a seamless loop */}
+                    {[...liveNews, ...liveNews].map((news, idx) => (
+                      <a 
+                        key={`${news.id}-${idx}`} 
+                        href={news.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="w-[280px] sm:w-[320px] md:w-[350px] shrink-0 group/card bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
+                      >
+                        <div className="h-40 md:h-48 bg-slate-100 relative overflow-hidden">
+                          <img 
+                            src={news.cover_image || news.social_image || "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=60"} 
+                            alt={news.title}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-700"
+                            onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=60" }}
+                          />
+                          <div className="absolute top-4 left-4 px-3 py-1 bg-white/95 backdrop-blur-md rounded-xl shadow-sm text-[9px] md:text-[10px] font-black uppercase text-slate-900 border border-slate-200">
+                            {news.published_at ? new Date(news.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : "À venir"}
+                          </div>
                         </div>
-                      </div>
-                      <div className="p-5 md:p-6 flex-1 flex flex-col">
-                        <h3 className="text-base md:text-lg font-medium text-slate-900 mb-2 line-clamp-2 group-hover/card:text-blue-600 transition-colors">
-                          {news.title}
-                        </h3>
-                        <p className="text-xs md:text-sm text-slate-500 line-clamp-3 mb-6 flex-1">
-                          {news.description || "Découvrez cet article exclusif concernant l'industrie tech actuelle."}
-                        </p>
-                        <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between text-sm font-bold text-orange-500 group-hover/card:text-orange-600">
-                          <span>Lire l'article</span>
-                          <ArrowRight size={16} className="group-hover/card:translate-x-1 transition-transform" />
+                        <div className="p-5 md:p-6 flex-1 flex flex-col">
+                          <h3 className="text-base md:text-lg font-medium text-slate-900 mb-2 line-clamp-2 group-hover/card:text-blue-600 transition-colors">
+                            {news.title}
+                          </h3>
+                          <p className="text-xs md:text-sm text-slate-500 line-clamp-3 mb-6 flex-1">
+                            {news.description || "Découvrez cet article exclusif concernant l'industrie tech actuelle."}
+                          </p>
+                          <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between text-sm font-bold text-orange-500 group-hover/card:text-orange-600">
+                            <span>Lire l'article</span>
+                            <ArrowRight size={16} className="group-hover/card:translate-x-1 transition-transform" />
+                          </div>
                         </div>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-3xl border border-dashed border-slate-200 w-full">
-                  <Globe className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                  Impossible de charger le flux tech pour le moment.
-                </div>
-              )}
-            </div>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-3xl border border-dashed border-slate-200 w-full">
+                    <Globe className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                    Impossible de charger le flux tech pour le moment.
+                  </div>
+                )}
+              </div>
+            )}
             </Reveal>
           </div>
         </section>

@@ -4,7 +4,9 @@ import EventList from "../../features/events/components/EventList";
 import SearchAndFilter from "../../features/events/components/SearchFilter";
 import { useEvents } from "../../hooks/useEvents";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { History, ArrowLeft, LayoutGrid } from "lucide-react";
+import { History, ArrowLeft, LayoutGrid, Search, Filter, Calendar, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useMemo, useEffect } from "react";
 
 const EventListPage = () => {
   const navigate = useNavigate();
@@ -15,8 +17,17 @@ const EventListPage = () => {
   const [query, setQuery] = useState(initialQuery);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+  const [recentIdx, setRecentIdx] = useState(0);
 
   const { data: events, isLoading, isError, error } = useEvents();
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   if (isLoading)
     return (
@@ -103,6 +114,190 @@ const EventListPage = () => {
   const startIndex = (currentPage - 1) * eventsPerPage;
   const currentEvents = filteredEvents.slice(startIndex, startIndex + eventsPerPage);
   const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+
+  const recentlyAdded = useMemo(() => {
+    if (!events) return [];
+    return [...events]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5);
+  }, [events]);
+
+  const upcomingEvents = useMemo(() => {
+    return filteredEvents
+      .filter(ev => new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0))
+      .sort((a, b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date));
+  }, [filteredEvents]);
+
+  const pastEvents = useMemo(() => {
+    return filteredEvents
+      .filter(ev => new Date(ev.startDate || ev.date) < new Date().setHours(0,0,0,0))
+      .sort((a, b) => new Date(b.startDate || b.date) - new Date(a.startDate || a.date));
+  }, [filteredEvents]);
+
+  const nextRecent = () => setRecentIdx((prev) => (prev + 1) % recentlyAdded.length);
+  const prevRecent = () => setRecentIdx((prev) => (prev - 1 + recentlyAdded.length) % recentlyAdded.length);
+
+  if (isMobile) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-slate-50 font-sans pb-32">
+          
+          {/* 1. FIXED SEARCH & FILTER BAR */}
+          <div className="sticky top-20 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-100 p-3 flex items-center gap-2 -mx-4 px-8 mt-[-32px]">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Rechercher..." 
+                className="w-full bg-slate-100 border-none rounded-xl py-2.5 pl-9 pr-4 text-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            <button 
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={`p-2.5 rounded-xl transition-colors ${isFilterOpen ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+            >
+              <Filter className="w-5 h-5" />
+            </button>
+          </div>
+
+          {isFilterOpen && (
+             <div className="bg-white border-b border-slate-100 p-4 -mx-4 px-8 animate-in slide-in-from-top duration-300">
+                <SearchAndFilter 
+                   query={query} setQuery={setQuery} 
+                   isFilterOpen={isFilterOpen} setIsFilterOpen={setIsFilterOpen} 
+                   setCurrentPage={setCurrentPage} 
+                />
+             </div>
+          )}
+
+          {/* 2. RECENTLY ADDED SLIDER */}
+          {recentlyAdded.length > 0 && (
+            <div className="mt-4 px-4">
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Récemment ajoutés (Nouveautés)</h2>
+              <div className="relative group rounded-3xl overflow-hidden aspect-[16/9] shadow-lg bg-slate-200">
+                {recentlyAdded.map((event, idx) => (
+                  <div 
+                    key={event._id || idx}
+                    className={`absolute inset-0 transition-all duration-500 transform ${idx === recentIdx ? 'opacity-100 scale-100' : 'opacity-0 scale-110 pointer-events-none'}`}
+                    onClick={() => navigate(`/events/${event._id}`)}
+                  >
+                    {event.coverImage || event.imageUrl ? (
+                      <img src={event.coverImage || event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-orange-500 to-amber-600 text-white font-black text-5xl flex items-center justify-center">
+                        {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
+                      <span className="text-white font-bold text-sm truncate">{event.title || event.name}</span>
+                      <span className="text-white/70 text-[10px]">{event.category?.name || "Événement"}</span>
+                    </div>
+                  </div>
+                ))}
+                
+                <button onClick={(e) => { e.stopPropagation(); prevRecent(); }} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/20 backdrop-blur-md rounded-full text-white active:scale-90 transition-transform"><ChevronLeft className="w-5 h-5" /></button>
+                <button onClick={(e) => { e.stopPropagation(); nextRecent(); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/20 backdrop-blur-md rounded-full text-white active:scale-90 transition-transform"><ChevronRight className="w-5 h-5" /></button>
+              </div>
+            </div>
+          )}
+
+          {/* 3. AVAILABLE EVENTS */}
+          <div className="mt-8 px-4 space-y-6">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Liste des événements</h2>
+            <div className="space-y-4">
+              {upcomingEvents.length > 0 ? (
+                upcomingEvents.map(event => (
+                  <div 
+                    key={event._id} 
+                    onClick={() => navigate(`/events/${event._id}`)} 
+                    className="group bg-white p-4 rounded-[1.5rem] flex gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 active:scale-[0.98] transition-all hover:shadow-md"
+                  >
+                    {/* Image / Fallback Container */}
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center relative">
+                      {event.coverImage || event.imageUrl ? (
+                        <img src={event.coverImage || event.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt={event.title} />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-inner">
+                          <span className="text-white font-black text-4xl drop-shadow-md">
+                            {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}
+                          </span>
+                        </div>
+                      )}
+                      {/* Price Badge on Image (Mobile) */}
+                      <div className="absolute top-1 right-1 px-2 py-1 bg-white/90 backdrop-blur-md rounded-lg text-[9px] font-black text-slate-900 shadow-sm border border-white/50">
+                        {event.price > 0 ? `${event.price.toLocaleString()} F` : 'GRATUIT'}
+                      </div>
+                    </div>
+
+                    {/* Info Container */}
+                    <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                           <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[8px] font-black uppercase rounded-md border border-orange-100 tracking-wider">
+                             {event.category?.name || "Événement"}
+                           </span>
+                        </div>
+                        <h3 className="text-[15px] font-black text-slate-900 truncate leading-tight">
+                          {event.title || event.name}
+                        </h3>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+                             <Calendar size={12} className="text-orange-500" strokeWidth={3} />
+                             <span>{new Date(event.startDate || event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+                             <MapPin size={12} className="text-blue-500" strokeWidth={3} />
+                             <span className="truncate">{event.location || event.city || "Abidjan, CI"}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-end mt-2">
+                         <div className="p-1 px-3 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest active:bg-orange-600">
+                            Réserver
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400 text-xs italic">Aucun événement trouvé</div>
+              )}
+            </div>
+          </div>
+
+          {/* 4. HISTORY */}
+          {pastEvents.length > 0 && (
+            <div className="mt-12 px-4 space-y-6">
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Événements passés</h2>
+              <div className="space-y-4">
+                {pastEvents.slice(0, 3).map(event => (
+                  <div key={event._id} onClick={() => navigate(`/events/${event._id}`)} className="bg-slate-100/50 p-3 rounded-2xl flex gap-4 border border-slate-100 grayscale-[0.8] opacity-70">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-slate-200">
+                      {event.coverImage || event.imageUrl ? (
+                        <img src={event.coverImage || event.imageUrl} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-slate-300 flex items-center justify-center font-black text-slate-500 text-xl">
+                          {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center py-0.5">
+                      <h3 className="text-xs font-bold text-slate-700 line-clamp-1">{event.title || event.name}</h3>
+                      <div className="flex items-center gap-2 mt-1 text-[9px] font-medium text-slate-400"><History size={10} /><span>Terminé</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
