@@ -12,6 +12,8 @@ const Footer = () => {
   // Assuming roles logic. You may refine this to match your exact backend role strings.
   const isCreator = user?.role === "Organisateur" || user?.role === "Administrateur" || user?.role === "organisateur";
 
+  const [isPlusMenuOpen, setIsPlusMenuOpen] = React.useState(false);
+
   const navItems = [
     { label: "Accueil", path: "/home", icon: Home },
     { label: "Explorer", path: "/events", icon: Search },
@@ -21,6 +23,41 @@ const Footer = () => {
 
   return (
     <>
+      {/* Plus Menu Backdrop */}
+      {isPlusMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] lg:hidden animate-in fade-in duration-300"
+          onClick={() => setIsPlusMenuOpen(false)}
+        />
+      )}
+
+      {/* Plus Menu Sheet */}
+      <div className={`fixed bottom-0 left-0 right-0 z-[120] lg:hidden bg-white rounded-t-[2.5rem] shadow-2xl transition-all duration-300 transform ${isPlusMenuOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+        <div className="p-8 space-y-6">
+           <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-2" />
+           <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest text-center">Espace Créateur</h3>
+           <div className="grid grid-cols-3 gap-4">
+              <Link to="/createevent" onClick={() => setIsPlusMenuOpen(false)} className="flex flex-col items-center gap-3 group">
+                 <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center shadow-inner group-active:scale-95 transition-transform">
+                    <Plus size={24} strokeWidth={3} />
+                 </div>
+                 <span className="text-[10px] font-black uppercase text-slate-400">Créer</span>
+              </Link>
+              <Link to="/scan" onClick={() => setIsPlusMenuOpen(false)} className="flex flex-col items-center gap-3 group">
+                 <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner group-active:scale-95 transition-transform">
+                    <Search size={22} strokeWidth={3} />
+                 </div>
+                 <span className="text-[10px] font-black uppercase text-slate-400">Scanner</span>
+              </Link>
+              <Link to="/dashboard" onClick={() => setIsPlusMenuOpen(false)} className="flex flex-col items-center gap-3 group">
+                 <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner group-active:scale-95 transition-transform">
+                    <Home size={22} strokeWidth={3} />
+                 </div>
+                 <span className="text-[10px] font-black uppercase text-slate-400">Stats</span>
+              </Link>
+           </div>
+        </div>
+      </div>
 
       {/* Mobile Navigation Bar - YouTube Style */}
       <div className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
@@ -34,15 +71,15 @@ const Footer = () => {
             return (
               <React.Fragment key={item.label}>
                 {showPlus && (
-                  <Link
-                    to="/createevent"
-                    className="flex flex-col items-center justify-center p-1 -mt-6"
+                  <button
+                    onClick={() => setIsPlusMenuOpen(!isPlusMenuOpen)}
+                    className="flex flex-col items-center justify-center p-1 -mt-6 outline-none"
                   >
-                    <div className="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-xl shadow-slate-900/40 border-4 border-white active:scale-95 transition-transform">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl border-4 border-white transition-all ${isPlusMenuOpen ? 'bg-orange-500 rotate-45 text-white' : 'bg-slate-900 text-white shadow-slate-900/10'}`}>
                       <Plus size={24} strokeWidth={3} />
                     </div>
-                    <span className="text-[7px] font-bold uppercase tracking-tighter mt-1 text-slate-400">Créer</span>
-                  </Link>
+                    <span className="text-[7px] font-bold uppercase tracking-tighter mt-1 text-slate-400">Publier</span>
+                  </button>
                 )}
                 <Link
                   to={item.path}

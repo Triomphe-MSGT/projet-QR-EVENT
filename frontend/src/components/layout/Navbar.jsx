@@ -250,12 +250,24 @@ const Navbar = () => {
                   onClick={() => { setProfileDropdownOpen(!profileDropdownOpen); setNotifDropdownOpen(false); }}
                   className={`p-1 rounded-2xl border transition-all ${profileDropdownOpen ? 'bg-orange-50 border-orange-200' : 'bg-white border-slate-200'}`}
                 >
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center shrink-0">
-                    {user?.image ? (
-                      <img src={`${STATIC_BASE_URL}/${user.image}`} className="w-full h-full object-cover" alt="Profile" />
-                    ) : (
-                      <span className="text-sm font-black text-slate-400">{user?.name?.charAt(0).toUpperCase() || "?"}</span>
-                    )}
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0 relative bg-slate-100">
+                    {user?.image || user?.profilePicture ? (
+                      <img 
+                        src={`${STATIC_BASE_URL}/${user?.image || user?.profilePicture}`} 
+                        className="w-full h-full object-cover" 
+                        alt="Profile" 
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : null}
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-400 to-amber-600">
+                      <span className="text-white text-xs md:text-sm font-black italic">
+                        {(user?.firstName || user?.name || "I").charAt(0).toUpperCase()}
+                      </span>
+                    </div>
                   </div>
                 </button>
 

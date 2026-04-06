@@ -15,6 +15,10 @@ import { useEvents } from "../../hooks/useEvents";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { useCategories } from "../../hooks/useCategories";
 import Reveal from "../../components/ui/Reveal";
+import { API_BASE_URL } from "../../slices/axiosInstance";
+
+// Configuration de l'URL de base pour les fichiers statiques
+const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -109,6 +113,43 @@ const HomePage = () => {
             {isMobile ? (
               /* --- MOBILE VIEW: YOUTUBE STYLE IMMERSIVE HERO --- */
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                {/* 0. Greeting Header (Mobile Only) - Only once per day for logged users */}
+                {(() => {
+                   const today = new Date().toDateString();
+                   const lastSeen = localStorage.getItem('last_greeting_date');
+                   const shouldShow = user && lastSeen !== today;
+                   
+                   if (!shouldShow) return null;
+
+                   // Set it as seen for today
+                   localStorage.setItem('last_greeting_date', today);
+
+                   return (
+                    <div className="flex items-center justify-between px-1">
+                      <div className="space-y-0.5">
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Content de vous revoir !</p>
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bonjour, <span className="text-orange-500">{user?.firstName || user?.name}</span> !</h1>
+                      </div>
+                      <Link to="/user-profile" className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 p-1 shrink-0">
+                        <div className="w-full h-full rounded-xl overflow-hidden relative flex items-center justify-center bg-gradient-to-br from-orange-400 to-amber-600">
+                          {(user?.image || user?.profilePicture) ? (
+                            <img 
+                              src={`${STATIC_BASE_URL}/${user?.image || user?.profilePicture}`} 
+                              className="w-full h-full object-cover" 
+                              alt="Profile" 
+                              loading="lazy"
+                              decoding="async"
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                          ) : null}
+                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black italic pointer-events-none">
+                            {(user?.firstName || user?.name || "U").charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      </Link>
+                    </div>
+                   );
+                })()}
                 {/* Category Chips Scroll (Top) */}
                 <div className="flex gap-2.5 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
                   <button className="px-5 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest flex-shrink-0">
@@ -143,12 +184,14 @@ const HomePage = () => {
                         <img 
                           src={featuredEvent.coverImage || featuredEvent.imageUrl} 
                           alt="Featured" 
+                          loading="eager" // Hero image should load fast
+                          decoding="async"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-orange-500 via-orange-600 to-amber-700 flex items-center justify-center">
                           <span className="text-white font-black text-8xl drop-shadow-2xl opacity-40 italic">
-                            {(featuredEvent.title || featuredEvent.name)?.charAt(0).toUpperCase()}
+                            {(featuredEvent.title || featuredEvent.name || "E").charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
@@ -249,7 +292,7 @@ const HomePage = () => {
                     <div className="flex -space-x-3">
                       {[1,2,3,4].map(i => (
                         <div key={i} className="w-10 h-10 md:w-12 md:h-12 rounded-full border-4 border-white bg-slate-100 overflow-hidden shadow-sm">
-                          <img src={`https://i.pravatar.cc/100?img=${i+30}`} alt="User" />
+                          <img src={`https://i.pravatar.cc/100?img=${i+30}`} alt="User" loading="lazy" decoding="async" />
                         </div>
                       ))}
                     </div>
@@ -267,6 +310,8 @@ const HomePage = () => {
                       <img 
                         src="/assets/hero_picture.png" 
                         alt="QR Event Experience" 
+                        loading="eager"
+                        decoding="async"
                         className="relative z-10 w-full max-w-xl mx-auto object-contain animate-slow-beat drop-shadow-[0_20px_40px_rgba(0,0,0,0.08)]" 
                       />
                       <div className="absolute top-[53%] right-[50%] z-20 bg-white p-3.5 rounded-2xl shadow-xl border border-white/50 animate-levitate hidden xl:block" style={{ animationDelay: '0s' }}>
@@ -334,11 +379,11 @@ const HomePage = () => {
                         >
                           <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center relative">
                             {event.coverImage || event.imageUrl ? (
-                              <img src={event.coverImage || event.imageUrl} className="w-full h-full object-cover" alt={event.title} />
+                              <img src={event.coverImage || event.imageUrl} className="w-full h-full object-cover" alt={event.title} loading="lazy" decoding="async" />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center">
                                 <span className="text-white font-black text-4xl drop-shadow-md">
-                                  {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}
+                                  {(event.title || event.name || "E").charAt(0).toUpperCase()}
                                 </span>
                               </div>
                             )}
@@ -379,6 +424,7 @@ const HomePage = () => {
                         <div 
                           key={event._id || idx} 
                           className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_4px_6px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-2 flex flex-col mx-auto w-full max-w-[280px] md:max-w-none"
+                          style={{ contentVisibility: 'auto' }}
                         >
                           <div className="h-40 md:h-60 overflow-hidden relative bg-slate-100 flex items-center justify-center">
                             {event.coverImage || event.imageUrl ? (
@@ -472,7 +518,7 @@ const HomePage = () => {
                 <Reveal direction="left">
                   <div className="absolute inset-0 bg-gradient-to-tr from-orange-300/30 to-blue-300/30 blur-3xl rounded-full -z-10 transform scale-110"></div>
                   <div className="bg-white p-5 sm:p-10 rounded-[3rem] shadow-2xl border border-white/50 relative overflow-hidden group">
-                    <img src="./assets/picture_of_choose.png" alt="Expérience QR Check-in" className="w-full max-w-sm lg:max-w-lg mx-auto object-contain drop-shadow-2xl group-hover:scale-105 transition-transform duration-700" />
+                    <img src="./assets/picture_of_choose.png" alt="Expérience QR Check-in" loading="lazy" decoding="async" className="w-full max-w-sm lg:max-w-lg mx-auto object-contain drop-shadow-2xl group-hover:scale-105 transition-transform duration-700" />
                     {/* Floating Info Tag on Mobile */}
                     <div className="absolute bottom-6 left-6 right-6 bg-slate-900/90 backdrop-blur-xl p-4 rounded-2xl border border-white/10 lg:hidden text-left">
                        <div className="flex items-center gap-3">

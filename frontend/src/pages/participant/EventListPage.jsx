@@ -141,11 +141,11 @@ const EventListPage = () => {
 
   if (isMobile) {
     return (
-      <MainLayout>
+      <MainLayout noPadding>
         <div className="min-h-screen bg-slate-50 font-sans pb-32">
           
-          {/* 1. FIXED SEARCH & FILTER BAR */}
-          <div className="sticky top-20 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-100 p-3 flex items-center gap-2 -mx-4 px-8 mt-[-32px]">
+          {/* 1. FIXED SEARCH & FILTER BAR - GLUED TO NAVBAR */}
+          <div className="sticky top-12 md:top-16 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-100 p-3 flex items-center gap-2 px-4 md:px-8 mt-12 md:mt-16 transition-all">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input 
@@ -301,61 +301,61 @@ const EventListPage = () => {
     );
   }
 
-  return (
-    <MainLayout>
-      <div className="min-h-screen font-sans bg-slate-50/50 pb-20">
-        
-        <div className="bg-white border-b border-slate-100 pt-8 pb-10 md:pt-12 md:pb-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-between">
-                <button 
-                  onClick={() => navigate(-1)}
-                  className="p-2 text-slate-400 hover:text-slate-500 transition-colors"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-                <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">
-                  <LayoutGrid className="w-3 h-3" />
-                  <span>{filteredEvents.length} événements</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-3 text-center md:text-left">
-                  <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-slate-500 tracking-tight leading-none">
-                    {getTitle()}
-                  </h1>
-                  <p className="text-sm md:text-base text-slate-500 max-w-xl font-medium mx-auto md:mx-0">
-                    Parcourez notre sélection exclusive pour vos prochaines expériences professionnelles.
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3">
+    return (
+      <MainLayout noPadding>
+        <div className="min-h-screen font-sans bg-slate-50/50 pb-20 pt-16 md:pt-20">
+          
+          <div className="bg-white border-b border-slate-100 py-8 md:py-12">
+            <div className="max-w-[1900px] mx-auto px-4 md:px-8">
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between">
                   <button 
-                    onClick={() => navigate("/past-events")}
-                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-600 font-bold text-[11px] uppercase tracking-widest rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                    onClick={() => navigate(-1)}
+                    className="p-2 text-slate-400 hover:text-slate-500 transition-colors"
                   >
-                    <History className="w-4 h-4 text-orange-500" />
-                    Boutique Passée
+                    <ArrowLeft className="w-5 h-5" />
                   </button>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">
+                    <LayoutGrid className="w-3 h-3" />
+                    <span>{filteredEvents.length} événements</span>
+                  </div>
+                </div>
+  
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                  <div className="space-y-3 text-center md:text-left">
+                    <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-500 tracking-tight leading-none">
+                      {getTitle()}
+                    </h1>
+                    <p className="text-sm md:text-base text-slate-400 max-w-xl font-medium mx-auto md:mx-0">
+                      Parcourez notre sélection exclusive pour vos prochaines expériences professionnelles.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => navigate("/past-events")}
+                      className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-600 font-bold text-[11px] uppercase tracking-widest rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                    >
+                      <History className="w-4 h-4 text-orange-500" />
+                      Boutique Passée
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
-          <div className="flex flex-col gap-12">
-            <div className="sticky top-24 z-30">
-              <SearchAndFilter
-                query={query}
-                setQuery={setQuery}
-                isFilterOpen={isFilterOpen}
-                setIsFilterOpen={setIsFilterOpen}
-                setCurrentPage={setCurrentPage}
-              />
-            </div>
+  
+          <div className="max-w-[1900px] mx-auto px-4 md:px-8 py-10">
+            <div className="flex flex-col gap-12">
+              <div className="sticky top-16 md:top-20 z-30">
+                <SearchAndFilter
+                  query={query}
+                  setQuery={setQuery}
+                  isFilterOpen={isFilterOpen}
+                  setIsFilterOpen={setIsFilterOpen}
+                  setCurrentPage={setCurrentPage}
+                />
+              </div>
 
             <div className="animate-fade-in">
               <EventList
