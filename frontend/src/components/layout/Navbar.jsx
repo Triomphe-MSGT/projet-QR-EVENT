@@ -265,7 +265,7 @@ const Navbar = () => {
                     ) : null}
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-400 to-amber-600">
                       <span className="text-white text-xs md:text-sm font-black italic">
-                        {(user?.firstName || user?.name || "I").charAt(0).toUpperCase()}
+                        {(user?.nom || user?.firstName || user?.name || "U").charAt(0).toUpperCase()}
                       </span>
                     </div>
                   </div>

@@ -128,7 +128,7 @@ const HomePage = () => {
                     <div className="flex items-center justify-between px-1">
                       <div className="space-y-0.5">
                         <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Content de vous revoir !</p>
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bonjour, <span className="text-orange-500">{user?.firstName || user?.name}</span> !</h1>
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bonjour, <span className="text-orange-500">{user?.nom || user?.firstName || user?.name}</span> !</h1>
                       </div>
                       <Link to="/user-profile" className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 p-1 shrink-0">
                         <div className="w-full h-full rounded-xl overflow-hidden relative flex items-center justify-center bg-gradient-to-br from-orange-400 to-amber-600">
@@ -143,7 +143,7 @@ const HomePage = () => {
                             />
                           ) : null}
                           <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black italic pointer-events-none">
-                            {(user?.firstName || user?.name || "U").charAt(0).toUpperCase()}
+                            {(user?.nom || user?.firstName || user?.name || "U").charAt(0).toUpperCase()}
                           </span>
                         </div>
                       </Link>

@@ -5,6 +5,9 @@ import {
   getDashboardStats,
   getMyOrganizedEvents,
 } from "../../services/dashboardService";
+import { API_BASE_URL } from "../../slices/axiosInstance";
+
+const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 import { 
   Calendar, 
   Users, 
@@ -182,11 +185,13 @@ const DashboardPage = () => {
                          </div>
                          <div className="max-h-80 overflow-y-auto">
                             {notifications.map(n => (
-                               <div key={n.id} className="p-4 flex gap-4 border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                                  <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center shrink-0"><n.icon size={18} /></div>
+                               <div key={n._id || n.id} className="p-4 flex gap-4 border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${!n.isRead ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-400'}`}>
+                                     <Bell size={18} />
+                                  </div>
                                   <div className="space-y-1">
-                                     <p className="text-[11px] font-bold text-slate-500">{n.text}</p>
-                                     <span className="text-[9px] text-gray-400 font-bold uppercase">{n.time}</span>
+                                     <p className="text-[11px] font-bold text-slate-500">{n.message || n.text}</p>
+                                     <span className="text-[9px] text-gray-400 font-bold uppercase">{n.createdAt ? new Date(n.createdAt).toLocaleDateString() : n.time}</span>
                                   </div>
                                </div>
                             ))}
@@ -196,8 +201,22 @@ const DashboardPage = () => {
                  )}
               </div>
 
-              <div className="w-10 h-10 rounded-full bg-orange-600 flex items-center justify-center text-white font-black text-sm uppercase shadow-lg shadow-orange-600/30">
-                 {userInitial}
+              <div className="w-10 h-10 rounded-full bg-white overflow-hidden relative flex items-center justify-center border border-slate-100 shadow-sm shrink-0">
+                 {user?.image || user?.profilePicture ? (
+                    <img 
+                      src={`${STATIC_BASE_URL}/${user?.image || user?.profilePicture}`} 
+                      className="w-full h-full object-cover" 
+                      alt="Profile" 
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                 ) : null}
+                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-400 to-amber-600">
+                    <span className="text-white text-sm font-black italic">
+                       {(user?.nom || user?.firstName || user?.name || "U").charAt(0).toUpperCase()}
+                    </span>
+                 </div>
               </div>
            </div>
         </header>
