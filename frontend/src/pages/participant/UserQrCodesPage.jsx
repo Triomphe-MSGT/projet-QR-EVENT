@@ -57,14 +57,14 @@ const UserQrCodesPage = () => {
                        <QrCode className="w-3 h-3" />
                        Billetterie Digitale
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none text-slate-900 max-w-2xl">
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none text-slate-500 max-w-2xl">
                        Mes Accès <span className="text-orange-600">Sécurisés</span>
                     </h1>
                     <p className="text-slate-400 font-bold text-xs md:text-sm max-w-md">Retrouvez tous vos billets d'entrée et présentez votre QR Code à l'accueil.</p>
                  </div>
                  <div className="shrink-0 flex items-center gap-4">
                     <div className="px-6 py-4 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col items-center">
-                       <span className="text-2xl font-black text-slate-900">{eventsWithQrCodes.length}</span>
+                       <span className="text-2xl font-black text-slate-500">{eventsWithQrCodes.length}</span>
                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Pass Actifs</span>
                     </div>
                  </div>
@@ -90,7 +90,7 @@ const UserQrCodesPage = () => {
 
                     <div className="p-8 space-y-6 relative flex-1 flex flex-col justify-between">
                        <div className="space-y-2 border-b border-slate-50 pb-6">
-                          <h2 className="text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors uppercase leading-tight line-clamp-2">
+                          <h2 className="text-xl font-black text-slate-500 group-hover:text-orange-600 transition-colors uppercase leading-tight line-clamp-2">
                             {event.name}
                           </h2>
                           <div className="flex flex-col gap-1.5 pt-2">
@@ -146,7 +146,7 @@ const UserQrCodesPage = () => {
                  <QrCode size={40} />
                </div>
                <div className="space-y-4 px-6">
-                 <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter uppercase">Aucun Ticket Actif</h2>
+                 <h2 className="text-2xl md:text-3xl font-black text-slate-500 tracking-tighter uppercase">Aucun Ticket Actif</h2>
                  <p className="text-slate-400 font-bold text-sm max-w-sm mx-auto leading-relaxed">
                    Vous n'avez pas encore réservé de place pour un événement. Parcourez notre catalogue pour obtenir votre sésame !
                  </p>
@@ -173,7 +173,7 @@ const UserQrCodesPage = () => {
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-600 rounded-full font-black text-[9px] uppercase tracking-widest">
                    Accès Validé
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter line-clamp-1">{selectedQr.name}</h3>
+                <h3 className="text-2xl font-black text-slate-500 uppercase tracking-tighter line-clamp-1">{selectedQr.name}</h3>
                 <p className="text-slate-400 font-bold text-xs">Présentez ce QR Code pour valider votre entrée.</p>
              </div>
 
@@ -188,12 +188,12 @@ const UserQrCodesPage = () => {
                 <div className="flex justify-around border-t border-slate-100 pt-8 mt-2">
                    <div className="flex flex-col items-center">
                       <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Date</span>
-                      <span className="text-xs font-black text-slate-900">{formatDate(selectedQr.startDate)}</span>
+                      <span className="text-xs font-black text-slate-500">{formatDate(selectedQr.startDate)}</span>
                    </div>
                    <div className="w-px h-8 bg-slate-100"></div>
                    <div className="flex flex-col items-center">
                       <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Lieu</span>
-                      <span className="text-xs font-black text-slate-900 truncate max-w-[120px]">{selectedQr.location || "Standard"}</span>
+                      <span className="text-xs font-black text-slate-500 truncate max-w-[120px]">{selectedQr.location || "Standard"}</span>
                    </div>
                 </div>
              </div>

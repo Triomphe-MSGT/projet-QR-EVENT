@@ -121,7 +121,7 @@ const EventCard = ({ event, handleDetails }) => {
       {/* Zone Infos Textuelles */}
       <div className="p-4 md:p-6 flex-1 flex flex-col justify-between">
         <div className="space-y-3 md:space-y-4">
-          <h3 className="text-sm md:text-lg font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-orange-600 transition-colors">
+          <h3 className="text-sm md:text-lg font-bold text-slate-500 line-clamp-2 leading-tight group-hover:text-orange-600 transition-colors">
             {event.name || event.title}
           </h3>
           
@@ -141,7 +141,7 @@ const EventCard = ({ event, handleDetails }) => {
         <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-50">
           <div className="flex flex-col">
             <span className="text-[8px] md:text-[10px] font-black text-slate-300 uppercase tracking-widest">À partir de</span>
-            <span className="text-base md:text-lg font-black text-slate-900">
+            <span className="text-base md:text-lg font-black text-slate-500">
               {event.price > 0 ? `${event.price.toLocaleString()} F` : "Gratuit"}
             </span>
           </div>

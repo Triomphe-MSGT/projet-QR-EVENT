@@ -124,7 +124,7 @@ const FeaturedNewsCarousel = () => {
                   href={currentArticle.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-6 py-3 lg:px-8 lg:py-4 bg-white text-black text-sm lg:text-base font-black rounded-full hover:bg-blue-600 hover:text-white transition-all hover:scale-105 flex items-center gap-2 shadow-xl"
+                  className="px-6 py-3 lg:px-8 lg:py-4 bg-white text-slate-500 text-sm lg:text-base font-black rounded-full hover:bg-blue-600 hover:text-white transition-all hover:scale-105 flex items-center gap-2 shadow-xl"
                 >
                   Lire <span className="hidden sm:inline">l'article</span> <ChevronRight className="w-4 h-4 lg:w-5 lg:h-5" />
                 </a>

@@ -81,7 +81,7 @@ const SearchAndFilter = ({
               setQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-12 pr-10 py-4 bg-slate-50 text-slate-900 placeholder-slate-400 border-none rounded-2xl focus:ring-2 focus:ring-orange-500/10 transition-all font-medium"
+            className="w-full pl-12 pr-10 py-4 bg-slate-50 text-slate-500 placeholder-slate-400 border-none rounded-2xl focus:ring-2 focus:ring-orange-500/10 transition-all font-medium"
           />
           {query && (
             <button onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -212,7 +212,7 @@ const SearchAndFilter = ({
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${activeCategories.includes(cat._id || cat.id) ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-200'}`}>
                       {activeCategories.includes(cat._id || cat.id) && <Check size={12} />}
                     </div>
-                    <span className="text-xs font-medium text-slate-700">{cat.emoji} {cat.name}</span>
+                    <span className="text-xs font-medium text-slate-500">{cat.emoji} {cat.name}</span>
                   </label>
                 ))}
               </div>
@@ -233,7 +233,7 @@ const SearchAndFilter = ({
             </button>
             <button 
               onClick={() => setIsFilterOpen(false)}
-              className="px-8 py-3 bg-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-200 transition-all"
+              className="px-8 py-3 bg-slate-100 text-slate-500 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-200 transition-all"
             >
               Fermer
             </button>

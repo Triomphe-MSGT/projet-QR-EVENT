@@ -29,6 +29,89 @@ const EventListPage = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const getTitle = () => {
+    if (categoryName) return categoryName;
+    const q = searchParams.get("query");
+    return q ? `Résultats pour "${q}"` : "Tous les événements";
+  };
+
+  const filteredEvents = useMemo(() => {
+    return (events || [])
+      .filter((event) => {
+        const q = query.toLowerCase();
+        const matchesQuery =
+          event.name?.toLowerCase().includes(q) ||
+          event.description?.toLowerCase().includes(q) ||
+          event.location?.toLowerCase().includes(q) ||
+          event.city?.toLowerCase().includes(q);
+
+        const categoryFilter = searchParams.get("categories")?.split(",");
+        const matchesCategory =
+          !categoryFilter || categoryFilter[0] === "" ||
+          categoryFilter.includes(event.category?._id || event.category?.id || event.category);
+
+        const typeFilter = searchParams.get("types")?.split(",");
+        const matchesType = !typeFilter || typeFilter[0] === "" || typeFilter.some(t => {
+          if (t === "free") return event.price === 0;
+          if (t === "paid") return event.price > 0;
+          return true;
+        });
+
+        const formatFilter = searchParams.get("formats")?.split(",");
+        const matchesFormat = !formatFilter || formatFilter[0] === "" || formatFilter.includes(event.format || event.type);
+
+        const cityFilter = searchParams.get("cities")?.split(",");
+        const matchesCity = !cityFilter || cityFilter[0] === "" || cityFilter.includes(event.city);
+
+        const dayFilter = searchParams.get("day");
+        const matchesDay = !dayFilter || new Date(event.startDate).toISOString().split('T')[0] === dayFilter;
+
+        return matchesQuery && matchesCategory && matchesType && matchesFormat && matchesCity && matchesDay;
+      })
+      .filter((event) => {
+        const dateFilter = searchParams.get("date");
+        if (!dateFilter) return true;
+        const eventDay = new Date(event.startDate);
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        const nextWeek = new Date(today);
+        nextWeek.setDate(today.getDate() + 7);
+
+        if (dateFilter === "today") return eventDay.toDateString() === today.toDateString();
+        if (dateFilter === "tomorrow") return eventDay.toDateString() === tomorrow.toDateString();
+        if (dateFilter === "week") return eventDay >= today && eventDay <= nextWeek;
+        return true;
+      });
+  }, [events, query, searchParams]);
+
+  const recentlyAdded = useMemo(() => {
+    if (!events) return [];
+    return [...events]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5);
+  }, [events]);
+
+  const upcomingEvents = useMemo(() => {
+    return filteredEvents
+      .filter(ev => new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0))
+      .sort((a, b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date));
+  }, [filteredEvents]);
+
+  const pastEvents = useMemo(() => {
+    return filteredEvents
+      .filter(ev => new Date(ev.startDate || ev.date) < new Date().setHours(0,0,0,0))
+      .sort((a, b) => new Date(b.startDate || b.date) - new Date(a.startDate || a.date));
+  }, [filteredEvents]);
+
+  const eventsPerPage = 12;
+  const startIndex = (currentPage - 1) * eventsPerPage;
+  const currentEvents = filteredEvents.slice(startIndex, startIndex + eventsPerPage);
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+
+  const nextRecent = () => setRecentIdx((prev) => (prev + 1) % recentlyAdded.length);
+  const prevRecent = () => setRecentIdx((prev) => (prev - 1 + recentlyAdded.length) % recentlyAdded.length);
+
   if (isLoading)
     return (
       <MainLayout>
@@ -55,87 +138,6 @@ const EventListPage = () => {
         </div>
       </MainLayout>
     );
-
-  const getTitle = () => {
-    if (categoryName) return categoryName;
-    const q = searchParams.get("query");
-    return q ? `Résultats pour "${q}"` : "Tous les événements";
-  };
-
-  const filteredEvents = (events || [])
-    .filter((event) => {
-      const q = query.toLowerCase();
-      const matchesQuery =
-        event.name?.toLowerCase().includes(q) ||
-        event.description?.toLowerCase().includes(q) ||
-        event.location?.toLowerCase().includes(q) ||
-        event.city?.toLowerCase().includes(q);
-
-      const categoryFilter = searchParams.get("categories")?.split(",");
-      const matchesCategory =
-        !categoryFilter || categoryFilter[0] === "" ||
-        categoryFilter.includes(event.category?._id || event.category?.id || event.category);
-
-      const typeFilter = searchParams.get("types")?.split(",");
-      const matchesType = !typeFilter || typeFilter[0] === "" || typeFilter.some(t => {
-        if (t === "free") return event.price === 0;
-        if (t === "paid") return event.price > 0;
-        return true;
-      });
-
-      const formatFilter = searchParams.get("formats")?.split(",");
-      const matchesFormat = !formatFilter || formatFilter[0] === "" || formatFilter.includes(event.format || event.type);
-
-      const cityFilter = searchParams.get("cities")?.split(",");
-      const matchesCity = !cityFilter || cityFilter[0] === "" || cityFilter.includes(event.city);
-
-      const dayFilter = searchParams.get("day");
-      const matchesDay = !dayFilter || new Date(event.startDate).toISOString().split('T')[0] === dayFilter;
-
-      return matchesQuery && matchesCategory && matchesType && matchesFormat && matchesCity && matchesDay;
-    })
-    .filter((event) => {
-      const dateFilter = searchParams.get("date");
-      if (!dateFilter) return true;
-      const eventDay = new Date(event.startDate);
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-      const nextWeek = new Date(today);
-      nextWeek.setDate(today.getDate() + 7);
-
-      if (dateFilter === "today") return eventDay.toDateString() === today.toDateString();
-      if (dateFilter === "tomorrow") return eventDay.toDateString() === tomorrow.toDateString();
-      if (dateFilter === "week") return eventDay >= today && eventDay <= nextWeek;
-      return true;
-    });
-
-  const eventsPerPage = 12;
-  const startIndex = (currentPage - 1) * eventsPerPage;
-  const currentEvents = filteredEvents.slice(startIndex, startIndex + eventsPerPage);
-  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
-
-  const recentlyAdded = useMemo(() => {
-    if (!events) return [];
-    return [...events]
-      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-      .slice(0, 5);
-  }, [events]);
-
-  const upcomingEvents = useMemo(() => {
-    return filteredEvents
-      .filter(ev => new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0))
-      .sort((a, b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date));
-  }, [filteredEvents]);
-
-  const pastEvents = useMemo(() => {
-    return filteredEvents
-      .filter(ev => new Date(ev.startDate || ev.date) < new Date().setHours(0,0,0,0))
-      .sort((a, b) => new Date(b.startDate || b.date) - new Date(a.startDate || a.date));
-  }, [filteredEvents]);
-
-  const nextRecent = () => setRecentIdx((prev) => (prev + 1) % recentlyAdded.length);
-  const prevRecent = () => setRecentIdx((prev) => (prev - 1 + recentlyAdded.length) % recentlyAdded.length);
 
   if (isMobile) {
     return (
@@ -226,7 +228,7 @@ const EventListPage = () => {
                         </div>
                       )}
                       {/* Price Badge on Image (Mobile) */}
-                      <div className="absolute top-1 right-1 px-2 py-1 bg-white/90 backdrop-blur-md rounded-lg text-[9px] font-black text-slate-900 shadow-sm border border-white/50">
+                      <div className="absolute top-1 right-1 px-2 py-1 bg-white/90 backdrop-blur-md rounded-lg text-[9px] font-black text-slate-500 shadow-sm border border-white/50">
                         {event.price > 0 ? `${event.price.toLocaleString()} F` : 'GRATUIT'}
                       </div>
                     </div>
@@ -239,7 +241,7 @@ const EventListPage = () => {
                              {event.category?.name || "Événement"}
                            </span>
                         </div>
-                        <h3 className="text-[15px] font-black text-slate-900 truncate leading-tight">
+                        <h3 className="text-[15px] font-black text-slate-500 truncate leading-tight">
                           {event.title || event.name}
                         </h3>
                         <div className="flex flex-col gap-1">
@@ -285,7 +287,7 @@ const EventListPage = () => {
                       )}
                     </div>
                     <div className="flex-1 flex flex-col justify-center py-0.5">
-                      <h3 className="text-xs font-bold text-slate-700 line-clamp-1">{event.title || event.name}</h3>
+                      <h3 className="text-xs font-bold text-slate-500 line-clamp-1">{event.title || event.name}</h3>
                       <div className="flex items-center gap-2 mt-1 text-[9px] font-medium text-slate-400"><History size={10} /><span>Terminé</span></div>
                     </div>
                   </div>
@@ -309,7 +311,7 @@ const EventListPage = () => {
               <div className="flex items-center justify-between">
                 <button 
                   onClick={() => navigate(-1)}
-                  className="p-2 text-slate-400 hover:text-slate-900 transition-colors"
+                  className="p-2 text-slate-400 hover:text-slate-500 transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
@@ -321,7 +323,7 @@ const EventListPage = () => {
 
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-3 text-center md:text-left">
-                  <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-slate-900 tracking-tight leading-none">
+                  <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-slate-500 tracking-tight leading-none">
                     {getTitle()}
                   </h1>
                   <p className="text-sm md:text-base text-slate-500 max-w-xl font-medium mx-auto md:mx-0">

@@ -121,7 +121,7 @@ const HomePage = () => {
                   <input 
                     type="text" 
                     placeholder="Quel événement ?" 
-                    className="w-full h-12 md:h-14 border-none border-transparent focus:border-transparent focus:ring-0 focus:outline-none outline-none text-slate-700 font-medium placeholder:text-slate-400 bg-transparent text-sm md:text-base"
+                    className="w-full h-12 md:h-14 border-none border-transparent focus:border-transparent focus:ring-0 focus:outline-none outline-none text-slate-500 font-medium placeholder:text-slate-400 bg-transparent text-sm md:text-base"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -131,7 +131,7 @@ const HomePage = () => {
                   <input 
                     type="text" 
                     placeholder="Ville ou Lieu" 
-                    className="w-full h-12 md:h-14 border-none border-transparent focus:border-transparent focus:ring-0 focus:outline-none outline-none text-slate-700 font-medium placeholder:text-slate-400 bg-transparent text-sm md:text-base"
+                    className="w-full h-12 md:h-14 border-none border-transparent focus:border-transparent focus:ring-0 focus:outline-none outline-none text-slate-500 font-medium placeholder:text-slate-400 bg-transparent text-sm md:text-base"
                     value={locationQuery}
                     onChange={(e) => setLocationQuery(e.target.value)}
                   />
@@ -154,7 +154,7 @@ const HomePage = () => {
                   ))}
                 </div>
                 <p className="text-xs sm:text-sm font-medium text-slate-400">
-                  <span className="text-slate-900 font-black">+2,000 organisateurs</span> utilisent QR EVENT
+                  <span className="text-slate-500 font-black">+2,000 organisateurs</span> utilisent QR EVENT
                 </p>
               </div>
             </div>
@@ -200,14 +200,14 @@ const HomePage = () => {
             <div className="flex flex-col md:flex-row items-center md:items-end justify-between mb-12 md:mb-20 gap-6 text-center md:text-left">
               <div className="space-y-4">
                
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-medium text-slate-700 tracking-tight leading-tight">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-medium text-slate-500 tracking-tight leading-tight">
                   Événements récemment ajoutés <br className="hidden sm:block" /> 
                   <span className="text-orange-500">Actualités</span>.
                 </h2>
               </div>
               <Link 
                 to="/events" 
-                className="group flex justify-center items-center gap-3 px-6 md:px-8 py-3.5 md:py-4 bg-white border border-slate-200 text-slate-900 rounded-2xl font-bold hover:bg-slate-50 transition-all hover:shadow-lg w-full md:w-auto"
+                className="group flex justify-center items-center gap-3 px-6 md:px-8 py-3.5 md:py-4 bg-white border border-slate-200 text-slate-500 rounded-2xl font-bold hover:bg-slate-50 transition-all hover:shadow-lg w-full md:w-auto"
               >
                 Tout explorer
                 <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
@@ -244,7 +244,7 @@ const HomePage = () => {
                                 </span>
                               </div>
                             )}
-                            <div className="absolute top-1 right-1 px-2 py-1 bg-white/95 backdrop-blur-md rounded-lg text-[9px] font-black text-slate-900 shadow-sm border border-slate-200">
+                            <div className="absolute top-1 right-1 px-2 py-1 bg-white/95 backdrop-blur-md rounded-lg text-[9px] font-black text-slate-500 shadow-sm border border-slate-200">
                               {event.price > 0 ? `${event.price.toLocaleString()} F` : 'GRATUIT'}
                             </div>
                           </div>
@@ -254,7 +254,7 @@ const HomePage = () => {
                                <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[8px] font-black uppercase rounded-md border border-orange-100 tracking-wider inline-block">
                                  {event.category?.name || "Événement"}
                                </span>
-                               <h3 className="text-[15px] font-black text-slate-900 truncate leading-tight">
+                               <h3 className="text-[15px] font-black text-slate-500 truncate leading-tight">
                                  {event.title || event.name}
                                </h3>
                                <div className="flex flex-col gap-1">
@@ -301,7 +301,7 @@ const HomePage = () => {
                           
                           <div className="p-4 md:p-7 flex-1 flex flex-col justify-between">
                             <div className="space-y-3 md:space-y-4">
-                              <h3 className="text-sm md:text-lg font-medium text-slate-900 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+                              <h3 className="text-sm md:text-lg font-medium text-slate-500 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
                                 {event.title}
                               </h3>
                               <div className="space-y-2">
@@ -319,7 +319,7 @@ const HomePage = () => {
                             <div className="flex items-center justify-between pt-4 md:pt-6 mt-4 md:mt-6 border-t border-slate-50">
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Ticket dès</span>
-                                <span className="text-base md:text-xl font-medium text-slate-900">
+                                <span className="text-base md:text-xl font-medium text-slate-500">
                                   {event.price > 0 ? `${event.price.toLocaleString()} F` : "Gratuit"}
                                 </span>
                               </div>
@@ -359,7 +359,7 @@ const HomePage = () => {
               {/* 1. Header (Mobile Only) */}
               <div className="lg:hidden text-center space-y-4 mb-8">
                 <Reveal direction="up">
-                  <h2 className="text-4xl font-black leading-[1.1] text-slate-800 tracking-tight">
+                  <h2 className="text-4xl font-black leading-[1.1] text-slate-500 tracking-tight">
                     L'innovation au service de <br/>
                     <span className="text-orange-500">votre événement.</span>
                   </h2>
@@ -392,7 +392,7 @@ const HomePage = () => {
               <div className="w-full lg:order-2 space-y-10 lg:space-y-12">
                 <div className="hidden lg:block space-y-6">
                   <Reveal direction="right">
-                    <h2 className="text-5xl lg:text-7xl font-black leading-[1.1] text-slate-800 tracking-tight">
+                    <h2 className="text-5xl lg:text-7xl font-black leading-[1.1] text-slate-500 tracking-tight">
                       L'innovation au service de <br className="hidden lg:block"/>
                       <span className="text-orange-500">votre événement.</span>
                     </h2>
@@ -425,7 +425,7 @@ const HomePage = () => {
                           <item.icon size={32} strokeWidth={2.5} />
                         </div>
                         <div className="space-y-2">
-                          <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{item.title}</h3>
+                          <h3 className="text-2xl lg:text-3xl font-black text-slate-500">{item.title}</h3>
                           <p className="text-base lg:text-lg text-slate-500 leading-relaxed font-medium">{item.desc}</p>
                         </div>
                       </div>
@@ -460,7 +460,7 @@ const HomePage = () => {
                 <Globe size={14} />
                 En Temps Réel
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-medium text-slate-700 tracking-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-medium text-slate-500 tracking-tight">
                 <span className="text-orange-500">Restez Informé.</span> <br className="hidden sm:block"/>
                 Actualités Tech & IT
               </h2>
@@ -500,7 +500,7 @@ const HomePage = () => {
                             <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[8px] font-black uppercase rounded-md border border-blue-100 tracking-wider inline-block">
                                Tech News
                             </span>
-                            <h3 className="text-[14px] font-black text-slate-900 line-clamp-2 leading-tight">
+                            <h3 className="text-[14px] font-black text-slate-500 line-clamp-2 leading-tight">
                               {news.title}
                             </h3>
                          </div>
@@ -551,12 +551,12 @@ const HomePage = () => {
                             className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-700"
                             onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=60" }}
                           />
-                          <div className="absolute top-4 left-4 px-3 py-1 bg-white/95 backdrop-blur-md rounded-xl shadow-sm text-[9px] md:text-[10px] font-black uppercase text-slate-900 border border-slate-200">
+                          <div className="absolute top-4 left-4 px-3 py-1 bg-white/95 backdrop-blur-md rounded-xl shadow-sm text-[9px] md:text-[10px] font-black uppercase text-slate-500 border border-slate-200">
                             {news.published_at ? new Date(news.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : "À venir"}
                           </div>
                         </div>
                         <div className="p-5 md:p-6 flex-1 flex flex-col">
-                          <h3 className="text-base md:text-lg font-medium text-slate-900 mb-2 line-clamp-2 group-hover/card:text-blue-600 transition-colors">
+                          <h3 className="text-base md:text-lg font-medium text-slate-500 mb-2 line-clamp-2 group-hover/card:text-blue-600 transition-colors">
                             {news.title}
                           </h3>
                           <p className="text-xs md:text-sm text-slate-500 line-clamp-3 mb-6 flex-1">
@@ -647,7 +647,7 @@ const HomePage = () => {
             {/* Final CTA */}
             <div className="mt-16 md:mt-20 text-center">
               <button 
-                onClick={() => navigate('/events/create')}
+                onClick={() => navigate('/createevent')}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-orange-500 text-white rounded-2xl md:rounded-3xl font-bold text-base md:text-lg hover:bg-orange-600 transition-all shadow-[0_0_40px_-10px_rgba(249,115,22,0.5)] hover:shadow-orange-500/50 hover:-translate-y-1"
               >
                 Créer Mon Événement

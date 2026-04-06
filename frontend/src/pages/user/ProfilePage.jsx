@@ -121,7 +121,7 @@ const ProfilePage = () => {
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="absolute top-10 right-10 flex gap-2">
                {isPremium ? (
-                 <div className="px-6 py-3 bg-amber-400 text-black rounded-2xl shadow-[0_0_20px_rgba(251,191,36,0.5)] border-2 border-white/50 text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-3 animate-in zoom-in duration-700">
+                 <div className="px-6 py-3 bg-amber-400 text-slate-500 rounded-2xl shadow-[0_0_20px_rgba(251,191,36,0.5)] border-2 border-white/50 text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-3 animate-in zoom-in duration-700">
                    <div className="p-1 bg-black rounded-lg shadow-inner">
                      <Star size={16} fill="currentColor" className="text-amber-400" />
                    </div>

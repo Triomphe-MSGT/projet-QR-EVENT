@@ -198,14 +198,14 @@ const EventDetails = ({ event }) => {
             <div className="max-w-7xl mx-auto flex justify-between items-center w-full">
               <button
                 onClick={() => navigate(-1)}
-                className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-white hover:text-slate-900 transition-all border border-white/20 shadow-xl pointer-events-auto active:scale-90"
+                className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-white hover:text-slate-500 transition-all border border-white/20 shadow-xl pointer-events-auto active:scale-90"
                 title="Retour"
               >
                 <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
               </button>
               <button
                 onClick={handleShare}
-                className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-white hover:text-slate-900 transition-all border border-white/20 shadow-xl pointer-events-auto active:scale-90"
+                className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-white hover:text-slate-500 transition-all border border-white/20 shadow-xl pointer-events-auto active:scale-90"
                 title="Partager"
               >
                 <Share2 className="w-5 h-5 md:w-6 md:h-6" />
@@ -231,7 +231,7 @@ const EventDetails = ({ event }) => {
               <div className="max-w-4xl space-y-6">
                 <div className="flex flex-wrap items-center gap-3">
                   {event.category && (
-                    <span className="px-5 py-2 bg-white text-slate-900 text-xs font-bold uppercase rounded-xl shadow-md border border-slate-100">
+                    <span className="px-5 py-2 bg-white text-slate-500 text-xs font-bold uppercase rounded-xl shadow-md border border-slate-100">
                       {event.category.emoji} {event.category.name}
                     </span>
                   )}
@@ -270,14 +270,14 @@ const EventDetails = ({ event }) => {
               <div className="bg-white rounded-[2.5rem] p-8 md:p-14 shadow-sm border border-slate-100">
                 <div className="flex items-center gap-4 mb-10">
                   <div className="p-3 bg-slate-50 rounded-2xl">
-                    <Info className="w-6 h-6 text-slate-900" />
+                    <Info className="w-6 h-6 text-slate-500" />
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                  <h2 className="text-2xl md:text-3xl font-bold text-slate-500 tracking-tight">
                     Présentation de l'événement
                   </h2>
                 </div>
                 <div className="prose prose-lg max-w-none">
-                  <p className="text-slate-800 text-lg md:text-xl leading-relaxed whitespace-pre-wrap font-book">
+                  <p className="text-slate-500 text-lg md:text-xl leading-relaxed whitespace-pre-wrap font-book">
                     {event.description}
                   </p>
                 </div>
@@ -288,7 +288,7 @@ const EventDetails = ({ event }) => {
                     <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1">
                       Capacité
                     </p>
-                    <p className="text-xl font-bold text-slate-800">
+                    <p className="text-xl font-bold text-slate-500">
                       Illimitée
                     </p>
                   </div>
@@ -306,13 +306,13 @@ const EventDetails = ({ event }) => {
                     <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1">
                       Format
                     </p>
-                    <p className="text-xl font-bold text-slate-800">
+                    <p className="text-xl font-bold text-slate-500">
                       {event.format || event.type || "Présentiel"}
                     </p>
                   </div>
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
                     <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1">Heure</p>
-                    <p className="text-xl font-bold text-slate-800">
+                    <p className="text-xl font-bold text-slate-500">
                       {event.time || "--:--"}
                     </p>
                   </div>
@@ -325,7 +325,7 @@ const EventDetails = ({ event }) => {
                   <div className="p-2 bg-orange-50 rounded-xl">
                     <MapPin className="w-5 h-5 text-orange-500" />
                   </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
+                  <h2 className="text-xl md:text-2xl font-bold text-slate-500 tracking-tight">
                     Lieu de l'événement
                   </h2>
                 </div>
@@ -368,7 +368,7 @@ const EventDetails = ({ event }) => {
                     <MapPin className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-slate-800 font-bold text-lg tracking-tight">
+                    <p className="text-slate-500 font-bold text-lg tracking-tight">
                       {event.city}
                     </p>
                     <p className="text-slate-500 text-sm font-medium">
@@ -384,7 +384,7 @@ const EventDetails = ({ event }) => {
               {/* Registration/Action Card */}
               <div className="bg-white rounded-3xl p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 sticky top-24">
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                  <h3 className="text-2xl font-bold text-slate-500 mb-2">
                     Billetterie & Accès
                   </h3>
                   <p className="text-slate-500 text-sm font-medium leading-relaxed">
@@ -520,7 +520,7 @@ const EventDetails = ({ event }) => {
                     {event.organizer?.name?.charAt(0) || "O"}
                   </div>
                   <div>
-                    <h4 className="text-slate-900 font-bold text-base flex items-center gap-1.5">
+                    <h4 className="text-slate-500 font-bold text-base flex items-center gap-1.5">
                       {event.organizer?.name || "Organisateur"}
                       {isCertified && (
                         <ShieldCheck className="w-5 h-5 text-blue-500" />
@@ -545,7 +545,7 @@ const EventDetails = ({ event }) => {
           <div className="max-w-7xl mx-auto px-4 mt-16 pb-12">
             <div className="flex items-center justify-between mb-8">
               <div className="space-y-2">
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-500 tracking-tight">
                   Événements similaires
                 </h2>
                 <p className="text-slate-500 text-base font-medium">
@@ -585,13 +585,13 @@ const EventDetails = ({ event }) => {
                         <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[9px] font-black uppercase rounded-lg">
                           {similarEvent.category?.name || "Événement"}
                         </span>
-                        <span className="text-[10px] font-black text-slate-800">
+                        <span className="text-[10px] font-black text-slate-500">
                           {similarEvent.price === 0
                             ? "GRATUIT"
                             : `${similarEvent.price} F`}
                         </span>
                       </div>
-                      <h3 className="text-base font-bold text-slate-900 line-clamp-1 tracking-tight group-hover:text-orange-500 transition-colors">
+                      <h3 className="text-base font-bold text-slate-500 line-clamp-1 tracking-tight group-hover:text-orange-500 transition-colors">
                         {similarEvent.name}
                       </h3>
                       <div className="flex items-center gap-1.5 text-slate-400 text-xs font-medium">

@@ -90,7 +90,7 @@ const AccountSettingsPage = () => {
                  <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center shadow-inner">
                     <SettingsIcon size={24} />
                  </div>
-                 <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase">Paramètres</h1>
+                 <h1 className="text-3xl md:text-5xl font-black text-slate-500 tracking-tighter uppercase">Paramètres</h1>
               </div>
               <p className="text-slate-400 font-bold ml-1">Gérez vos préférences et la sécurité de votre compte <span className="text-orange-600 font-black tracking-widest uppercase text-[10px] ml-2">Eco-Système QR</span></p>
            </div>
@@ -112,11 +112,11 @@ const AccountSettingsPage = () => {
                       }`}
                     >
                        <div className="flex items-center gap-5">
-                          <div className={`p-3 rounded-xl transition-colors ${activeTab === tab.id ? 'bg-orange-500 text-white' : 'bg-slate-50 text-slate-400 group-hover:text-slate-900'}`}>
+                          <div className={`p-3 rounded-xl transition-colors ${activeTab === tab.id ? 'bg-orange-500 text-white' : 'bg-slate-50 text-slate-400 group-hover:text-slate-500'}`}>
                              <tab.icon size={20} className={tab.color} />
                           </div>
                           <div className="text-left">
-                             <p className={`text-[11px] font-black uppercase tracking-widest ${activeTab === tab.id ? 'text-white' : 'text-slate-900'}`}>{tab.label}</p>
+                             <p className={`text-[11px] font-black uppercase tracking-widest ${activeTab === tab.id ? 'text-white' : 'text-slate-500'}`}>{tab.label}</p>
                              <p className={`text-[9px] font-bold uppercase tracking-tighter ${activeTab === tab.id ? 'text-slate-400' : 'text-slate-400'}`}>{tab.description}</p>
                           </div>
                        </div>
@@ -130,8 +130,8 @@ const AccountSettingsPage = () => {
                  
                  {/* SECURITY SECTION */}
                  {activeTab === "security" && (
-                    <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500 text-slate-900">
-                       <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
+                    <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500 text-slate-500">
+                       <h2 className="text-2xl font-black text-slate-500 uppercase tracking-tighter flex items-center gap-3">
                           <ShieldCheck className="text-orange-600" /> Protection du Compte
                        </h2>
                        <form onSubmit={handlePasswordSubmit} className="space-y-8 max-w-md">
@@ -238,7 +238,7 @@ const AccountSettingsPage = () => {
                           <Bell size={48} />
                        </div>
                        <div className="space-y-2">
-                          <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Réglages des Alertes</h3>
+                          <h3 className="text-xl font-black text-slate-500 uppercase tracking-tighter">Réglages des Alertes</h3>
                           <p className="text-slate-400 font-bold text-sm max-w-xs mx-auto">Configurez vos préférences pour les emails et les notifications push.</p>
                        </div>
                        <div className="px-6 py-2 bg-orange-50 text-orange-600 rounded-full font-black text-[9px] uppercase tracking-[0.2em] border border-orange-100">

@@ -75,7 +75,7 @@ const UsageGuidePage = () => {
                       <div className={`w-20 h-20 ${section.bg} ${section.color} rounded-[2rem] flex items-center justify-center shadow-inner`}>
                          <section.icon size={40} />
                       </div>
-                      <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">{section.title}</h2>
+                      <h2 className="text-3xl font-black text-slate-500 uppercase tracking-tighter">{section.title}</h2>
                    </div>
 
                    <div className="space-y-8">
@@ -87,7 +87,7 @@ const UsageGuidePage = () => {
                            <div className="space-y-2">
                               <div className="flex items-center gap-3">
                                  <step.icon size={18} className="text-orange-500" />
-                                 <h4 className="text-base font-black text-slate-900 uppercase">{step.title}</h4>
+                                 <h4 className="text-base font-black text-slate-500 uppercase">{step.title}</h4>
                               </div>
                               <p className="text-slate-400 font-bold text-sm leading-relaxed">{step.text}</p>
                            </div>
@@ -101,7 +101,7 @@ const UsageGuidePage = () => {
            {/* FEATURES SHOWCASE */}
            <section className="space-y-16">
               <div className="text-center space-y-4">
-                 <h3 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Fonctionnalités Clés</h3>
+                 <h3 className="text-4xl font-black text-slate-500 uppercase tracking-tighter">Fonctionnalités Clés</h3>
                  <div className="w-20 h-1.5 bg-orange-600 mx-auto rounded-full"></div>
               </div>
 
@@ -113,7 +113,7 @@ const UsageGuidePage = () => {
                  ].map((feat, i) => (
                     <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm text-center space-y-6 hover:-translate-y-2 transition-all">
                        <div className="w-16 h-16 bg-slate-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner"><feat.icon size={28} /></div>
-                       <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight">{feat.title}</h4>
+                       <h4 className="text-lg font-black text-slate-500 uppercase tracking-tight">{feat.title}</h4>
                        <p className="text-slate-400 font-bold text-sm leading-relaxed">{feat.text}</p>
                     </div>
                  ))}

@@ -24,7 +24,7 @@ const Button = ({
     detail:
       "px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200",
     google:
-      "w-full flex items-center justify-center gap-2 bg-white text-black border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 transition",
+      "w-full flex items-center justify-center gap-2 bg-white text-slate-500 border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 transition",
     connecter: "w-full bg-green-500 text-white hover:bg-green-600",
     inscrire: "w-full bg-green-500 text-white hover:bg-green-600",
 

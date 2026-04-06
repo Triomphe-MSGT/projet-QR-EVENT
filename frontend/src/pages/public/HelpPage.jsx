@@ -81,7 +81,7 @@ const HelpPage = () => {
                         <div className={`w-20 h-20 ${section.bg} ${section.color} rounded-3xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform`}>
                            <section.icon size={44} />
                         </div>
-                        <h2 className="text-3xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter">{section.title}</h2>
+                        <h2 className="text-3xl md:text-4xl font-black text-slate-500 uppercase tracking-tighter">{section.title}</h2>
                         <p className="text-slate-400 font-bold text-sm tracking-tight">{section.description}</p>
                       </div>
 
@@ -94,7 +94,7 @@ const HelpPage = () => {
                               <div className="space-y-1.5">
                                  <div className="flex items-center gap-3">
                                     <step.icon size={16} className="text-orange-600" />
-                                    <h4 className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{step.title}</h4>
+                                    <h4 className="text-[13px] font-black text-slate-500 uppercase tracking-tight">{step.title}</h4>
                                  </div>
                                  <p className="text-slate-400 font-bold text-[13px] leading-relaxed">{step.text}</p>
                               </div>
@@ -109,7 +109,7 @@ const HelpPage = () => {
            {/* FEATURES GRID */}
            <section className="bg-white p-12 md:p-24 rounded-[3.5rem] border border-slate-100 shadow-sm space-y-16">
               <div className="text-center space-y-4">
-                 <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter shrink-0">L'écosystème <span className="text-orange-600">QR-EVENT</span></h3>
+                 <h3 className="text-3xl font-black text-slate-500 uppercase tracking-tighter shrink-0">L'écosystème <span className="text-orange-600">QR-EVENT</span></h3>
                  <p className="text-slate-400 font-bold text-xs uppercase tracking-widest leading-none">Une technologie conçue pour la performance</p>
               </div>
 
@@ -121,7 +121,7 @@ const HelpPage = () => {
                  ].map((feat, i) => (
                     <div key={i} className="text-center space-y-6">
                        <div className="w-16 h-16 bg-slate-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner"><feat.icon size={28} /></div>
-                       <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">{feat.title}</h4>
+                       <h4 className="text-base font-black text-slate-500 uppercase tracking-tight">{feat.title}</h4>
                        <p className="text-slate-400 font-bold text-sm leading-relaxed">{feat.text}</p>
                     </div>
                  ))}
