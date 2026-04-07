@@ -33,6 +33,8 @@ const HomePage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Tout");
   const [dateQuery, setDateQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState(null); // null | 'today' | 'tomorrow' | 'week' | 'month'
+  const [featuredIndex, setFeaturedIndex] = useState(0);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -84,6 +86,26 @@ const HomePage = () => {
       });
   }, []);
 
+  // --- Filtering helpers ---
+  const getDateFilteredEvents = (evtList) => {
+    if (!dateFilter || !evtList) return evtList;
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+    const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowEnd = new Date(tomorrowStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+    const weekEnd = new Date(todayStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const monthEnd = new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, todayStart.getDate());
+    return evtList.filter(e => {
+      const d = new Date(e.startDate || e.date);
+      if (dateFilter === 'today') return d >= todayStart && d <= todayEnd;
+      if (dateFilter === 'tomorrow') return d >= tomorrowStart && d <= tomorrowEnd;
+      if (dateFilter === 'week') return d >= todayStart && d <= weekEnd;
+      if (dateFilter === 'month') return d >= todayStart && d <= monthEnd;
+      return true;
+    });
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
@@ -100,10 +122,7 @@ const HomePage = () => {
         {/* ==========================================
             SECTION 1: HERO (ACCUEIL & RECHERCHE)
             ========================================== */}
-        {/* ==========================================
-            SECTION 1: HERO (ACCUEIL & RECHERCHE)
-            ========================================== */}
-        <section className={`relative overflow-hidden font-sans ${isMobile ? 'pt-20 pb-10 bg-white' : 'pt-40 pb-20 md:pt-60 md:pb-72 bg-gradient-to-tr from-sky-100 via-white to-blue-50'}`}>
+        <section className={`relative overflow-hidden font-sans ${isMobile ? 'pt-16 pb-4 bg-white' : 'pt-40 pb-20 md:pt-60 md:pb-72 bg-gradient-to-tr from-sky-100 via-white to-blue-50'}`}>
           
           {!isMobile && (
             <>
@@ -113,169 +132,182 @@ const HomePage = () => {
             </>
           )}
 
-          <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8">
+          <div className={`max-w-[1800px] mx-auto ${isMobile ? 'px-3' : 'px-4 sm:px-6 md:px-8'}`}>
             {isMobile ? (
-              /* --- MOBILE VIEW: YOUTUBE STYLE IMMERSIVE HERO --- */
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                 {/* 0. Greeting Header (Mobile Only) */}
+              /* ======================================================
+                 MOBILE VIEW: NOUVELLE STRUCTURE REDESSINÉE
+                 1. Salutation
+                 2. Barre recherche + bouton filtre (inline)
+                 3. Filtres date rapides
+                 4. Événement vedette avec flèches
+                 5. Liste 10 événements (desc gauche, image droite)
+                 6. Bouton "Plus d'événements"
+                 ====================================================== */
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+
+                {/* ---- 1. Salutation ---- */}
                 {(() => {
                    const today = new Date().toDateString();
                    const lastSeen = localStorage.getItem('last_greeting_date');
                    const shouldShow = lastSeen !== today;
-                   
                    if (!shouldShow) return null;
-
-                   // Set it as seen for today
                    localStorage.setItem('last_greeting_date', today);
-
                    const displayName = user?.nom || user?.firstName || user?.name || "Invité";
-
                    return (
-                    <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center justify-between px-1 pt-2">
                       <div className="space-y-0.5">
                         <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Content de vous revoir !</p>
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bonjour, <span className="text-orange-500">{displayName}</span> !</h1>
+                        <h1 className="text-xl font-black text-slate-900 tracking-tight">Bonjour, <span className="text-orange-500">{displayName}</span> !</h1>
                       </div>
-                      <Link to={token ? "/user-profile" : "/login"} className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 p-1 shrink-0">
+                      <Link to={token ? "/user-profile" : "/login"} className="w-11 h-11 rounded-2xl bg-slate-50 border border-slate-100 p-1 shrink-0">
                         <div className="w-full h-full rounded-xl overflow-hidden relative flex items-center justify-center bg-gradient-to-br from-orange-400 to-amber-600">
                           {(user?.image || user?.profilePicture) ? (
-                            <img 
-                              src={`${STATIC_BASE_URL}/${user?.image || user?.profilePicture}`} 
-                              className="w-full h-full object-cover" 
-                              alt="Profile" 
-                              loading="lazy"
-                              decoding="async"
-                              onError={(e) => { e.target.style.display = 'none'; }}
-                            />
+                            <img src={`${STATIC_BASE_URL}/${user?.image || user?.profilePicture}`} className="w-full h-full object-cover" alt="Profile" loading="lazy" decoding="async" onError={(e) => { e.target.style.display = 'none'; }} />
                           ) : null}
-                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black italic pointer-events-none">
-                            {displayName.charAt(0).toUpperCase()}
-                          </span>
+                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black italic pointer-events-none">{displayName.charAt(0).toUpperCase()}</span>
                         </div>
                       </Link>
                     </div>
                    );
                 })()}
-                {/* Category Chips Scroll (Top) */}
-                <div className="flex gap-2.5 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sticky top-0 bg-white/95 backdrop-blur-md z-30 py-2 border-b border-slate-50">
-                  <Link 
-                    to="/filters" 
-                    className="px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-full flex items-center gap-2 flex-shrink-0 active:scale-95 transition-transform"
-                  >
-                    <Filter size={12} className="text-orange-500" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Filtres</span>
-                  </Link>
-                  
-                  <div className="w-[1px] h-8 bg-slate-100 self-center mx-1 flex-shrink-0" />
 
-                  <button 
-                    onClick={() => setSelectedCategory("Tout")}
-                    className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex-shrink-0 transition-all active:scale-95 ${selectedCategory === "Tout" ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-500'}`}
+                {/* ---- 2. Barre de recherche + bouton Filtre côte à côte ---- */}
+                <form onSubmit={handleSearch} className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center gap-2 bg-slate-100 rounded-2xl px-3 py-2.5">
+                    <Search className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Rechercher un événement..."
+                      className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-slate-700 font-semibold placeholder:text-slate-400 text-[13px]"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Link
+                    to="/filters"
+                    className="w-11 h-11 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0 active:scale-95 transition-transform shadow-md"
                   >
-                    Tout
-                  </button>
-                  {categories?.map((cat, idx) => (
-                    <button 
-                      key={cat._id || cat.id || idx} 
-                      onClick={() => setSelectedCategory(cat.name)}
-                      className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex-shrink-0 transition-all active:scale-95 ${selectedCategory === cat.name ? 'bg-orange-500 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-orange-50 hover:text-orange-600'}`}
+                    <Filter size={18} className="text-white" />
+                  </Link>
+                </form>
+
+                {/* ---- 3. Filtres date rapides ---- */}
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                  {[
+                    { key: 'month', label: 'Ce mois' },
+                    { key: 'week',  label: 'Cette semaine' },
+                    { key: 'today', label: "Aujourd'hui" },
+                    { key: 'tomorrow', label: 'Demain' },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setDateFilter(prev => prev === key ? null : key)}
+                      className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wide flex-shrink-0 transition-all active:scale-95 border ${
+                        dateFilter === key
+                          ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200'
+                          : 'bg-white text-slate-500 border-slate-200'
+                      }`}
                     >
-                      {cat.name}
+                      {label}
                     </button>
                   ))}
                 </div>
 
-                {/* Featured Content Card - Most Imminent Event */}
+                {/* ---- 4. Événement vedette avec flèches de navigation ---- */}
                 {(() => {
-                  const upcomingEvents = events?.filter(e => {
-                    const isUpcoming = new Date(e.startDate) >= new Date().setHours(0,0,0,0);
-                    const categoryMatch = selectedCategory === "Tout" || e.category?.name === selectedCategory;
-                    return isUpcoming && categoryMatch;
-                  }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-                  const featuredEvent = upcomingEvents?.[0];
+                  const featuredPool = events
+                    ?.filter(e => {
+                      const isUpcoming = new Date(e.startDate) >= new Date().setHours(0,0,0,0);
+                      const categoryMatch = selectedCategory === "Tout" || e.category?.name === selectedCategory;
+                      return isUpcoming && categoryMatch;
+                    })
+                    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
-                  if (eventsLoading) return <div className="w-full aspect-[16/9] bg-slate-100 rounded-[2.5rem] animate-pulse"></div>;
-                  if (!featuredEvent) return null;
+                  const filtered = getDateFilteredEvents(featuredPool) || [];
+                  const safeIndex = Math.min(featuredIndex, Math.max(0, filtered.length - 1));
+                  const featuredEvent = filtered[safeIndex];
+
+                  if (eventsLoading) return <div className="w-full aspect-[16/9] bg-slate-100 rounded-3xl animate-pulse" />;
+                  if (!filtered.length) return null;
 
                   return (
-                    <div 
-                      onClick={() => navigate(`/events/${featuredEvent._id}`)}
-                      className="relative w-full aspect-[16/9] rounded-[2.5rem] overflow-hidden shadow-2xl group active:scale-[0.98] transition-transform"
-                    >
-                      {featuredEvent.coverImage || featuredEvent.imageUrl ? (
-                        <img 
-                          src={featuredEvent.coverImage || featuredEvent.imageUrl} 
-                          alt="Featured" 
-                          loading="eager" // Hero image should load fast
-                          decoding="async"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-orange-500 via-orange-600 to-amber-700 flex items-center justify-center">
-                          <span className="text-white font-black text-8xl drop-shadow-2xl opacity-40 italic">
-                            {(featuredEvent.title || featuredEvent.name || "E").charAt(0).toUpperCase()}
+                    <div className="relative">
+                      {/* Card cliquable */}
+                      <div
+                        onClick={() => navigate(`/events/${featuredEvent._id}`)}
+                        className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden shadow-xl group active:scale-[0.99] transition-transform cursor-pointer"
+                      >
+                        {featuredEvent.coverImage || featuredEvent.imageUrl ? (
+                          <img
+                            src={featuredEvent.coverImage || featuredEvent.imageUrl}
+                            alt={featuredEvent.title || featuredEvent.name}
+                            loading="eager"
+                            decoding="async"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-orange-500 via-orange-600 to-amber-700 flex items-center justify-center">
+                            <span className="text-white font-black text-7xl drop-shadow-2xl opacity-40 italic">
+                              {(featuredEvent.title || featuredEvent.name || "E").charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+
+                        {/* Badge */}
+                        <div className="absolute top-4 left-4">
+                          <span className="px-3 py-1 bg-red-600 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow">
+                            À L'Affiche
                           </span>
                         </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-                      
-                      <div className="absolute top-5 left-5 flex gap-2">
-                         <span className="px-3 py-1 bg-red-600 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                            À L'Affiche
-                         </span>
+
+                        {/* Indicateur pagination */}
+                        {filtered.length > 1 && (
+                          <div className="absolute top-4 right-4 flex gap-1">
+                            {filtered.slice(0, Math.min(5, filtered.length)).map((_, i) => (
+                              <div key={i} className={`h-1.5 rounded-full transition-all ${ i === safeIndex ? 'w-5 bg-white' : 'w-1.5 bg-white/40'}`} />
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Infos */}
+                        <div className="absolute bottom-4 left-4 right-4 space-y-2">
+                          <h2 className="text-xl font-black text-white uppercase tracking-tight leading-tight line-clamp-2">
+                            {featuredEvent.title || featuredEvent.name}
+                          </h2>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-300">
+                              <Calendar size={11} className="text-orange-400" />
+                              <span>{new Date(featuredEvent.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            </div>
+                            <span className="px-4 py-1.5 bg-white text-slate-900 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
+                              Voir l'événement
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="absolute bottom-6 left-6 right-6 space-y-3">
-                         <h2 className="text-2xl font-black text-white uppercase tracking-tighter leading-tight italic">
-                           {featuredEvent.title || featuredEvent.name}
-                         </h2>
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-300">
-                               <Calendar size={12} className="text-orange-500" />
-                               <span>{new Date(featuredEvent.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
-                            </div>
-                            <button className="px-5 py-2 bg-white text-slate-900 rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl">
-                               Vivre l'Expérience
-                            </button>
-                         </div>
-                      </div>
+                      {/* Flèches de navigation */}
+                      {filtered.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => setFeaturedIndex(i => (i - 1 + filtered.length) % filtered.length)}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform z-10"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                          </button>
+                          <button
+                            onClick={() => setFeaturedIndex(i => (i + 1) % filtered.length)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform z-10"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                          </button>
+                        </>
+                      )}
                     </div>
                   );
                 })()}
 
-                {/* Search Bar - Integrated & Mobile Optimized */}
-                <form 
-                  onSubmit={handleSearch}
-                  className="bg-slate-50 p-1.5 rounded-[2.5rem] border border-slate-100 flex flex-col gap-1 shadow-inner"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 flex items-center px-4 py-2 bg-white rounded-full shadow-sm">
-                      <Search className="w-4 h-4 text-orange-400 mr-2 flex-shrink-0" />
-                      <input 
-                        type="text" 
-                        placeholder="Chercher une expérience..." 
-                        className="w-full border-none bg-transparent focus:ring-0 focus:outline-none text-slate-600 font-bold placeholder:text-slate-400 text-xs"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 flex items-center px-4 py-2 bg-white rounded-full shadow-sm">
-                        <MapPin className="w-4 h-4 text-blue-400 mr-2 flex-shrink-0" />
-                        <input 
-                          type="text" 
-                          placeholder="Où ? (Ville, Quartier...)" 
-                          className="w-full border-none bg-transparent focus:ring-0 focus:outline-none text-slate-600 font-bold placeholder:text-slate-400 text-xs"
-                          value={locationQuery}
-                          onChange={(e) => setLocationQuery(e.target.value)}
-                        />
-                    </div>
-                    <button type="submit" className="w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform shrink-0">
-                       <ArrowRight size={16} />
-                    </button>
-                  </div>
-                </form>
               </div>
             ) : (
               /* --- DESKTOP VIEW: ORIGINAL SOPHISTICATED HERO --- */
@@ -371,112 +403,187 @@ const HomePage = () => {
         </section>
 
         {/* ==========================================
-            SECTION 2: DÉCOUVREZ LES DERNIERS ÉVÉNEMENTS
+            SECTION 2: LISTE DES ÉVÉNEMENTS
             ========================================== */}
-        <section className="relative py-20 md:py-32 overflow-hidden bg-gradient-to-b from-sky-50/50 via-white to-white">
-          <div className="max-w-[1900px] mx-auto px-4 sm:px-6 md:px-8">
-            <Reveal direction="up">
-            <div className="flex flex-col md:flex-row items-center md:items-end justify-between mb-12 md:mb-20 gap-6 text-center md:text-left">
-              <div className="space-y-4">
-               
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-medium text-slate-500 tracking-tight leading-tight">
-                  Événements récemment ajoutés <br className="hidden sm:block" /> 
-                  <span className="text-orange-500">Actualités</span>.
-                </h2>
-              </div>
-              <Link 
-                to="/events" 
-                className="group flex justify-center items-center gap-3 px-6 md:px-8 py-3.5 md:py-4 bg-white border border-slate-200 text-slate-500 rounded-2xl font-bold hover:bg-slate-50 transition-all hover:shadow-lg w-full md:w-auto"
-              >
-                Tout explorer
-                <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-            </Reveal>
+        <section className={`relative overflow-hidden bg-gradient-to-b from-sky-50/50 via-white to-white ${ isMobile ? 'py-5' : 'py-20 md:py-32' }`}>
+          <div className={`max-w-[1900px] mx-auto ${ isMobile ? 'px-3' : 'px-4 sm:px-6 md:px-8' }`}>
 
-            <Reveal direction="up" delay={200}>
-              <div className={isMobile ? "space-y-4" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-8"}>
-                {eventsLoading ? (
-                  [1, 2, 3, 4, 5].map((idx) => (
-                    <div key={idx} className={isMobile ? "h-28 bg-white border border-slate-100 animate-pulse rounded-2xl" : "h-[480px] bg-white border border-slate-100 animate-pulse rounded-3xl"}></div>
-                  ))
-                ) : events?.filter(ev => {
-                    const isUpcoming = new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0);
-                    const categoryMatch = selectedCategory === "Tout" || ev.category?.name === selectedCategory;
-                    return isUpcoming && categoryMatch;
-                  }).length > 0 ? (
-                  events
-                    .filter(ev => {
-                      const isUpcoming = new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0);
-                      const categoryMatch = selectedCategory === "Tout" || ev.category?.name === selectedCategory;
-                      return isUpcoming && categoryMatch;
-                    })
-                    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-                    .slice(0, 5)
-                    .map((event, idx) => (
-                      isMobile ? (
-                        /* Mobile Premium Card */
-                        <div 
-                          key={event._id || idx} 
-                          onClick={() => navigate(`/events/${event._id}`)} 
-                          className="group bg-white p-4 rounded-[1.5rem] flex gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 active:scale-[0.98] transition-all"
-                        >
-                          <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center relative">
-                            {event.coverImage || event.imageUrl ? (
-                              <img src={event.coverImage || event.imageUrl} className="w-full h-full object-cover" alt={event.title} loading="lazy" decoding="async" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center">
-                                <span className="text-white font-black text-4xl drop-shadow-md">
-                                  {(event.title || event.name || "E").charAt(0).toUpperCase()}
+            {isMobile ? (
+              /* ======= MOBILE : affichage instantané (pas de Reveal) ======= */
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Événements à venir</p>
+                  <Link to="/events" className="text-[11px] font-black text-orange-500 uppercase tracking-wide">Voir tout →</Link>
+                </div>
+
+                <div className="space-y-3">
+                  {eventsLoading ? (
+                    [1,2,3,4,5,6].map((idx) => (
+                      <div key={idx} className="h-24 bg-white border border-slate-100 animate-pulse rounded-2xl" />
+                    ))
+                  ) : (() => {
+                    const baseFiltered = events
+                      ?.filter(ev => {
+                        const isUpcoming = new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0);
+                        const categoryMatch = selectedCategory === "Tout" || ev.category?.name === selectedCategory;
+                        return isUpcoming && categoryMatch;
+                      })
+                      .sort((a, b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date));
+
+                    const filteredByDate = getDateFilteredEvents(baseFiltered);
+                    const sliced = filteredByDate?.slice(0, 10);
+
+                    if (!sliced?.length) return (
+                      <div className="py-16 text-center bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                        <div className="max-w-xs mx-auto space-y-4">
+                          <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto text-slate-300"><Sparkles size={32} /></div>
+                          <p className="text-slate-500 font-medium italic">Plus d'événements bientôt disponibles...</p>
+                        </div>
+                      </div>
+                    );
+
+                    return (
+                      <>
+                        {sliced.map((event, idx) => (
+                          <div
+                            key={event._id || idx}
+                            onClick={() => navigate(`/events/${event._id}`)}
+                            className="group bg-white rounded-2xl flex gap-3 shadow-[0_1px_6px_rgba(0,0,0,0.05)] border border-slate-100 active:scale-[0.98] transition-all overflow-hidden p-3 hp-card-enter"
+                            style={{ animationDelay: `${idx * 30}ms` }}
+                          >
+                            {/* Gauche : image */}
+                            <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-slate-100 relative self-center">
+                              {event.coverImage || event.imageUrl ? (
+                                <img
+                                  src={event.coverImage || event.imageUrl}
+                                  className="w-full h-full object-cover"
+                                  alt={event.title}
+                                  loading="lazy"
+                                  decoding="async"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
+                                  <span className="text-white font-black text-3xl drop-shadow">
+                                    {(event.title || event.name || "E").charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Droite : description */}
+                            <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+                              <div className="space-y-1">
+                                <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[8px] font-black uppercase rounded-md border border-orange-100 tracking-wider inline-block">
+                                  {event.category?.name || "Événement"}
+                                </span>
+                                <h3 className="text-[14px] font-black text-slate-800 line-clamp-2 leading-tight">
+                                  {event.title || event.name}
+                                </h3>
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
+                                    <Calendar size={11} className="text-orange-500 flex-shrink-0" strokeWidth={2.5} />
+                                    <span>{new Date(event.startDate || event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
+                                    <MapPin size={11} className="text-blue-500 flex-shrink-0" strokeWidth={2.5} />
+                                    <span className="truncate">{event.location || event.city || "Lieu à confirmer"}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="text-[11px] font-black text-slate-700">
+                                  {event.price > 0 ? `${event.price.toLocaleString()} FCFA` : 'Gratuit'}
+                                </span>
+                                <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest">
+                                  Réserver
                                 </span>
                               </div>
-                            )}
-                            <div className="absolute top-1 right-1 px-2 py-1 bg-white/95 backdrop-blur-md rounded-lg text-[9px] font-black text-slate-500 shadow-sm border border-slate-200">
-                              {event.price > 0 ? `${event.price.toLocaleString()} F` : 'GRATUIT'}
                             </div>
                           </div>
+                        ))}
 
-                          <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
-                            <div className="space-y-1.5 text-left">
-                               <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[8px] font-black uppercase rounded-md border border-orange-100 tracking-wider inline-block">
-                                 {event.category?.name || "Événement"}
-                               </span>
-                               <h3 className="text-[15px] font-black text-slate-500 truncate leading-tight">
-                                 {event.title || event.name}
-                               </h3>
-                               <div className="flex flex-col gap-1">
-                                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 text-left">
-                                    <Calendar size={12} className="text-orange-500" strokeWidth={3} />
-                                    <span>{new Date(event.startDate || event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</span>
-                                 </div>
-                                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 text-left">
-                                    <MapPin size={12} className="text-blue-500" strokeWidth={3} />
-                                    <span className="truncate">{event.location || event.city || "Abidjan, CI"}</span>
-                                 </div>
-                               </div>
-                            </div>
-                            
-                            <div className="flex items-center justify-end mt-2">
-                               <div className="p-1 px-3 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest active:bg-orange-600">
-                                  Réserver
-                               </div>
-                            </div>
+                        {/* Bouton "Plus d'événements" */}
+                        {filteredByDate && filteredByDate.length > 10 ? (
+                          <div className="pt-2 pb-4">
+                            <Link to="/events" className="w-full flex items-center justify-center gap-2 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-[13px] uppercase tracking-widest active:scale-[0.98] transition-transform shadow-lg">
+                              <span>Plus d'événements</span>
+                              <ArrowRight size={16} />
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="pt-2 pb-4">
+                            <Link to="/events" className="w-full flex items-center justify-center gap-2 py-3 bg-slate-50 border border-slate-200 text-slate-600 rounded-2xl font-bold text-[12px] active:scale-[0.98] transition-transform">
+                              <span>Voir tous les événements</span>
+                              <ArrowRight size={14} />
+                            </Link>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Keyframe pour stagger rapide */}
+                <style>{`
+                  @keyframes hpCardEnter {
+                    from { opacity: 0; transform: translateY(8px); }
+                    to { opacity: 1; transform: translateY(0); }
+                  }
+                  .hp-card-enter { animation: hpCardEnter 0.2s ease-out both; }
+                `}</style>
+              </>
+            ) : (
+              /* ======= DESKTOP : Reveal animé classique ======= */
+              <>
+                <Reveal direction="up">
+                  <div className="flex flex-col md:flex-row items-center md:items-end justify-between mb-12 md:mb-20 gap-6 text-center md:text-left">
+                    <div className="space-y-4">
+                      <h2 className="text-3xl sm:text-4xl md:text-5xl font-medium text-slate-500 tracking-tight leading-tight">
+                        Événements récemment ajoutés <br className="hidden sm:block" />
+                        <span className="text-orange-500">Actualités</span>.
+                      </h2>
+                    </div>
+                    <Link to="/events" className="group flex justify-center items-center gap-3 px-6 md:px-8 py-3.5 md:py-4 bg-white border border-slate-200 text-slate-500 rounded-2xl font-bold hover:bg-slate-50 transition-all hover:shadow-lg w-full md:w-auto">
+                      Tout explorer
+                      <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </Reveal>
+
+                <Reveal direction="up" delay={200}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-8">
+                    {eventsLoading ? (
+                      [1,2,3,4,5].map((idx) => (
+                        <div key={idx} className="h-[480px] bg-white border border-slate-100 animate-pulse rounded-3xl" />
+                      ))
+                    ) : (() => {
+                      const baseFiltered = events
+                        ?.filter(ev => {
+                          const isUpcoming = new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0);
+                          const categoryMatch = selectedCategory === "Tout" || ev.category?.name === selectedCategory;
+                          return isUpcoming && categoryMatch;
+                        })
+                        .sort((a, b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date))
+                        ?.slice(0, 5);
+
+                      if (!baseFiltered?.length) return (
+                        <div className="col-span-full py-16 text-center bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                          <div className="max-w-xs mx-auto space-y-4">
+                            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto text-slate-300"><Sparkles size={32} /></div>
+                            <p className="text-slate-500 font-medium italic">Plus d'événements bientôt disponibles...</p>
                           </div>
                         </div>
-                      ) : (
-                        /* Desktop Grid Card */
-                        <div 
-                          key={event._id || idx} 
+                      );
+
+                      return baseFiltered.map((event, idx) => (
+                        <div
+                          key={event._id || idx}
                           className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_4px_6px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-2 flex flex-col mx-auto w-full max-w-[280px] md:max-w-none"
                           style={{ contentVisibility: 'auto' }}
                         >
                           <div className="h-40 md:h-60 overflow-hidden relative bg-slate-100 flex items-center justify-center">
                             {event.coverImage || event.imageUrl ? (
-                              <img 
-                                src={event.coverImage || event.imageUrl} 
-                                alt={event.title || event.name} 
-                                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                              />
+                              <img src={event.coverImage || event.imageUrl} alt={event.title || event.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
                             ) : (
                               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-500 to-amber-600 text-white font-black text-5xl md:text-6xl group-hover:scale-105 transition-transform duration-1000">
                                 {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}
@@ -486,12 +593,9 @@ const HomePage = () => {
                               {event.category?.name || "Événement"}
                             </div>
                           </div>
-                          
                           <div className="p-4 md:p-7 flex-1 flex flex-col justify-between">
                             <div className="space-y-3 md:space-y-4">
-                              <h3 className="text-sm md:text-lg font-medium text-slate-500 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
-                                {event.title}
-                              </h3>
+                              <h3 className="text-sm md:text-lg font-medium text-slate-500 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">{event.title}</h3>
                               <div className="space-y-2">
                                 <div className="flex items-center gap-2.5 text-xs font-medium text-slate-400">
                                   <Calendar size={14} className="text-blue-500 flex-shrink-0" />
@@ -503,37 +607,22 @@ const HomePage = () => {
                                 </div>
                               </div>
                             </div>
-
                             <div className="flex items-center justify-between pt-4 md:pt-6 mt-4 md:mt-6 border-t border-slate-50">
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Ticket dès</span>
-                                <span className="text-base md:text-xl font-medium text-slate-500">
-                                  {event.price > 0 ? `${event.price.toLocaleString()} F` : "Gratuit"}
-                                </span>
+                                <span className="text-base md:text-xl font-medium text-slate-500">{event.price > 0 ? `${event.price.toLocaleString()} F` : "Gratuit"}</span>
                               </div>
-                              <button 
-                                onClick={() => navigate(`/events/${event._id}`)}
-                                className="px-4 py-2 bg-slate-900 text-white text-[10px] md:text-xs font-bold rounded-lg md:rounded-xl hover:bg-blue-600 transition-all shadow-md active:scale-95"
-                              >
-                                Réserver
-                              </button>
+                              <button onClick={() => navigate(`/events/${event._id}`)} className="px-4 py-2 bg-slate-900 text-white text-[10px] md:text-xs font-bold rounded-lg md:rounded-xl hover:bg-blue-600 transition-all shadow-md active:scale-95">Réserver</button>
                             </div>
                           </div>
                         </div>
-                      )
-                    ))
-                ) : (
-                  <div className="col-span-full py-20 text-center bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
-                    <div className="max-w-xs mx-auto space-y-4">
-                      <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto text-slate-300">
-                        <Sparkles size={32} />
-                      </div>
-                      <p className="text-slate-500 font-medium italic">Plus d'événements bientôt disponibles...</p>
-                    </div>
+                      ));
+                    })()}
                   </div>
-                )}
-              </div>
-            </Reveal>
+                </Reveal>
+              </>
+            )}
+
           </div>
         </section>
 

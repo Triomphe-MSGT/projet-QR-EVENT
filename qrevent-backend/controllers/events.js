@@ -65,21 +65,31 @@ const canEditEvent = (user, event) => {
 // Controller methods --------------------------------------------------------
 /**
  * GET /events
+ * Retourne uniquement les événements à venir (non passés) pour le public.
+ * Les événements passés sont masqués ; seuls l'organisateur et l'admin y accèdent via leurs routes dédiées.
  */
 const getAllEvents = async (req, res, next) => {
   try {
-    const events = await Event.find({ visibility: { $ne: "private" } })
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // début de la journée courante
+
+    const events = await Event.find({
+      visibility: { $ne: "private" },
+      startDate: { $gte: now }, // ← uniquement les événements actuels et futurs
+    })
       .populate("organizer", "nom email")
       .populate("category", "name emoji")
-      .sort({ startDate: -1 })
+      .sort({ startDate: 1 }) // du plus proche au plus lointain
       .lean();
-    console.log(`getAllEvents: Found ${events.length} public events`);
+
+    console.log(`getAllEvents: Found ${events.length} upcoming public events`);
     res.json(events);
   } catch (error) {
     console.error("Error in getAllEvents:", error);
     next(error);
   }
 };
+
 
 /**
  * GET /events/:id
