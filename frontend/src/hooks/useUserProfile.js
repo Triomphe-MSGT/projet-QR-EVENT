@@ -6,11 +6,12 @@ import { login, logout } from "../slices/authSlice";
 /**
  * Hook to fetch the current user's profile.
  */
-export const useUserProfile = () => {
+export const useUserProfile = (options = {}) => {
   return useQuery({
     queryKey: ["userProfile"],
     queryFn: userProfileService.getProfile,
     staleTime: 1000 * 60 * 5,
+    ...options,
   });
 };
 
@@ -81,11 +82,12 @@ export const useUploadAvatar = () => {
 /**
  * Hook to fetch events associated with the user.
  */
-export const useUserEvents = () => {
+export const useUserEvents = (options = {}) => {
   return useQuery({
     queryKey: ["userEvents"],
     queryFn: userProfileService.getUserEvents,
     staleTime: 0,
+    ...options,
   });
 };
 

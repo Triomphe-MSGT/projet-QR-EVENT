@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import MainLayout from "../../components/layout/MainLayout";
 import { QrCode, Search, MapPin, Calendar, ArrowRight, Sparkles,
   Zap,
@@ -9,7 +10,8 @@ import { QrCode, Search, MapPin, Calendar, ArrowRight, Sparkles,
   Plus,
   Mail,
   MessageCircle,
-  Smartphone
+  Smartphone,
+  Filter
 } from "lucide-react";
 import { useEvents } from "../../hooks/useEvents";
 import { useUserProfile } from "../../hooks/useUserProfile";
@@ -22,12 +24,14 @@ const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { data: user } = useUserProfile();
+  const { token } = useSelector((state) => state.auth);
+  const { data: user } = useUserProfile({ enabled: !!token });
   const { data: events, isLoading: eventsLoading } = useEvents();
   const { data: categories } = useCategories();
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Tout");
   const [dateQuery, setDateQuery] = useState("");
 
   useEffect(() => {
@@ -113,24 +117,26 @@ const HomePage = () => {
             {isMobile ? (
               /* --- MOBILE VIEW: YOUTUBE STYLE IMMERSIVE HERO --- */
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                {/* 0. Greeting Header (Mobile Only) - Only once per day for logged users */}
+                 {/* 0. Greeting Header (Mobile Only) */}
                 {(() => {
                    const today = new Date().toDateString();
                    const lastSeen = localStorage.getItem('last_greeting_date');
-                   const shouldShow = user && lastSeen !== today;
+                   const shouldShow = lastSeen !== today;
                    
                    if (!shouldShow) return null;
 
                    // Set it as seen for today
                    localStorage.setItem('last_greeting_date', today);
 
+                   const displayName = user?.nom || user?.firstName || user?.name || "Invité";
+
                    return (
                     <div className="flex items-center justify-between px-1">
                       <div className="space-y-0.5">
                         <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Content de vous revoir !</p>
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bonjour, <span className="text-orange-500">{user?.nom || user?.firstName || user?.name}</span> !</h1>
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bonjour, <span className="text-orange-500">{displayName}</span> !</h1>
                       </div>
-                      <Link to="/user-profile" className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 p-1 shrink-0">
+                      <Link to={token ? "/user-profile" : "/login"} className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 p-1 shrink-0">
                         <div className="w-full h-full rounded-xl overflow-hidden relative flex items-center justify-center bg-gradient-to-br from-orange-400 to-amber-600">
                           {(user?.image || user?.profilePicture) ? (
                             <img 
@@ -143,7 +149,7 @@ const HomePage = () => {
                             />
                           ) : null}
                           <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black italic pointer-events-none">
-                            {(user?.nom || user?.firstName || user?.name || "U").charAt(0).toUpperCase()}
+                            {displayName.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       </Link>
@@ -151,25 +157,41 @@ const HomePage = () => {
                    );
                 })()}
                 {/* Category Chips Scroll (Top) */}
-                <div className="flex gap-2.5 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
-                  <button className="px-5 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest flex-shrink-0">
+                <div className="flex gap-2.5 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sticky top-0 bg-white/95 backdrop-blur-md z-30 py-2 border-b border-slate-50">
+                  <Link 
+                    to="/filters" 
+                    className="px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-full flex items-center gap-2 flex-shrink-0 active:scale-95 transition-transform"
+                  >
+                    <Filter size={12} className="text-orange-500" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Filtres</span>
+                  </Link>
+                  
+                  <div className="w-[1px] h-8 bg-slate-100 self-center mx-1 flex-shrink-0" />
+
+                  <button 
+                    onClick={() => setSelectedCategory("Tout")}
+                    className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex-shrink-0 transition-all active:scale-95 ${selectedCategory === "Tout" ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-500'}`}
+                  >
                     Tout
                   </button>
                   {categories?.map((cat, idx) => (
-                    <Link 
+                    <button 
                       key={cat._id || cat.id || idx} 
-                      to={`/categories/${cat.name}`}
-                      className="px-5 py-2 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest flex-shrink-0 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                      onClick={() => setSelectedCategory(cat.name)}
+                      className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex-shrink-0 transition-all active:scale-95 ${selectedCategory === cat.name ? 'bg-orange-500 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-orange-50 hover:text-orange-600'}`}
                     >
                       {cat.name}
-                    </Link>
+                    </button>
                   ))}
                 </div>
 
                 {/* Featured Content Card - Most Imminent Event */}
                 {(() => {
-                  const upcomingEvents = events?.filter(e => new Date(e.startDate) >= new Date().setHours(0,0,0,0))
-                                               .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+                  const upcomingEvents = events?.filter(e => {
+                    const isUpcoming = new Date(e.startDate) >= new Date().setHours(0,0,0,0);
+                    const categoryMatch = selectedCategory === "Tout" || e.category?.name === selectedCategory;
+                    return isUpcoming && categoryMatch;
+                  }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
                   const featuredEvent = upcomingEvents?.[0];
 
                   if (eventsLoading) return <div className="w-full aspect-[16/9] bg-slate-100 rounded-[2.5rem] animate-pulse"></div>;
@@ -224,21 +246,35 @@ const HomePage = () => {
                 {/* Search Bar - Integrated & Mobile Optimized */}
                 <form 
                   onSubmit={handleSearch}
-                  className="bg-slate-50 p-2 rounded-[2rem] border border-slate-100 flex items-center gap-2"
+                  className="bg-slate-50 p-1.5 rounded-[2.5rem] border border-slate-100 flex flex-col gap-1 shadow-inner"
                 >
-                  <div className="flex-1 flex items-center px-4">
-                    <Search className="w-4 h-4 text-orange-400 mr-2 flex-shrink-0" />
-                    <input 
-                      type="text" 
-                      placeholder="Chercher une expérience..." 
-                      className="w-full h-10 border-none bg-transparent focus:ring-0 focus:outline-none text-slate-600 font-bold placeholder:text-slate-400 text-xs"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 flex items-center px-4 py-2 bg-white rounded-full shadow-sm">
+                      <Search className="w-4 h-4 text-orange-400 mr-2 flex-shrink-0" />
+                      <input 
+                        type="text" 
+                        placeholder="Chercher une expérience..." 
+                        className="w-full border-none bg-transparent focus:ring-0 focus:outline-none text-slate-600 font-bold placeholder:text-slate-400 text-xs"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <button className="w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
-                     <ArrowRight size={16} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 flex items-center px-4 py-2 bg-white rounded-full shadow-sm">
+                        <MapPin className="w-4 h-4 text-blue-400 mr-2 flex-shrink-0" />
+                        <input 
+                          type="text" 
+                          placeholder="Où ? (Ville, Quartier...)" 
+                          className="w-full border-none bg-transparent focus:ring-0 focus:outline-none text-slate-600 font-bold placeholder:text-slate-400 text-xs"
+                          value={locationQuery}
+                          onChange={(e) => setLocationQuery(e.target.value)}
+                        />
+                    </div>
+                    <button type="submit" className="w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform shrink-0">
+                       <ArrowRight size={16} />
+                    </button>
+                  </div>
                 </form>
               </div>
             ) : (
@@ -364,9 +400,17 @@ const HomePage = () => {
                   [1, 2, 3, 4, 5].map((idx) => (
                     <div key={idx} className={isMobile ? "h-28 bg-white border border-slate-100 animate-pulse rounded-2xl" : "h-[480px] bg-white border border-slate-100 animate-pulse rounded-3xl"}></div>
                   ))
-                ) : events?.filter(ev => new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0)).length > 0 ? (
+                ) : events?.filter(ev => {
+                    const isUpcoming = new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0);
+                    const categoryMatch = selectedCategory === "Tout" || ev.category?.name === selectedCategory;
+                    return isUpcoming && categoryMatch;
+                  }).length > 0 ? (
                   events
-                    .filter(ev => new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0))
+                    .filter(ev => {
+                      const isUpcoming = new Date(ev.startDate || ev.date) >= new Date().setHours(0,0,0,0);
+                      const categoryMatch = selectedCategory === "Tout" || ev.category?.name === selectedCategory;
+                      return isUpcoming && categoryMatch;
+                    })
                     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
                     .slice(0, 5)
                     .map((event, idx) => (

@@ -196,6 +196,10 @@ const uploadUserAvatar = async (req, res, next) => {
 // -----------------------------------------------------
 const getMyEvents = async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentification requise." });
+    }
+
     const userId = req.user.id;
 
     const organizedEvents = await Event.find({ organizer: userId })

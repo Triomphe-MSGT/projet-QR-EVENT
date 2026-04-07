@@ -22,12 +22,13 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useSelector } from "react-redux";
 import {
   useUserProfile,
   useUpdateProfile,
   useUploadAvatar,
+  useUserEvents,
 } from "../../hooks/useUserProfile";
-import { useUserEvents } from "../../hooks/useUserProfile";
 import { API_BASE_URL } from "../../slices/axiosInstance";
 
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
@@ -59,8 +60,9 @@ const getEventTagAndColor = (title) => {
 };
 
 const ProfilePage = () => {
-  const { data: user, isLoading: isLoadingUser, isError: isUserError, error: userError } = useUserProfile();
-  const { data: eventsData, isLoading: isLoadingEvents, isError: isEventsError, error: eventsError } = useUserEvents();
+  const { token } = useSelector((state) => state.auth);
+  const { data: user, isLoading: isLoadingUser, isError: isUserError, error: userError } = useUserProfile({ enabled: !!token });
+  const { data: eventsData, isLoading: isLoadingEvents, isError: isEventsError, error: eventsError } = useUserEvents({ enabled: !!token });
   const { mutateAsync: updateProfileAsync, isPending: isUpdating, isSuccess: isUpdateSuccess, error: updateError } = useUpdateProfile();
   const { mutate: uploadAvatar, isPending: isUploading } = useUploadAvatar();
 
@@ -103,6 +105,26 @@ const ProfilePage = () => {
         <div className="min-h-[60vh] flex flex-col items-center justify-center p-8">
           <Loader2 className="w-10 h-10 text-orange-500 animate-spin mb-4" />
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Accès au profil...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Visitor (not logged in) — show a friendly prompt
+  if (!user) {
+    return (
+      <MainLayout>
+        <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 text-center p-8">
+          <div className="w-20 h-20 bg-orange-50 rounded-3xl flex items-center justify-center">
+            <User2 size={36} className="text-orange-400" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-500 tracking-tighter">Profil non disponible</h2>
+            <p className="text-slate-400 font-bold text-sm max-w-xs mx-auto">Vous devez être connecté pour accéder à votre profil.</p>
+          </div>
+          <Link to="/login" className="px-8 py-4 bg-orange-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-600/20 active:scale-95">
+            Se connecter
+          </Link>
         </div>
       </MainLayout>
     );

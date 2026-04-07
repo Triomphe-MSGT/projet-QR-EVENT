@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import MainLayout from "../../components/layout/MainLayout";
 import QrCodeDisplay from "../../features/events/components/QrCodeDisplay";
 import { useUserEvents } from "../../hooks/useUserProfile";
@@ -8,7 +9,8 @@ import { Trash2, ArrowLeft, History, QrCode, Calendar, MapPin, ExternalLink, X, 
 
 const UserQrCodesPage = () => {
   const navigate = useNavigate();
-  const { data: eventsData, isLoading, isError, error } = useUserEvents();
+  const { token } = useSelector((state) => state.auth);
+  const { data: eventsData, isLoading, isError, error } = useUserEvents({ enabled: !!token });
   const unregisterMutation = useUnregisterFromEvent();
   const [selectedQr, setSelectedQr] = useState(null);
 
