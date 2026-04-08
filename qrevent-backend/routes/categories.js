@@ -6,6 +6,7 @@ const {
   createCategory,
   updateCategory,
   deleteCategory,
+  checkSimilarity,
 } = require("../controllers/categories");
 
 const { userExtractor, authorize } = require("../utils/middleware");
@@ -18,13 +19,16 @@ router.get("/id/:id", userExtractor, getCategoryById);
 
 router.get("/name/:name", userExtractor, getCategoryByName);
 
+// --- Routes pour Administrateur et Organisateur ---
+router.post("/check-similarity", userExtractor, authorize(["Administrateur", "Organisateur"]), checkSimilarity);
+router.post("/", userExtractor, authorize(["Administrateur", "Organisateur"]), createCategory);
+
 // --- Routes pour Administrateur seulement ---
-router.post("/", userExtractor, authorize("administrateur"), createCategory);
-router.put("/:id", userExtractor, authorize("administrateur"), updateCategory);
+router.put("/:id", userExtractor, authorize("Administrateur"), updateCategory);
 router.delete(
   "/:id",
   userExtractor,
-  authorize("administrateur"),
+  authorize("Administrateur"),
   deleteCategory
 );
 

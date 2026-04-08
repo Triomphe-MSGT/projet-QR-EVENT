@@ -5,4 +5,7 @@ const info = (...params) => {
 const error = (...params) => {
   console.error(...params)
 }
-module.exports = { info, error }
+const warn = (...params) => {
+  console.warn(...params)
+}
+module.exports = { info, error, warn }

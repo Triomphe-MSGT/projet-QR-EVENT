@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../slices/authSlice";
 import {
   getDashboardStats,
   getMyOrganizedEvents,
@@ -48,10 +49,16 @@ import {
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState("overview");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
 
   const { data: stats, isLoading: isLoadingStats } = useQuery({
     queryKey: ["organizerStats"],
@@ -125,8 +132,8 @@ const DashboardPage = () => {
         </Link>
       </div>
       <div className="p-8 border-t">
-         <button onClick={() => navigate("/login")} className="text-red-500 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-            <LogOut size={18} /> Quitter
+         <button onClick={handleLogout} className="text-red-500 font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-red-50 p-3 rounded-xl transition-all w-full">
+            <LogOut size={18} /> Se déconnecter
          </button>
       </div>
     </div>
@@ -226,7 +233,7 @@ const DashboardPage = () => {
            {activeTab === "overview" && (
              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-10">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                   <StatCard title="Événements" value={stats?.totalEvents || 0} icon={Calendar} theme="blue" description="Total actifs" />
+                   <StatCard title="Événements" value={stats?.totalEvents || 0} icon={Calendar} theme="orange" description="Total actifs" />
                    <StatCard title="Inscriptions" value={stats?.totalRegistrations || 0} icon={Users} theme="purple" description="Participants inscrits" />
                    <StatCard title="Tickets Validés" value={stats?.qrValidated || 0} icon={CheckSquare} theme="emerald" description="Accès confirmés" />
                 </div>

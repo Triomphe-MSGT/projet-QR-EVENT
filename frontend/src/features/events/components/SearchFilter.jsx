@@ -13,7 +13,9 @@ import {
   Laptop
 } from "lucide-react";
 import { useCategories } from "../../../hooks/useCategories";
+import { useCities } from "../../../hooks/useCities";
 import { useSearchParams } from "react-router-dom";
+import CategoryIcon from "../../../components/ui/CategoryIcon";
 
 const SearchAndFilter = ({
   query,
@@ -24,8 +26,19 @@ const SearchAndFilter = ({
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories } = useCategories();
+  const { data: dbCities } = useCities();
 
-  const cities = ["Douala", "Yaoundé", "Garoua", "Bamenda", "Bafoussam", "Maroua", "Ngaoundéré", "Nkongsamba", "Kumba", "Édéa", "Limbé", "Ébolowa", "Autre"];
+  const cities = React.useMemo(() => {
+    const base = ["Douala", "Yaoundé", "Garoua", "Bamenda", "Bafoussam", "Maroua", "Ngaoundéré", "Nkongsamba", "Kumba", "Édéa", "Limbé", "Ébolowa"];
+    if (dbCities) {
+      dbCities.forEach(c => {
+        if (!base.map(b => b.toLowerCase()).includes(c.toLowerCase())) {
+          base.push(c);
+        }
+      });
+    }
+    return [...base, "Autre"];
+  }, [dbCities]);
 
   const types = [
     { label: "Gratuit", value: "free" },
@@ -212,7 +225,8 @@ const SearchAndFilter = ({
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${activeCategories.includes(cat._id || cat.id) ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-200'}`}>
                       {activeCategories.includes(cat._id || cat.id) && <Check size={12} />}
                     </div>
-                    <span className="text-xs font-medium text-slate-500">{cat.emoji} {cat.name}</span>
+                    <CategoryIcon iconName={cat.icon} emoji={cat.emoji} className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-xs font-medium text-slate-500">{cat.name}</span>
                   </label>
                 ))}
               </div>

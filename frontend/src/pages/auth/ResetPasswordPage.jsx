@@ -26,12 +26,13 @@ const ResetPasswordPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
     if (newPassword !== confirmPassword) {
       alert("Les mots de passe ne correspondent pas.");
       return;
     }
-    if (newPassword.length < 6) {
-      alert("Le mot de passe doit contenir au moins 6 caractères.");
+    if (!passwordRegex.test(newPassword)) {
+      alert("Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial.");
       return;
     }
     mutation.mutate({ token, newPassword });

@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { API_BASE_URL } from "../../../slices/axiosInstance";
 import { Calendar, MapPin, ArrowRight, Zap, Heart, Share2, Clock } from "lucide-react";
 import { useToggleLikeEvent } from "../../../hooks/useEvents";
+import CategoryIcon from "../../../components/ui/CategoryIcon";
 
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
@@ -93,7 +94,8 @@ const EventCard = ({ event, handleDetails }) => {
         )}
         
         {/* Badge Catégorie */}
-        <div className="absolute top-4 left-4 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-orange-600 shadow-sm border border-orange-50">
+        <div className="absolute top-4 left-4 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-orange-600 shadow-sm border border-orange-50 flex items-center gap-2">
+          <CategoryIcon iconName={event.category?.icon} emoji={event.category?.emoji} className="w-3 h-3" />
           {event.category?.name || "Event"}
         </div>
         

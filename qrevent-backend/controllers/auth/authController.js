@@ -9,6 +9,12 @@ const { sendEmail } = require("../../services/emailService");
 // Client OAuth2 pour la connexion via Google
 const client = new OAuth2Client(config.GOOGLE_CLIENT_ID);
 
+// Assistant de validation de mot de passe
+const validatePassword = (password) => {
+  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+  return passwordRegex.test(password);
+};
+
 /* =========================================================
    REGISTER - Inscription d'un nouvel utilisateur
    ========================================================= */
@@ -30,6 +36,13 @@ const register = async (req, res, next) => {
       return res
         .status(400)
         .json({ message: "Nom, email et mot de passe sont requis." });
+    }
+
+    // Validation du format du mot de passe
+    if (!validatePassword(password)) {
+      return res.status(400).json({ 
+        message: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial." 
+      });
     }
 
     // Vérifie si l'utilisateur existe déjà
@@ -250,6 +263,13 @@ const resetPassword = async (req, res, next) => {
 
     if (!user) {
       return res.status(400).json({ message: "Token invalide ou expiré." });
+    }
+
+    // Validation du format du nouveau mot de passe
+    if (!validatePassword(newPassword)) {
+      return res.status(400).json({ 
+        message: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial." 
+      });
     }
 
     // Hash du nouveau mot de passe

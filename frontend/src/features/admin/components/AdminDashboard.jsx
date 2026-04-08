@@ -67,17 +67,17 @@ const AdminDashboard = () => {
         {/* DASHBOARD HERO */}
         <section className="bg-slate-900 pt-20 pb-16 md:pt-32 md:pb-24 relative overflow-hidden">
            <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5"></div>
-           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-600 rounded-full blur-[120px] -ml-48 -mt-24 opacity-10"></div>
+           <div className="absolute top-0 left-0 w-96 h-96 bg-orange-600 rounded-full blur-[120px] -ml-48 -mt-24 opacity-10"></div>
            
            <div className="max-w-7xl mx-auto px-6 relative z-10">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                  <div className="text-center md:text-left space-y-6">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/10 rounded-full text-white font-black text-[9px] uppercase tracking-widest">
-                       <ShieldAlert size={12} className="text-blue-500" />
+                       <ShieldAlert size={12} className="text-orange-500" />
                        Centre de Commande Admin
                     </div>
                     <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter uppercase leading-none">
-                       Dashboard <span className="text-blue-500">Pro</span>
+                       Dashboard <span className="text-orange-600">Pro</span>
                     </h1>
                     <p className="text-slate-400 font-bold text-sm md:text-lg max-w-xl">
                        Supervision globale de l'écosystème QR. Gérez les flux d'utilisateurs et la performance des événements en temps réel.
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
                       disabled={isDownloading}
                       className="px-6 py-4 md:px-8 md:py-5 bg-white/10 backdrop-blur-md text-white rounded-2xl font-black text-[10px] uppercase tracking-widest border border-white/10 hover:bg-white/20 transition-all flex items-center gap-3"
                     >
-                      {isDownloading ? <Loader2 className="animate-spin" size={16} /> : <Download size={16} className="text-blue-500" />}
+                      {isDownloading ? <Loader2 className="animate-spin" size={16} /> : <Download size={16} className="text-orange-500" />}
                       Rapport Global
                     </button>
                  </div>
@@ -112,7 +112,7 @@ const AdminDashboard = () => {
                      : 'text-slate-400 hover:bg-slate-50'
                    }`}
                  >
-                   <tab.icon size={18} className={activeTab === tab.id ? "text-blue-500" : "text-slate-300"} />
+                   <tab.icon size={18} className={activeTab === tab.id ? "text-orange-500" : "text-slate-300"} />
                    <span>{tab.label}</span>
                  </button>
               ))}
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
                         </div>
                       ) : (
                         <>
-                          <StatCard title="Événements" value={stats?.totalEvents} icon={Calendar} theme="blue" description="Total actifs" />
+                          <StatCard title="Événements" value={stats?.totalEvents} icon={Calendar} theme="orange" description="Total actifs" />
                           <StatCard title="Inscriptions" value={stats?.totalRegistrations} icon={Users} theme="purple" description="Volume global" />
                           <StatCard title="Validés" value={stats?.qrValidated} icon={QrCode} theme="emerald" description="Tickets scannés" />
                           <StatCard title="Engagement" value={`${Number(stats?.avgPerEvent || 0).toFixed(1)}%`} icon={BarChart3} theme="orange" description="Performance moy." />
@@ -167,13 +167,13 @@ const AdminDashboard = () => {
               )}
 
               {activeTab === "events" && (
-                <div className="bg-white rounded-[3rem] p-6 md:p-10 shadow-xl border border-slate-50 min-h-[600px] text-slate-500">
+                <div className="bg-white rounded-[3rem] p-6 md:p-10 shadow-xl border border-slate-100 min-h-[600px] text-slate-500">
                    <EventManagement />
                 </div>
               )}
 
               {activeTab === "categories" && (
-                <div className="bg-white rounded-[3rem] p-6 md:p-10 shadow-xl border border-slate-50 min-h-[600px] text-slate-500">
+                <div className="bg-white rounded-[3rem] p-6 md:p-10 shadow-xl border border-slate-100 min-h-[600px] text-slate-500">
                    <CategoryManagement />
                 </div>
               )}

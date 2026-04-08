@@ -78,7 +78,7 @@ const getAllEvents = async (req, res, next) => {
       startDate: { $gte: now }, // ← uniquement les événements actuels et futurs
     })
       .populate("organizer", "nom email")
-      .populate("category", "name emoji")
+      .populate("category", "name icon emoji")
       .sort({ startDate: 1 }) // du plus proche au plus lointain
       .lean();
 
@@ -103,7 +103,7 @@ const getEventById = async (req, res, next) => {
 
     const event = await Event.findById(eventId)
       .populate("organizer", "nom email")
-      .populate("category", "name emoji")
+      .populate("category", "name icon emoji")
       .populate("participants", "nom email role sexe profession")
       .lean();
 
@@ -119,38 +119,55 @@ const getEventById = async (req, res, next) => {
  */
 const createEvent = async (req, res, next) => {
   try {
+    console.log("--- START CREATE EVENT ---");
+    console.log("User:", req.user?.id);
+    console.log("BodyKeys:", Object.keys(req.body));
+    console.log("File:", req.file ? { name: req.file.originalname, size: req.file.size } : "No file");
+
     requireAuthUser(req);
     const { body, user } = req;
 
-    // Vérifier la catégorie
+    console.log("Validating Category ID:", body.category);
     if (!body.category || !isValidObjectId(body.category)) {
+      console.log("❌ Invalid category ID:", body.category);
       return res.status(400).json({ error: "Catégorie invalide." });
     }
+
     const category = await Category.findById(body.category);
-    if (!category) return res.status(400).json({ error: "Catégorie introuvable." });
+    if (!category) {
+      console.log("❌ Category not found");
+      return res.status(400).json({ error: "Catégorie introuvable." });
+    }
+    console.log("✅ Category found:", category.name);
 
-    // Géolocalisation (non bloquante)
+    console.log("Starting Geocoding for:", body.city);
     const location = await geocodeAddress({ neighborhood: body.neighborhood, city: body.city });
+    console.log("✅ Geocoding finished:", location ? "Success" : "Failed/Skipped");
 
-    // Image URL (Cloudinary via multer-storage-cloudinary)
     const imageUrl = req.file ? req.file.path : null;
+    console.log("Final Image URL:", imageUrl);
 
     const newEvent = new Event({
       ...body,
       organizer: user.id,
       imageUrl,
       location,
-      type: body.format || body.type, // Sync type with format
+      type: body.format || body.type,
     });
 
+    console.log("Saving Event to DB...");
     const savedEvent = await newEvent.save();
+    console.log("✅ Event saved! ID:", savedEvent._id);
 
-    // Mettre à jour la catégorie
+    console.log("Updating Category...");
     category.events.push(savedEvent._id);
     await category.save();
+    console.log("✅ Category updated.");
 
+    console.log("--- CREATE EVENT FINISHED ---");
     res.status(201).json(savedEvent.toObject());
   } catch (error) {
+    console.error("❌ CREATE EVENT ERROR:", error);
     if (error.name === "ValidationError") {
       return res.status(400).json({ error: error.message });
     }
@@ -204,7 +221,7 @@ const updateEvent = async (req, res, next) => {
       runValidators: true,
     })
       .populate("organizer", "nom email")
-      .populate("category", "name emoji")
+      .populate("category", "name icon emoji")
       .lean();
 
     if (!updatedEvent) return res.status(404).json({ error: "Événement introuvable après mise à jour." });
@@ -629,7 +646,7 @@ const getEventsByOrganizer = async (req, res, next) => {
     const organizerId = req.user.id;
 
     const events = await Event.find({ organizer: organizerId })
-      .populate("category", "name emoji")
+      .populate("category", "name icon emoji")
       .populate("participants", "nom email role sexe profession")
       .sort({ startDate: -1 })
       .lean();
@@ -930,4 +947,12 @@ module.exports = {
   getValidatedAttendees,
   generateEventReport,
   toggleLikeEvent,
+  getCities: async (req, res, next) => {
+    try {
+      const cities = await Event.distinct("city");
+      res.json(cities.filter(Boolean));
+    } catch (error) {
+      next(error);
+    }
+  },
 };

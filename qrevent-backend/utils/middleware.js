@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const config = require("../utils/config.js");
-const logger = require("../utils/logger.js"); 
+const logger = require("./logger.js");
+if (!logger.warn) logger.warn = (...args) => logger.info("WARN:", ...args);
 
 // Middleware pour extraire l'utilisateur depuis le token JWT
 const userExtractor = async (req, res, next) => {
@@ -69,7 +70,7 @@ const unknownEndpoint = (req, res) => {
 
 // Middleware global de gestion des erreurs
 const errorHandler = (err, req, res, next) => {
-  logger.error("Erreur attrapée :", err?.message || err);
+  logger.error("Erreur attrapée :", err);
 
   if (err.name === "CastError") return res.status(400).json({ error: "ID mal formaté" });
   if (err.name === "ValidationError") return res.status(400).json({ error: err.message });

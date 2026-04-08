@@ -37,7 +37,7 @@ const UserCards = () => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
        {[
-         { label: "Total", count: totalUsers, color: "bg-blue-500" },
+         { label: "Total", count: totalUsers, color: "bg-orange-500" },
          { label: "Participants", count: participantCount, color: "bg-emerald-500" },
          { label: "Organisateurs", count: organizerCount, color: "bg-purple-500" },
          { label: "Admins", count: adminCount, color: "bg-red-500" }

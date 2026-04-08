@@ -1,13 +1,5 @@
 const cloudinary = require("cloudinary").v2;
-// `multer-storage-cloudinary` can export in different shapes depending on version.
-// Normalize to a constructor called `CloudinaryStorage`.
-const _multerStorageCloudinary = require("multer-storage-cloudinary");
-const CloudinaryStorage =
-  (_multerStorageCloudinary &&
-    (_multerStorageCloudinary.CloudinaryStorage ||
-      _multerStorageCloudinary.default ||
-      _multerStorageCloudinary)) ||
-  null;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const multer = require("multer");
 
 // Configuration Cloudinary
@@ -21,29 +13,34 @@ cloudinary.config({
 const createStorage = (folderName) => {
   return new CloudinaryStorage({
     cloudinary,
-    params: async (req, file) => ({
-      folder: `qrevent/${folderName}`,
-      allowed_formats: ["jpeg", "jpg", "png", "webp"],
-      transformation: [
-        { width: 1024, height: 1024, crop: "limit", quality: "auto:good" },
-      ],
-    }),
+    params: async (req, file) => {
+      console.log(`[Multer] Start upload to Cloudinary: ${file.originalname} (${file.mimetype})`);
+      return {
+        folder: `qrevent/${folderName}`,
+        allowed_formats: ["jpeg", "jpg", "png", "webp"],
+        transformation: [
+          { width: 1024, height: 1024, crop: "limit", quality: "auto:good" },
+        ],
+      };
+    },
   });
 };
 
 // Filtre MIME
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-  allowedTypes.includes(file.mimetype)
-    ? cb(null, true)
-    : cb(new Error("Format invalide"), false);
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Format d'image non supporté. Utilisez jpg, png ou webp."), false);
+  }
 };
 
 // Fonction qui crée un upload Multer fonctionnel
 const createUpload = (folderName) => {
   return multer({
     storage: createStorage(folderName),
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
     fileFilter,
   });
 };

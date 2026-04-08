@@ -1,30 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getCategories } from "../../services/categoryService";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getCategories, checkSimilarity, createCategory } from "../../services/categoryService";
+import { 
+  Zap, Calendar, MapPin, Clock, 
+  Info, Image as ImageIcon, QrCode, 
+  ChevronRight, Plus, Music, Utensils, 
+  Film, Camera, Code, Dumbbell, 
+  PartyPopper, Palette, Gamepad2, 
+  Languages, GraduationCap, Heart, 
+  Plane, ShoppingBag, Coffee, AlertCircle,
+  CheckCircle2, X, Loader2, ArrowLeft, Lock, Search
+} from "lucide-react";
 import {
   useCreateEvent,
   useUpdateEvent,
   useEventDetails,
 } from "../../hooks/useEvents";
+import { useCities } from "../../hooks/useCities";
 import MainLayout from "../../components/layout/MainLayout";
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Loader2, 
-  MapPin, 
-  ChevronRight,
-  ArrowLeft,
-  QrCode,
-  Users,
-  Lock,
-  Zap,
-  Globe,
-  Image as ImageIcon,
-  CheckCircle2,
-  Calendar,
-  Clock,
-  Search,
-  Plus
-} from "lucide-react";
 
 const cameroonianCities = [
   "Yaoundé", "Douala", "Garoua", "Bamenda", "Maroua", "Bafoussam", 
@@ -34,7 +28,7 @@ const cameroonianCities = [
   "Mbalmayo", "Kumbo", "Wum", "Akonolinga", "Eséka", "Mamfé", "Obala",
 ].sort();
 
-const EventForm = () => {
+const CreateEventPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -61,6 +55,64 @@ const EventForm = () => {
     image: null,
   });
 
+  // Category creation state
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatIcon, setNewCatIcon] = useState("Zap");
+  const [similarCats, setSimilarCats] = useState([]);
+  const [catLoading, setCatLoading] = useState(false);
+
+  const LUCIDE_ICONS = [
+    { name: "Music", icon: Music },
+    { name: "Utensils", icon: Utensils },
+    { name: "Film", icon: Film },
+    { name: "Camera", icon: Camera },
+    { name: "Code", icon: Code },
+    { name: "Dumbbell", icon: Dumbbell },
+    { name: "PartyPopper", icon: PartyPopper },
+    { name: "Palette", icon: Palette },
+    { name: "Gamepad2", icon: Gamepad2 },
+    { name: "Languages", icon: Languages },
+    { name: "GraduationCap", icon: GraduationCap },
+    { name: "Heart", icon: Heart },
+    { name: "Plane", icon: Plane },
+    { name: "ShoppingBag", icon: ShoppingBag },
+    { name: "Coffee", icon: Coffee },
+    { name: "Zap", icon: Zap },
+  ];
+
+  const queryClient = useQueryClient();
+
+  const handleCreateCategory = async (force = false) => {
+    if (!newCatName.trim()) return;
+    setCatLoading(true);
+    try {
+      if (!force) {
+        const similar = await checkSimilarity(newCatName);
+        if (similar && similar.length > 0) {
+          setSimilarCats(similar);
+          setCatLoading(false);
+          return;
+        }
+      }
+      
+      const newCat = await createCategory({ 
+        name: newCatName, 
+        icon: newCatIcon 
+      });
+      
+      await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setFormData(prev => ({ ...prev, category: newCat.id }));
+      setShowCatModal(false);
+      setNewCatName("");
+      setSimilarCats([]);
+    } catch (err) {
+      alert(err.response?.data?.error || "Erreur création catégorie");
+    } finally {
+      setCatLoading(false);
+    }
+  };
+
   const [citySearch, setCitySearch] = useState("");
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const cityDropdownRef = useRef(null);
@@ -70,11 +122,9 @@ const EventForm = () => {
     queryFn: getCategories 
   });
 
+  const { data: dbCities } = useCities();
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();
-
-  const [step, setStep] = useState(1);
-  const [showChoiceModal, setShowChoiceModal] = useState(!isEditMode && !searchParams.get("visibility"));
 
   useEffect(() => {
     if (isEditMode && existingEventData) {
@@ -106,30 +156,25 @@ const EventForm = () => {
     }));
   };
 
-  const nextStep = () => {
-    if (step === 1 && (!formData.name || !formData.category || !formData.description)) {
-      alert("Veuillez remplir l'identité.");
-      return;
-    }
-    if (step === 2 && (!formData.startDate || (!formData.city && formData.format !== "En ligne"))) {
-      alert("Veuillez remplir l'emplacement (choisissez une ville ou entrez la vôtre).");
-      return;
-    }
-    setStep(prev => prev + 1);
-  };
-
-  const prevStep = () => setStep(prev => prev - 1);
-
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log("Submitting form...", formData);
+
     if (!formData.name || !formData.startDate || !formData.city || !formData.category || !formData.description) {
-      alert("Veuillez remplir tous les champs obligatoires (*)");
+      alert("Veuillez remplir les informations essentielles.");
       return;
     }
+
     const dataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
-      if (key === "category" && typeof formData.category === "object" && formData.category !== null) {
-        dataToSend.append("category", formData.category.id);
+      // Nettoyage des valeurs nulles ou vides pour éviter d'envoyer la chaîne "null"
+      if (formData[key] === null || formData[key] === undefined) {
+        return;
+      }
+
+      if (key === "category") {
+        const catId = typeof formData.category === "object" ? (formData.category._id || formData.category.id) : formData.category;
+        dataToSend.append("category", catId);
       } else if (key === "image" && formData.image) {
         dataToSend.append("image", formData.image);
       } else {
@@ -137,20 +182,39 @@ const EventForm = () => {
       }
     });
 
+    console.log("FormData prepared, calling mutation...");
+
+    const mutationCallback = {
+      onSuccess: () => {
+        console.log("Success! Navigating to dashboard...");
+        navigate("/dashboard");
+      },
+      onError: (error) => {
+        console.error("Mutation error:", error);
+        alert(`Erreur: ${error.response?.data?.error || error.response?.data?.message || error.message}`);
+      },
+    };
+
     if (isEditMode) {
-      updateEventMutation.mutate({ id: eventIdToEdit, formData: dataToSend }, {
-        onSuccess: () => navigate("/dashboard"),
-        onError: (error) => alert(`Erreur: ${error.response?.data?.error || error.message}`),
-      });
+      updateEventMutation.mutate({ id: eventIdToEdit, formData: dataToSend }, mutationCallback);
     } else {
-      createEventMutation.mutate(dataToSend, {
-        onSuccess: () => navigate("/dashboard"),
-        onError: (error) => alert(`Erreur: ${error.response?.data?.error || error.message}`),
-      });
+      createEventMutation.mutate(dataToSend, mutationCallback);
     }
   };
 
-  const filteredCities = cameroonianCities.filter(c => 
+  const allCities = useMemo(() => {
+    const merged = [...cameroonianCities];
+    if (dbCities) {
+      dbCities.forEach(city => {
+        if (!merged.map(c => c.toLowerCase()).includes(city.toLowerCase())) {
+          merged.push(city);
+        }
+      });
+    }
+    return merged;
+  }, [dbCities]);
+
+  const filteredCities = allCities.filter(c => 
     c.toLowerCase().includes(citySearch.toLowerCase())
   );
 
@@ -158,13 +222,6 @@ const EventForm = () => {
     setFormData(p => ({ ...p, city }));
     setCitySearch(city);
     setShowCityDropdown(false);
-  };
-
-  const handleCustomCity = () => {
-    if (citySearch.trim()) {
-      setFormData(p => ({ ...p, city: citySearch }));
-      setShowCityDropdown(false);
-    }
   };
 
   useEffect(() => {
@@ -180,12 +237,36 @@ const EventForm = () => {
   const isLoading = isLoadingCategories || (isEditMode && isLoadingEventDetails);
   const isSubmitting = createEventMutation.isPending || updateEventMutation.isPending;
 
+  if (formData.visibility === "private") {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center p-8 bg-white">
+          <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-sm">
+             <Lock className="w-12 h-12 text-slate-300 animate-pulse" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 mb-4 tracking-tight">
+            FONCTIONNALITÉ EN COURS DE DÉVELOPPEMENT
+          </h2>
+          <p className="text-slate-400 font-medium max-w-md leading-relaxed">
+            La création d'événements privés est une fonctionnalité premium qui sera bientôt disponible pour tous les organisateurs.
+          </p>
+          <button 
+            onClick={() => navigate(-1)}
+            className="mt-10 px-10 py-4 bg-orange-600 text-white rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95"
+          >
+            Retour au Dashboard
+          </button>
+        </div>
+      </MainLayout>
+    );
+  }
+
   if (isLoading) {
     return (
       <MainLayout>
         <div className="flex flex-col justify-center items-center h-[60vh]">
-          <Loader2 className="w-10 h-10 animate-spin text-orange-600 mb-4" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Préparation...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-orange-600 mb-6" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 animate-pulse">Chargement intelligent...</p>
         </div>
       </MainLayout>
     );
@@ -193,218 +274,329 @@ const EventForm = () => {
 
   return (
     <MainLayout>
-      {/* Studio Interface (Compact One-Screen) */}
-      <div className="bg-slate-50 min-h-screen md:h-[calc(100vh-64px)] flex flex-col items-center justify-center py-4 px-4 overflow-x-hidden">
-        <div className="w-full max-w-4xl bg-white rounded-3xl md:rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden flex flex-col max-h-full transition-all">
+      <div className="bg-slate-50/50 min-h-screen py-8 px-4">
+        <div className="max-w-3xl mx-auto space-y-6">
           
-          {/* Header */}
-          <div className="px-6 py-5 md:px-8 md:py-6 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
-             <div className="flex items-center gap-3 md:gap-4">
-               <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400">
-                  <ArrowLeft size={18} md:size={20} />
-               </button>
-               <h2 className="text-lg md:text-xl font-black text-slate-500 tracking-tighter">Event <span className="text-orange-600">Studio</span></h2>
-             </div>
-             
-             <div className="flex items-center gap-2 md:gap-3">
-               <div className="hidden sm:flex gap-1.5 md:gap-3">
-                 {[1, 2, 3].map((s) => (
-                   <div key={s} className={`w-8 md:w-12 h-1 md:h-1.5 rounded-full transition-all duration-500 ${step >= s ? "bg-orange-500" : "bg-slate-100"}`} />
-                 ))}
-               </div>
-               <span className="text-[8px] md:text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50 px-2.5 py-1 rounded-full">Step {step}/3</span>
-             </div>
+          <div className="flex items-center justify-between bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+            <div className="flex items-center gap-4">
+              <button onClick={() => navigate(-1)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 border border-slate-100">
+                <ArrowLeft size={20} />
+              </button>
+              <div>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight">
+                  {isEditMode ? "Modifier" : "Créer"} <span className="text-orange-600">votre événement</span>
+                </h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Public & Instantané</p>
+              </div>
+            </div>
           </div>
 
-          {/* Form Content */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar">
-            <form onSubmit={(e) => e.preventDefault()} className="h-full">
-              
-              {step === 1 && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                   <div className="space-y-1">
-                      <h3 className="text-2xl font-black text-slate-500">Fondations du <span className="text-orange-600 underline decoration-4 decoration-orange-100 underline-offset-4">projet</span></h3>
-                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Identité visuelle & conceptuelle</p>
-                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Définition du titre *</label>
-                        <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Que se passe-t-il ?" className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-500 shadow-sm transition-all" />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Catégorie thématique *</label>
-                        <select name="category" value={formData.category} onChange={handleChange} className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-500 appearance-none cursor-pointer shadow-sm">
-                          <option value="">Sélectionner</option>
-                          {categories?.map((cat) => (
-                            <option key={cat.id} value={cat.id}>{cat.emoji} {cat.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                   </div>
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Présentation narrative *</label>
-                      <textarea name="description" value={formData.description} onChange={handleChange} rows="4" className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-[1.5rem] outline-none font-bold text-slate-500 shadow-sm resize-none" placeholder="Donnez envie à votre audience..." />
-                   </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+                  <Zap size={20} />
                 </div>
-              )}
+                <h3 className="text-lg font-black text-slate-700 tracking-tight">Informations Générales</h3>
+              </div>
 
-              {/* Step 2: Logistique (THE REVOLUTIONARY CITY SOLUTION) */}
-              {step === 2 && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                   <div className="space-y-1">
-                      <h3 className="text-2xl font-black text-slate-500">Emplacement & <span className="text-orange-600">Tempo</span></h3>
-                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Liberté totale géographique</p>
-                   </div>
-                   
-                   <div className="flex gap-4 p-2 bg-slate-100 rounded-[1.25rem]">
-                      {["Présentiel", "En ligne"].map((f) => (
-                        <button key={f} type="button" onClick={() => setFormData(p => ({ ...p, format: f }))} className={`flex-1 py-4 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${formData.format === f ? "bg-white text-orange-600 shadow-md scale-[1.02]" : "text-slate-400 hover:text-slate-500"}`}>{f}</button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nom de l'événement *</label>
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Ex: Festival de Musique" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-600 transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Visibilité *</label>
+                  <div className="flex gap-2">
+                    {["public", "private"].map((v) => (
+                      <button 
+                        key={v}
+                        type="button" 
+                        onClick={() => setFormData(p => ({ ...p, visibility: v }))}
+                        className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${formData.visibility === v ? "bg-slate-900 text-white border-slate-900 shadow-md" : "bg-slate-50 text-slate-400 border-slate-100"}`}
+                      >
+                         {v === 'public' ? 'Public' : 'Privé'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Catégorie *</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowCatModal(true)}
+                      className="text-[10px] font-black text-orange-600 uppercase tracking-widest hover:underline flex items-center gap-1"
+                    >
+                      <Plus size={12} /> Nouvelle
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <select name="category" value={formData.category} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-600 appearance-none cursor-pointer">
+                      <option value="">Sélectionner une catégorie</option>
+                      {categories?.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.emoji || "✨"} {cat.name}</option>
                       ))}
-                   </div>
-
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Searchable / Manual City Input */}
-                      <div className="space-y-3 relative" ref={cityDropdownRef}>
-                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ville (Sélectionnez ou Tapez) *</label>
-                         <div className="relative">
-                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                            <input 
-                              type="text" 
-                              value={citySearch} 
-                              onChange={(e) => {
-                                setCitySearch(e.target.value);
-                                setFormData(p => ({ ...p, city: e.target.value }));
-                                setShowCityDropdown(true);
-                              }}
-                              onFocus={() => setShowCityDropdown(true)}
-                              disabled={formData.format === "En ligne"}
-                              placeholder="Tapez le nom de votre ville..." 
-                              className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-500 shadow-sm disabled:opacity-40" 
-                            />
-                         </div>
-                         
-                         {showCityDropdown && formData.format !== "En ligne" && (
-                           <div className="absolute z-50 left-0 right-0 top-full mt-2 bg-white rounded-3xl shadow-2xl border border-slate-100 max-h-60 overflow-y-auto custom-scrollbar p-2 animate-in fade-in zoom-in-95 duration-200">
-                             {filteredCities.length > 0 ? (
-                               filteredCities.map((c) => (
-                                 <button 
-                                  key={c} 
-                                  onClick={() => handleCitySelect(c)}
-                                  className="w-full text-left px-6 py-4 hover:bg-orange-50 rounded-2xl font-bold text-slate-500 transition-colors flex items-center justify-between group"
-                                 >
-                                   {c}
-                                   <ChevronRight size={14} className="text-slate-300 group-hover:text-orange-600 transition-colors" />
-                                 </button>
-                               ))
-                             ) : (
-                               <div className="p-4 text-center space-y-4">
-                                  <p className="text-[11px] font-bold text-slate-400">Cette ville n'est pas dans notre liste de suggestions...</p>
-                                  <button 
-                                    onClick={handleCustomCity}
-                                    className="w-full py-4 bg-orange-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-orange-600/20 flex items-center justify-center gap-2"
-                                  >
-                                    <Plus size={14} /> Confirmer "{citySearch}"
-                                  </button>
-                               </div>
-                             )}
-                           </div>
-                         )}
-                      </div>
-
-                      <div className="space-y-3">
-                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Précision (Quartier/Lieu)</label>
-                         <div className="relative">
-                            <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                            <input type="text" name="neighborhood" value={formData.neighborhood} onChange={handleChange} disabled={formData.format === "En ligne"} placeholder="Ex: Akwa, Face Casino" className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-500 shadow-sm disabled:opacity-40" />
-                         </div>
-                      </div>
-                   </div>
-
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-3">
-                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Début du projet *</label>
-                         <div className="relative">
-                            <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                            <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-500 shadow-sm" />
-                         </div>
-                      </div>
-                      <div className="space-y-3">
-                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Heure de lancement</label>
-                         <div className="relative">
-                            <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                            <input type="time" name="time" value={formData.time} onChange={handleChange} className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-500 shadow-sm" />
-                         </div>
-                      </div>
-                   </div>
+                    </select>
+                    <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={16} />
+                  </div>
                 </div>
-              )}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Prix par Ticket (FCFA) *</label>
+                  <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-600 transition-all" />
+                </div>
+              </div>
 
-              {/* Step 3: Finalisation */}
-              {step === 3 && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                   <div className="space-y-1">
-                      <h3 className="text-2xl font-black text-slate-500">Diffusions & <span className="text-orange-600 underline underline-offset-8">Règles</span></h3>
-                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Contrôle d'accès & Billetterie</p>
-                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Prix par Ticket (FCFA) *</label>
-                        <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-500 text-xl shadow-sm" />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Options Digitales</label>
-                        <button type="button" onClick={() => setFormData(p => ({ ...p, qrOption: !p.qrOption }))} className={`w-full py-5 px-8 rounded-2xl flex items-center justify-between border-2 transition-all ${formData.qrOption ? "border-orange-500 bg-orange-50 text-orange-600 shadow-md" : "border-slate-100 text-slate-400 bg-slate-50"}`}>
-                           <span className="text-xs font-black uppercase tracking-widest">Activer Scan QR</span>
-                           <QrCode size={24} className={formData.qrOption ? "animate-pulse" : ""} />
-                        </button>
-                      </div>
-                   </div>
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Image Impactante (Couverture)</label>
-                      <input type="file" id="cov" name="image" className="hidden" onChange={handleChange} accept="image/*" />
-                      <label htmlFor="cov" className="flex flex-col items-center justify-center w-full h-44 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] cursor-pointer hover:bg-slate-100 transition-all overflow-hidden group border-spacing-4">
-                        {formData.image ? <div className="text-center font-black text-orange-600 flex flex-col items-center gap-2"><CheckCircle2 size={32} /><span className="text-[10px] uppercase">{formData.image.name}</span></div> : 
-                        <div className="text-center space-y-3">
-                          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto text-slate-300 group-hover:text-orange-500 transition-all shadow-sm">
-                            <ImageIcon size={28} />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Description détaillée *</label>
+                <textarea name="description" value={formData.description} onChange={handleChange} rows="4" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 focus:border-orange-500 rounded-[1.5rem] outline-none font-bold text-slate-600 resize-none" placeholder="Décrivez l'expérience unique que vous proposez..." />
+              </div>
+            </div>
+
+            {/* Section 2: Logistique */}
+            <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                  <MapPin size={20} />
+                </div>
+                <h3 className="text-lg font-black text-slate-700 tracking-tight">Date & Lieu</h3>
+              </div>
+
+              <div className="flex gap-4 p-2 bg-slate-50 rounded-2xl border border-slate-100">
+                {["Présentiel", "En ligne"].map((f) => (
+                  <button key={f} type="button" onClick={() => setFormData(p => ({ ...p, format: f }))} className={`flex-1 py-3 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${formData.format === f ? "bg-white text-orange-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-500"}`}>{f}</button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6" ref={cityDropdownRef}>
+                <div className="space-y-2 relative">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ville *</label>
+                  <div className="relative">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <input 
+                      type="text" 
+                      value={citySearch} 
+                      onChange={(e) => {
+                        setCitySearch(e.target.value);
+                        setFormData(p => ({ ...p, city: e.target.value }));
+                        setShowCityDropdown(true);
+                      }}
+                      onFocus={() => setShowCityDropdown(true)}
+                      disabled={formData.format === "En ligne"}
+                      placeholder="Tapez le nom de votre ville..." 
+                      className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-600 disabled:opacity-40" 
+                    />
+                  </div>
+                  {showCityDropdown && formData.format !== "En ligne" && (
+                    <div className="absolute z-50 left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-60 overflow-y-auto p-2 scrollbar-thin">
+                      {filteredCities.map((c) => (
+                        <button key={c} type="button" onClick={() => handleCitySelect(c)} className="w-full text-left px-5 py-3 hover:bg-slate-50 rounded-xl font-bold text-slate-600 transition-colors">{c}</button>
+                      ))}
+                      {citySearch && !cameroonianCities.map(c => c.toLowerCase()).includes(citySearch.toLowerCase()) && (
+                        <button 
+                          type="button" 
+                          onClick={() => handleCitySelect(citySearch)} 
+                          className="w-full text-left px-5 py-3 hover:bg-orange-50 rounded-xl font-bold text-orange-600 transition-all flex items-center gap-3 border-t border-slate-50 mt-1"
+                        >
+                          <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <Plus size={14} />
                           </div>
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliquer pour importer</span>
-                        </div>}
-                      </label>
-                   </div>
+                          <span>Utiliser "{citySearch}"</span>
+                        </button>
+                      )}
+                      {filteredCities.length === 0 && !citySearch && (
+                        <div className="px-5 py-8 text-center text-slate-400 text-xs italic">
+                          Commencez à taper pour chercher ou ajouter une ville
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-            </form>
-          </div>
 
-          {/* Footer */}
-          <div className="px-8 py-8 border-t border-slate-50 bg-white flex items-center gap-6 shrink-0">
-             {step > 1 && (
-               <button type="button" onClick={prevStep} className="flex-1 py-6 px-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-[12px] uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95">Précédent</button>
-             )}
-             
-             {step < 3 ? (
-               <button type="button" onClick={nextStep} className="flex-[2] py-6 px-10 bg-orange-600 text-white rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-2xl shadow-orange-600/30 hover:bg-orange-700 transition-all flex items-center justify-center gap-3">
-                 Continuer <ChevronRight size={18} />
-               </button>
-             ) : (
-               <button onClick={handleSubmit} disabled={isSubmitting} className="flex-[2] py-6 px-10 bg-black text-white rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
-                 {isSubmitting ? <Loader2 size={24} className="animate-spin text-orange-500" /> : <Zap size={22} className="text-orange-500" />}
-                 {isSubmitting ? "Lancement..." : isEditMode ? "Enregistrer les modifications" : "Lancer mon événement"}
-               </button>
-             )}
-          </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Quartier / Précision</label>
+                  <input type="text" name="neighborhood" value={formData.neighborhood} onChange={handleChange} disabled={formData.format === "En ligne"} placeholder="Ex: Bastos" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-600 disabled:opacity-40" />
+                </div>
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Date *</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-600" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Heure</label>
+                  <div className="relative">
+                    <Clock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <input type="time" name="time" value={formData.time} onChange={handleChange} className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Ticketing & Image */}
+            <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                  <QrCode size={20} />
+                </div>
+                <h3 className="text-lg font-black text-slate-700 tracking-tight">Billetterie & Visuel</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Options d'accès</p>
+                  <p className="text-xs font-bold text-slate-500 italic">Configurez le contrôle d'accès numérique pour vos participants.</p>
+                </div>
+                <div className="flex flex-col justify-end">
+                  <button type="button" onClick={() => setFormData(p => ({ ...p, qrOption: !p.qrOption }))} className={`w-full py-4 px-6 rounded-2xl flex items-center justify-between border-2 transition-all ${formData.qrOption ? "border-orange-500 bg-orange-50 text-orange-600" : "border-slate-50 text-slate-400 bg-slate-50"}`}>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Activer Scan QR</span>
+                    <CheckCircle2 size={24} className={formData.qrOption ? "text-orange-600" : "text-slate-200"} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">L'image de couverture</label>
+                <input type="file" id="cov" name="image" className="hidden" onChange={handleChange} accept="image/*" />
+                <label htmlFor="cov" className="flex flex-col items-center justify-center w-full h-40 bg-slate-50 border-2 border-dashed border-slate-100 rounded-[2rem] cursor-pointer hover:bg-slate-100 transition-all overflow-hidden group">
+                  {formData.image ? 
+                    <div className="flex items-center gap-3 p-4 bg-white rounded-2xl shadow-sm border border-slate-100">
+                      <ImageIcon className="text-orange-600" size={24} />
+                      <span className="text-[10px] font-black uppercase tracking-tighter text-slate-500 max-w-[200px] truncate">{formData.image.name}</span>
+                      <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center"><CheckCircle2 size={14} /></div>
+                    </div> : 
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-12 h-12 flex items-center justify-center text-slate-300 group-hover:text-orange-500 transition-all">
+                        <ImageIcon size={24} />
+                      </div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ajouter une image</span>
+                    </div>
+                  }
+                </label>
+              </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex gap-4 pt-4">
+              <button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="flex-1 py-5 bg-black text-white rounded-3xl font-black text-[12px] uppercase tracking-widest shadow-2xl hover:scale-[1.02] active:scale-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                {isSubmitting ? <Loader2 size={20} className="animate-spin text-orange-500" /> : <Zap size={20} className="text-orange-500" />}
+                {isSubmitting ? "Lancement en cours..." : isEditMode ? "Sauvegarder les modifications" : "Lancer mon événement"}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 20px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #F97316; }
-      `}</style>
+
+      {showCatModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowCatModal(false)}></div>
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg p-8 md:p-10 shadow-2xl relative z-10 animate-in zoom-in-95 duration-300 overflow-y-auto max-h-[90vh]">
+            <div className="flex justify-between items-center mb-8">
+               <div className="flex items-center gap-3">
+                  <div className="p-3 bg-orange-100 text-orange-600 rounded-2xl">
+                     <Plus size={20} />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-700 tracking-tight">Nouvelle Catégorie</h3>
+               </div>
+               <button onClick={() => setShowCatModal(false)} className="p-2 text-slate-300 hover:text-slate-500"><X size={24} /></button>
+            </div>
+
+            {similarCats.length > 0 ? (
+              <div className="space-y-6">
+                 <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3">
+                    <AlertCircle className="text-amber-600 shrink-0" size={20} />
+                    <div>
+                       <p className="text-xs font-black text-amber-900 uppercase tracking-widest mb-1">Attention</p>
+                       <p className="text-[11px] font-bold text-amber-700">Des catégories similaires existent déjà. Voulez-vous en utiliser une ?</p>
+                    </div>
+                 </div>
+                 
+                 <div className="space-y-3">
+                    {similarCats.map(cat => (
+                      <button 
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, category: cat.id }));
+                          setShowCatModal(false);
+                          setSimilarCats([]);
+                        }}
+                        className="w-full p-4 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-orange-500 hover:bg-orange-50 transition-all font-bold text-slate-600 text-sm"
+                      >
+                        <span>{cat.emoji || "✨"} {cat.name}</span>
+                        <CheckCircle2 size={16} className="text-orange-500" />
+                      </button>
+                    ))}
+                 </div>
+
+                 <button 
+                    type="button"
+                    onClick={() => handleCreateCategory(true)}
+                    className="w-full py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-2 border-dashed border-slate-100 rounded-2xl hover:border-orange-200 hover:text-orange-500 transition-all"
+                 >
+                    Non, créer "{newCatName}" quand même
+                 </button>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Nom de la catégorie</label>
+                  <input 
+                    type="text" 
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    placeholder="Ex: Conférence, Sport..."
+                    className="w-full px-6 py-5 bg-slate-50 border border-slate-100 focus:border-orange-500 rounded-2xl outline-none font-bold text-slate-600 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Choisir une Icône</label>
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
+                     {LUCIDE_ICONS.map((item) => (
+                        <button
+                          key={item.name}
+                          type="button"
+                          onClick={() => setNewCatIcon(item.name)}
+                          className={`aspect-square flex items-center justify-center rounded-xl border transition-all ${
+                            newCatIcon === item.name 
+                            ? 'bg-orange-600 text-white border-orange-600 shadow-lg shadow-orange-600/20' 
+                            : 'bg-slate-50 text-slate-400 border-slate-100 hover:bg-white hover:border-orange-200'
+                          }`}
+                        >
+                          <item.icon size={20} />
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleCreateCategory(false)}
+                  disabled={catLoading || !newCatName}
+                  className="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-orange-600 transition-all disabled:opacity-50 uppercase tracking-widest text-xs"
+                >
+                  {catLoading ? <Loader2 className="animate-spin mx-auto" /> : "Valider la catégorie"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 };
 
-export default EventForm;
+export default CreateEventPage;

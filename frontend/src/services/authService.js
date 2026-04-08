@@ -44,11 +44,7 @@ const authService = {
         formData.append("image", userData.image);
       }
 
-      await api.post(`/auth/register`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await api.post(`/auth/register`, formData);
 
       return authService.login(userData.email, userData.password);
     } catch (err) {

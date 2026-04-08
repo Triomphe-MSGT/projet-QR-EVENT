@@ -151,7 +151,7 @@ const ProfileEditModal = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current.click()}
-                  className="absolute -bottom-2 -right-2 p-4 bg-blue-600 text-white rounded-2xl shadow-xl hover:bg-blue-700 transition-all hover:scale-110 border-4 border-white dark:border-gray-900"
+                  className="absolute -bottom-2 -right-2 p-4 bg-orange-600 text-white rounded-2xl shadow-xl hover:bg-orange-700 transition-all hover:scale-110 border-4 border-white dark:border-gray-900"
                 >
                   <Camera size={20} />
                 </button>
@@ -175,13 +175,13 @@ const ProfileEditModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-[11px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
-                  <User size={14} className="text-blue-500" /> Nom Complet
+                  <User size={14} className="text-orange-500" /> Nom Complet
                 </label>
                 <input
                   name="nom"
                   value={form.nom}
                   onChange={handleChange}
-                  className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-blue-500 dark:focus:border-blue-600 rounded-2xl text-base md:text-sm font-bold text-slate-500 dark:text-white transition-all outline-none placeholder:text-gray-400"
+                  className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-orange-500 dark:focus:border-orange-600 rounded-2xl text-base md:text-sm font-bold text-slate-500 dark:text-white transition-all outline-none placeholder:text-gray-400"
                   placeholder="Ex: Jean Dupont"
                 />
               </div>
@@ -195,7 +195,7 @@ const ProfileEditModal = ({
                   type="email"
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-blue-500 dark:focus:border-blue-600 rounded-2xl text-base md:text-sm font-bold text-slate-500 dark:text-white transition-all outline-none placeholder:text-gray-400"
+                  className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-orange-500 dark:focus:border-orange-600 rounded-2xl text-base md:text-sm font-bold text-slate-500 dark:text-white transition-all outline-none placeholder:text-gray-400"
                   placeholder="votre@email.com"
                 />
               </div>
@@ -209,7 +209,7 @@ const ProfileEditModal = ({
                   type="tel"
                   value={form.phone}
                   onChange={handleChange}
-                  className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-blue-500 dark:focus:border-blue-600 rounded-2xl text-base md:text-sm font-bold text-slate-500 dark:text-white transition-all outline-none placeholder:text-gray-400"
+                  className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-orange-500 dark:focus:border-orange-600 rounded-2xl text-base md:text-sm font-bold text-slate-500 dark:text-white transition-all outline-none placeholder:text-gray-400"
                   placeholder="+237 ..."
                 />
               </div>
@@ -222,7 +222,7 @@ const ProfileEditModal = ({
                   name="profession"
                   value={form.profession}
                   onChange={handleChange}
-                  className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-blue-500 dark:focus:border-blue-600 rounded-2xl text-base md:text-sm font-bold text-slate-500 dark:text-white transition-all outline-none placeholder:text-gray-400"
+                  className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-orange-500 dark:focus:border-orange-600 rounded-2xl text-base md:text-sm font-bold text-slate-500 dark:text-white transition-all outline-none placeholder:text-gray-400"
                   placeholder="Votre métier"
                 />
               </div>
@@ -260,7 +260,7 @@ const ProfileEditModal = ({
             <button
               type="submit"
               disabled={isUpdating}
-              className="flex-[2] md:flex-none md:min-w-[200px] px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50"
+              className="flex-[2] md:flex-none md:min-w-[200px] px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-orange-500/20 flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50"
             >
               {isUpdating ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

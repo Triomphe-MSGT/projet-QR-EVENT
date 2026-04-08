@@ -36,17 +36,33 @@ const getCategoryById = async (req, res, next) => {
 
 const createCategory = async (req, res, next) => {
   try {
-    const { name, emoji, description } = req.body;
+    const { name, emoji, icon, description } = req.body;
 
-    const existing = await Category.findOne({ name });
+    const existing = await Category.findOne({ name: { $regex: `^${name}$`, $options: "i" } });
     if (existing) {
       return res.status(400).json({ error: "Cette catégorie existe déjà." });
     }
 
-    const category = new Category({ name, emoji, description });
+    const category = new Category({ name, emoji, icon, description });
     const saved = await category.save();
 
     res.status(201).json(saved);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkSimilarity = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: "Nom requis." });
+
+    // Recherche de noms similaires (commençant par ou contenant le nom, insensible à la casse)
+    const similar = await Category.find({
+      name: { $regex: name, $options: "i" }
+    }).limit(5);
+
+    res.json({ similar });
   } catch (error) {
     next(error);
   }
@@ -124,4 +140,5 @@ module.exports = {
   updateCategory,
   deleteCategory,
   getCategoryByName,
+  checkSimilarity,
 };

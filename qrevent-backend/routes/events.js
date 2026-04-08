@@ -21,7 +21,7 @@ const router = express.Router();
 router.get(
   "/organizer/me",
   userExtractor,
-  authorize(["Organisateur"]),
+  authorize(["Organisateur", "Administrateur"]),
   eventsController.getEventsByOrganizer
 );
 
@@ -33,13 +33,19 @@ router.get(
 router.post(
   "/validate-qr",
   userExtractor,
-  authorize(["Organisateur", "administrateur"]),
+  authorize(["Administrateur", "Organisateur"]),
   eventsController.validateQRCodeWithEventName
 );
 
 /* =========================================================
    2. Routes publiques
    ========================================================= */
+
+/**
+ * GET /api/events/cities
+ * Récupère toutes les villes uniques présentes dans la base de données
+ */
+router.get("/cities", eventsController.getCities);
 
 /**
  * GET /api/events/
@@ -61,7 +67,7 @@ router.get("/", userExtractor, eventsController.getAllEvents);
 router.post(
   "/",
   userExtractor,
-  authorize(["administrateur", "Organisateur"]),
+  authorize(["Administrateur", "Organisateur"]),
   upload.single("image"),
   eventsController.createEvent
 );
@@ -79,7 +85,7 @@ router.post(
 router.get(
   "/:id/report",
   userExtractor,
-  authorize(["administrateur", "Organisateur"]),
+  authorize(["Administrateur", "Organisateur"]),
   eventsController.generateEventReport
 );
 
@@ -90,7 +96,7 @@ router.get(
 router.get(
   "/:id/validated-attendees",
   userExtractor,
-  authorize(["administrateur", "Organisateur"]),
+  authorize(["Administrateur", "Organisateur"]),
   eventsController.getValidatedAttendees
 );
 
@@ -123,7 +129,7 @@ router.delete(
 router.post(
   "/:id/participants",
   userExtractor,
-  authorize(["administrateur", "Organisateur"]),
+  authorize(["Administrateur", "Organisateur"]),
   eventsController.addParticipant
 );
 
@@ -134,7 +140,7 @@ router.post(
 router.delete(
   "/:id/participants/:participantId",
   userExtractor,
-  authorize(["administrateur", "Organisateur"]),
+  authorize(["Administrateur", "Organisateur"]),
   eventsController.removeParticipant
 );
 
@@ -158,7 +164,7 @@ router.get("/:id", userExtractor, eventsController.getEventById);
 router.put(
   "/:id",
   userExtractor,
-  authorize(["administrateur", "Organisateur"]),
+  authorize(["Administrateur", "Organisateur"]),
   upload.single("image"),
   eventsController.updateEvent
 );
@@ -171,7 +177,7 @@ router.put(
 router.delete(
   "/:id",
   userExtractor,
-  authorize(["administrateur", "Organisateur"]),
+  authorize(["Administrateur", "Organisateur"]),
   eventsController.deleteEvent
 );
 

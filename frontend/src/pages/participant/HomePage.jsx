@@ -18,6 +18,7 @@ import { useUserProfile } from "../../hooks/useUserProfile";
 import { useCategories } from "../../hooks/useCategories";
 import Reveal from "../../components/ui/Reveal";
 import { API_BASE_URL } from "../../slices/axiosInstance";
+import CategoryIcon from "../../components/ui/CategoryIcon";
 
 // Configuration de l'URL de base pour les fichiers statiques
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
@@ -470,7 +471,8 @@ const HomePage = () => {
                             {/* Droite : description */}
                             <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
                               <div className="space-y-1">
-                                <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[8px] font-black uppercase rounded-md border border-orange-100 tracking-wider inline-block">
+                                <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[8px] font-black uppercase rounded-md border border-orange-100 tracking-wider flex items-center gap-1 w-fit">
+                                  <CategoryIcon iconName={event.category?.icon} emoji={event.category?.emoji} className="w-2.5 h-2.5" />
                                   {event.category?.name || "Événement"}
                                 </span>
                                 <h3 className="text-[14px] font-black text-slate-800 line-clamp-2 leading-tight">
@@ -586,7 +588,8 @@ const HomePage = () => {
                                 {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}
                               </div>
                             )}
-                            <div className="absolute top-4 left-4 px-3 md:px-4 py-1.5 md:py-2 bg-white/95 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-orange-600 shadow-sm border border-orange-50">
+                            <div className="absolute top-4 left-4 px-3 md:px-4 py-1.5 md:py-2 bg-white/95 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-orange-600 shadow-sm border border-orange-50 flex items-center gap-2">
+                              <CategoryIcon iconName={event.category?.icon} emoji={event.category?.emoji} className="w-3 h-3" />
                               {event.category?.name || "Événement"}
                             </div>
                           </div>

@@ -13,10 +13,10 @@ export const StatCard = ({
   title,
   value = 0,
   icon: Icon,
-  theme = "blue",
+  theme = "orange",
   description = "",
 }) => {
-  const themeClasses = themeMap[theme] || themeMap.blue;
+  const themeClasses = themeMap[theme] || themeMap.orange;
 
   return (
     <div className={`p-6 md:p-8 rounded-[2rem] bg-gradient-to-br ${themeClasses} text-white shadow-2xl relative overflow-hidden group`}>

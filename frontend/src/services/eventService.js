@@ -43,9 +43,7 @@ export const unregisterFromEvent = async (eventId) => {
  * @param {FormData} formData
  */
 export const createEvent = async (formData) => {
-  const { data } = await api.post("/events", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const { data } = await api.post("/events", formData);
   return data;
 };
 
@@ -55,9 +53,7 @@ export const createEvent = async (formData) => {
  */
 export const updateEvent = async ({ id, formData }) => {
   if (!id) throw new Error("Event ID missing");
-  const { data } = await api.put(`/events/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const { data } = await api.put(`/events/${id}`, formData);
   return data;
 };
 
@@ -114,6 +110,14 @@ export const toggleLikeEvent = async (eventId) => {
   return data;
 };
 
+/**
+ * Fetch all unique cities.
+ */
+export const getCities = async () => {
+  const { data } = await api.get("/events/cities");
+  return data;
+};
+
 const eventService = {
   getEvents,
   getEventById,
@@ -126,5 +130,6 @@ const eventService = {
   addParticipant,
   removeParticipant,
   toggleLikeEvent,
+  getCities,
 };
 export default eventService;

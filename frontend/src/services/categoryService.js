@@ -84,6 +84,20 @@ export const deleteCategory = async (id) => {
   }
 };
 
+/**
+ * Check for similar categories.
+ * @param {string} name
+ */
+export const checkSimilarity = async (name) => {
+  try {
+    const { data } = await api.post("/categories/check-similarity", { name });
+    return data.similar;
+  } catch (error) {
+    console.error("Check similarity failed:", error);
+    throw error;
+  }
+};
+
 const categoryService = {
   getCategories,
   getCategoryByName,
@@ -91,5 +105,6 @@ const categoryService = {
   createCategory,
   updateCategory,
   deleteCategory,
+  checkSimilarity,
 };
 export default categoryService;

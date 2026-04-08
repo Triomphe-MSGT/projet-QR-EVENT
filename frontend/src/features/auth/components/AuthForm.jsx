@@ -59,6 +59,12 @@ const AuthFormRegisterConnection = () => {
       return;
     }
 
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+    if (!passwordRegex.test(registerPassword)) {
+      setError("Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial.");
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -180,6 +186,9 @@ const AuthFormRegisterConnection = () => {
                       {showRegisterPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  <p className="text-[10px] text-slate-400 font-bold px-2">
+                    Requis : 8+ caract., 1 majuscule, 1 chiffre, 1 spéc.
+                  </p>
 
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#fb923c] transition-colors" />

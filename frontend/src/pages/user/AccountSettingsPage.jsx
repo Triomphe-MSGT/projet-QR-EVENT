@@ -42,8 +42,12 @@ const AccountSettingsPage = () => {
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
     setFeedback({ type: "", message: "" });
-    if (newPassword.length < 6) {
-      setFeedback({ type: "error", message: "Le mot de passe doit faire au moins 6 caractères." });
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      setFeedback({ 
+        type: "error", 
+        message: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial." 
+      });
       return;
     }
     changePasswordMutation.mutate(

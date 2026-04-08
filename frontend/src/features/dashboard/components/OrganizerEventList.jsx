@@ -199,10 +199,10 @@ const OrganizerEventList = ({ events }) => {
                     </div>
                   </Link>
 
-                  <div className="flex items-center gap-3 self-end md:self-center">
+                  <div className="flex flex-wrap items-center gap-3 self-stretch md:self-auto md:flex-nowrap">
                     <button
                       onClick={() => handleManageParticipants(event)}
-                      className="px-6 py-3.5 bg-orange-50 text-orange-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all shadow-sm flex items-center gap-2"
+                      className="flex-1 md:flex-none px-6 py-3.5 bg-orange-50 text-orange-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all shadow-sm flex items-center justify-center gap-2"
                     >
                       <Users size={14} /> Gérer
                     </button>
@@ -210,7 +210,7 @@ const OrganizerEventList = ({ events }) => {
                     <button
                       onClick={(e) => handleDownload(e, event._id || event.id, event.name)}
                       disabled={downloadingId === (event._id || event.id)}
-                      className="px-6 py-3.5 bg-black text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 disabled:opacity-50 transition-all shadow-sm flex items-center gap-2"
+                      className="flex-1 md:flex-none px-6 py-3.5 bg-black text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
                     >
                       {downloadingId === (event._id || event.id) ? (
                         <Loader2 size={14} className="animate-spin" />
@@ -220,28 +220,30 @@ const OrganizerEventList = ({ events }) => {
                       Rapport
                     </button>
 
-                    <div className="h-10 w-[2px] bg-slate-100 hidden md:block mx-1"></div>
+                    <div className="h-10 w-[2px] bg-slate-100 hidden md:block mx-1 shrink-0"></div>
 
-                    <button
-                      onClick={() => handleEdit(event._id || event.id)}
-                      className="p-3.5 text-slate-400 hover:text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
-                    >
-                      <Edit size={18} />
-                    </button>
+                    <div className="flex gap-2 w-full md:w-auto justify-end md:justify-start">
+                      <button
+                        onClick={() => handleEdit(event._id || event.id)}
+                        className="p-3.5 text-slate-400 hover:text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
+                      >
+                        <Edit size={18} />
+                      </button>
 
-                    <button
-                      onClick={() => handleDelete(event)}
-                      disabled={!allowed || (deleteMutation.isPending && deleteMutation.variables === (event._id || event.id))}
-                      className={`p-3.5 rounded-xl transition-all ${allowed ? "text-slate-400 hover:text-red-500 hover:bg-red-50" : "opacity-30 cursor-not-allowed"}`}
-                    >
-                      {deleteMutation.isPending && deleteMutation.variables === (event._id || event.id) ? (
-                        <Loader2 size={18} className="animate-spin" />
-                      ) : (
-                        <Trash2 size={18} />
-                      )}
-                    </button>
-                    
-                    <ChevronRight size={20} className="text-slate-200 group-hover:translate-x-1 group-hover:text-orange-500 transition-all ml-2" />
+                      <button
+                        onClick={() => handleDelete(event)}
+                        disabled={!allowed || (deleteMutation.isPending && deleteMutation.variables === (event._id || event.id))}
+                        className={`p-3.5 rounded-xl transition-all ${allowed ? "text-slate-400 hover:text-red-500 hover:bg-red-50" : "opacity-30 cursor-not-allowed"}`}
+                      >
+                        {deleteMutation.isPending && deleteMutation.variables === (event._id || event.id) ? (
+                          <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={18} />
+                        )}
+                      </button>
+                      
+                      <ChevronRight size={20} className="text-slate-200 group-hover:translate-x-1 group-hover:text-orange-500 transition-all ml-2" />
+                    </div>
                   </div>
                 </div>
               );

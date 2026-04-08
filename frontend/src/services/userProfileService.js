@@ -15,9 +15,7 @@ const userProfileService = {
     const formData = new FormData();
     formData.append("avatar", file);
 
-    const { data } = await api.post("/users/avatar", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const { data } = await api.post("/users/avatar", formData);
     return data;
   },
 
