@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Home, Search, QrCode, User, Plus, Facebook, Twitter, Instagram, Linkedin, MapPin, Mail, Phone, ArrowRight } from "lucide-react";
+import { Home, Search, QrCode, User, Plus, Facebook, Twitter, Instagram, Linkedin, MapPin, Mail, Phone, ArrowRight, Globe, Lock } from "lucide-react";
 
 const Footer = () => {
   const location = useLocation();
@@ -32,30 +32,25 @@ const Footer = () => {
       )}
 
       {/* Plus Menu Sheet */}
-      <div className={`fixed bottom-0 left-0 right-0 z-[120] lg:hidden bg-white rounded-t-[2.5rem] shadow-2xl transition-all duration-300 transform ${isPlusMenuOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+      <div className={`fixed bottom-0 left-0 right-0 z-[120] lg:hidden bg-white rounded-t-[2.5rem] shadow-2xl transition-all duration-500 transform ${isPlusMenuOpen ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="p-8 space-y-6">
            <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-2" />
-           <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest text-center">Espace Créateur</h3>
-           <div className="grid grid-cols-3 gap-4">
-              <Link to="/createevent" onClick={() => setIsPlusMenuOpen(false)} className="flex flex-col items-center gap-3 group">
-                 <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center shadow-inner group-active:scale-95 transition-transform">
-                    <Plus size={24} strokeWidth={3} />
+           <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest text-center">Créer un événement</h3>
+           <div className="grid grid-cols-2 gap-4">
+              <Link to="/createevent?visibility=public" onClick={() => setIsPlusMenuOpen(false)} className="flex flex-col items-center gap-3 group">
+                 <div className="w-full h-20 bg-orange-50 text-orange-600 rounded-2xl flex flex-col items-center justify-center shadow-inner group-active:scale-95 transition-transform border border-orange-100">
+                    <Globe size={24} strokeWidth={3} />
+                    <span className="text-[10px] font-black uppercase mt-1">Public</span>
                  </div>
-                 <span className="text-[10px] font-black uppercase text-slate-400">Créer</span>
               </Link>
-              <Link to="/scan" onClick={() => setIsPlusMenuOpen(false)} className="flex flex-col items-center gap-3 group">
-                 <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner group-active:scale-95 transition-transform">
-                    <Search size={22} strokeWidth={3} />
+              <Link to="/createevent?visibility=private" onClick={() => setIsPlusMenuOpen(false)} className="flex flex-col items-center gap-3 group">
+                 <div className="w-full h-20 bg-blue-50 text-blue-600 rounded-2xl flex flex-col items-center justify-center shadow-inner group-active:scale-95 transition-transform border border-blue-100">
+                    <Lock size={24} strokeWidth={3} />
+                    <span className="text-[10px] font-black uppercase mt-1">Privé</span>
                  </div>
-                 <span className="text-[10px] font-black uppercase text-slate-400">Scanner</span>
-              </Link>
-              <Link to="/dashboard" onClick={() => setIsPlusMenuOpen(false)} className="flex flex-col items-center gap-3 group">
-                 <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner group-active:scale-95 transition-transform">
-                    <Home size={22} strokeWidth={3} />
-                 </div>
-                 <span className="text-[10px] font-black uppercase text-slate-400">Stats</span>
               </Link>
            </div>
+           <p className="text-[10px] text-center text-slate-400 font-medium italic">Un événement privé n'est pas visible sur la plateforme publique.</p>
         </div>
       </div>
 

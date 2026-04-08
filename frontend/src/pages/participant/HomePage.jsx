@@ -47,30 +47,27 @@ const HomePage = () => {
   const [newsLoading, setNewsLoading] = useState(true);
   const scrollRef = useRef(null);
 
-  // Auto-scroll logic (Desktop: Horizontal | Mobile: Vertical)
+  // Auto-scroll logic (Horizontal scroll on all devices)
   useEffect(() => {
     let scrollInterval;
-    if (!newsLoading && scrollRef.current) {
+    if (!newsLoading && scrollRef.current && liveNews.length > 0) {
+      // Small adjustment to avoid smooth scrolling conflicts if any
+      if (scrollRef.current.style) {
+         scrollRef.current.style.scrollBehavior = 'auto';
+      }
+      
       scrollInterval = setInterval(() => {
-        if (scrollRef.current && !scrollRef.current.matches(':hover')) {
-          if (isMobile) {
-            // Vertical scroll for mobile list
-            scrollRef.current.scrollTop += 0.5;
-            if (scrollRef.current.scrollTop >= (scrollRef.current.scrollHeight - scrollRef.current.clientHeight) / 2) {
-              scrollRef.current.scrollTop = 0;
-            }
-          } else {
-            // Horizontal scroll for desktop marquee
-            scrollRef.current.scrollLeft += 0.5;
-            if (scrollRef.current.scrollLeft >= (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) / 2) {
-              scrollRef.current.scrollLeft = 0;
-            }
+        if (scrollRef.current && !scrollRef.current.matches(':hover') && !scrollRef.current.matches(':active')) {
+          scrollRef.current.scrollLeft += 1;
+          
+          if (scrollRef.current.scrollLeft >= (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) / 2) {
+            scrollRef.current.scrollLeft = 0;
           }
         }
-      }, 30); // 0.5px every 30ms -> super slow and smooth
+      }, 30); // 1px every 30ms
     }
     return () => clearInterval(scrollInterval);
-  }, [newsLoading, liveNews, isMobile]);
+  }, [newsLoading, liveNews]);
 
   // Fetch real-time tech events/news from DEV.to API
   useEffect(() => {

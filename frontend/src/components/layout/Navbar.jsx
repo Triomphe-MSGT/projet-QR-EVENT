@@ -29,6 +29,7 @@ const Navbar = () => {
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const { data: notifications } = useNotifications({ enabled: !!token });
@@ -46,6 +47,7 @@ const Navbar = () => {
   const handleLogout = () => {
     dispatch(logout());
     queryClient.clear();
+    setIsSidebarOpen(false);
     navigate("/login");
   };
 
@@ -75,6 +77,14 @@ const Navbar = () => {
         <div className="max-w-[1800px] mx-auto px-4 md:px-8 flex items-center justify-between h-full">
           
           <div className="flex items-center gap-4">
+             {/* Burger Menu for Mobile */}
+             <button 
+               onClick={() => setIsSidebarOpen(true)}
+               className="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-50 rounded-xl transition-colors active:scale-95"
+             >
+               <Menu size={22} />
+             </button>
+
              <Link to="/home" className="flex items-center group shrink-0">
                 <img src="/logo.png" alt="QR-EVENT" className="h-8 md:h-12 w-auto object-contain transition-transform group-hover:scale-105" />
                 <span className="text-sm md:text-2xl font-black text-slate-500 uppercase tracking-tighter hidden sm:inline-block">QR <span className="text-orange-600">Event</span></span>
@@ -184,6 +194,105 @@ const Navbar = () => {
         </div>
       </nav>
 
+      {/* MOBILE SIDEBAR (Drawer) */}
+      <div 
+        className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] lg:hidden transition-all duration-300 ${isSidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
+      <div className={`fixed top-0 left-0 bottom-0 w-80 bg-white z-[110] lg:hidden shadow-2xl transition-transform duration-500 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex flex-col h-full">
+          {/* Sidebar Header */}
+          <div className="p-6 bg-slate-50/50 border-b border-slate-100">
+            <div className="flex items-center justify-between mb-8">
+              <Link to="/home" onClick={() => setIsSidebarOpen(false)} className="flex items-center group">
+                 <img src="/logo.png" alt="QR-EVENT" className="h-10 w-auto object-contain" />
+              </Link>
+              <button 
+                onClick={() => setIsSidebarOpen(false)}
+                className="p-2 text-slate-400 hover:bg-white rounded-xl transition-colors shadow-sm border border-slate-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {token && user && (
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center relative shadow-lg">
+                  {user?.image || user?.profilePicture ? (
+                     <img src={`${STATIC_BASE_URL}/${user?.image || user?.profilePicture}`} className="w-full h-full object-cover" alt="" />
+                  ) : null}
+                  <span className="text-white text-lg font-black italic">{(user?.nom || user?.name || "U").charAt(0).toUpperCase()}</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-slate-700 truncate">{user?.name || user?.nom}</p>
+                  <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest">{role}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar Navigation */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Navigation Principale</div>
+            
+            <Link to="/home" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 p-4 rounded-2xl text-[12px] font-black uppercase tracking-wide group transition-all ${isActive('/home') ? 'bg-orange-50 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}>
+              <Home size={20} /> Accueil
+            </Link>
+
+            <Link to="/events" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 p-4 rounded-2xl text-[12px] font-black uppercase tracking-wide group transition-all ${isActive('/events') ? 'bg-orange-50 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}>
+              <Search size={20} /> Événements
+            </Link>
+
+            <Link to="/my-qrcodes" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 p-4 rounded-2xl text-[12px] font-black uppercase tracking-wide group transition-all ${isActive('/my-qrcodes') ? 'bg-orange-50 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}>
+              <QrCode size={20} /> Mes Billets
+            </Link>
+
+            {/* Demandé : Devenir organisateur (visible si simple participant) */}
+            {role === "Participant" && (
+              <Link to="/user-profile" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 p-4 rounded-2xl text-[12px] font-black uppercase tracking-wide text-blue-600 bg-blue-50/50 border border-blue-100 mt-4 group transition-all animate-pulse-subtle">
+                <ShieldAlert size={20} /> Devenir organisateur
+              </Link>
+            )}
+
+            {(role === "Administrateur" || role === "Organisateur") && (
+              <>
+                <div className="pt-4 px-3 mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Espace Créateur</div>
+                
+                <Link to="/dashboard" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 p-4 rounded-2xl text-[12px] font-black uppercase tracking-wide group transition-all ${isActive('/dashboard') ? 'bg-orange-50 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}>
+                  <LayoutDashboard size={20} /> Dashboard
+                </Link>
+
+                <Link to="/scan" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 p-4 rounded-2xl text-[12px] font-black uppercase tracking-wide group transition-all ${isActive('/scan') ? 'bg-orange-50 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}>
+                  <Scan size={20} /> Scanner
+                </Link>
+              </>
+            )}
+
+            <div className="pt-8 px-3 mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Aide & Paramètres</div>
+
+            <Link to="/qrevent_help" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 p-4 rounded-2xl text-[12px] font-black uppercase tracking-wide group transition-all ${isActive('/qrevent_help') ? 'bg-orange-50 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}>
+              <BookOpen size={20} /> Guide d'utilisation
+            </Link>
+
+            <Link to="/account-settings" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 p-4 rounded-2xl text-[12px] font-black uppercase tracking-wide group transition-all ${isActive('/account-settings') ? 'bg-orange-50 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}>
+              <Settings size={20} /> Paramètres
+            </Link>
+          </div>
+
+          {/* Sidebar Footer */}
+          {token && (
+            <div className="p-4 border-t border-slate-50">
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl text-[12px] font-black uppercase tracking-widest bg-red-50 text-red-500 hover:bg-red-100 transition-all transition-colors"
+              >
+                <LogOut size={20} /> Déconnecter
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       <style>{`
         @keyframes swing {
           0%, 100% { transform: rotate(0deg); }
@@ -193,6 +302,12 @@ const Navbar = () => {
           80% { transform: rotate(-5deg); }
         }
         .animate-swing { animation: swing 1s ease-in-out infinite; transform-origin: top center; }
+        
+        @keyframes pulse-subtle {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.8; }
+        }
+        .animate-pulse-subtle { animation: pulse-subtle 3s ease-in-out infinite; }
       `}</style>
     </>
   );
