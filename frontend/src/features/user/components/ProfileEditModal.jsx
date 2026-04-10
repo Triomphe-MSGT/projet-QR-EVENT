@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import { API_BASE_URL } from "../../../slices/axiosInstance";
+import { getSafeImageUrl } from "../../../utils/imageUtils";
 
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
@@ -38,13 +39,6 @@ const ProfileEditModal = ({
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
 
-  const getAvatarUrl = (imagePath) => {
-    if (!imagePath)
-      return "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
-    if (imagePath.startsWith("http")) return imagePath;
-    return `${STATIC_BASE_URL}/${imagePath}`;
-  };
-
   useEffect(() => {
     setForm({
       nom: user.nom || "",
@@ -53,7 +47,7 @@ const ProfileEditModal = ({
       phone: user.phone || "",
       sexe: user.sexe || "Autre",
     });
-    setPreviewUrl(getAvatarUrl(user.image));
+    setPreviewUrl(getSafeImageUrl(user.image, 'user', user.nom));
     setSelectedFile(null);
   }, [user]);
 
@@ -79,7 +73,7 @@ const ProfileEditModal = ({
   };
 
   const handleCancel = () => {
-    setPreviewUrl(getAvatarUrl(user.image));
+    setPreviewUrl(getSafeImageUrl(user.image, 'user', user.nom));
     setSelectedFile(null);
     onClose();
   };

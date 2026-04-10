@@ -6,6 +6,7 @@ import { useEvents } from "../../hooks/useEvents";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { History, ArrowLeft, LayoutGrid, Search, Filter, Calendar, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getSafeImageUrl } from "../../utils/imageUtils";
 
 const EventListPage = () => {
   const navigate = useNavigate();
@@ -181,16 +182,16 @@ const EventListPage = () => {
                     className="group bg-white rounded-2xl flex gap-3 shadow-[0_1px_6px_rgba(0,0,0,0.05)] border border-slate-100 active:scale-[0.98] transition-all overflow-hidden p-3 cursor-pointer"
                   >
                     {/* Gauche : image */}
-                    <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-slate-100 relative self-center">
-                      {event.coverImage || event.imageUrl ? (
-                        <img
-                          src={event.coverImage || event.imageUrl}
-                          className="w-full h-full object-cover"
-                          alt={event.title || event.name}
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : (
+                     <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-slate-100 relative self-center">
+                       {getSafeImageUrl(event.coverImage || event.imageUrl) ? (
+                         <img
+                           src={getSafeImageUrl(event.coverImage || event.imageUrl)}
+                           className="w-full h-full object-cover"
+                           alt={event.title || event.name}
+                           loading="lazy"
+                           decoding="async"
+                         />
+                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
                           <span className="text-white font-black text-3xl drop-shadow">
                             {(event.title || event.name || "E").charAt(0).toUpperCase()}

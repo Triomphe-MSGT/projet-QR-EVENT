@@ -1,6 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { API_BASE_URL } from "../../../slices/axiosInstance";
+import { getSafeImageUrl } from "../../../utils/imageUtils";
 import { Calendar, MapPin, ArrowRight, Zap, Heart, Share2, Clock } from "lucide-react";
 import { useToggleLikeEvent } from "../../../hooks/useEvents";
 import CategoryIcon from "../../../components/ui/CategoryIcon";
@@ -35,15 +36,6 @@ const EventCard = ({ event, handleDetails }) => {
     }
   };
 
-  /**
-   * Construit l'URL complète de l'image
-   */
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith("http")) return imagePath;
-    return `${STATIC_BASE_URL}/${imagePath}`;
-  };
-
   // --- Actions ---
   const handleLike = (e) => {
     e.stopPropagation();
@@ -71,7 +63,7 @@ const EventCard = ({ event, handleDetails }) => {
     }
   };
 
-  const imageUrl = getImageUrl(event.imageUrl || event.coverImage);
+  const imageUrl = getSafeImageUrl(event.imageUrl || event.coverImage);
   const date = formatDate(event.startDate || event.date);
 
   return (

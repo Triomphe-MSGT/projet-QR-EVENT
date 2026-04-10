@@ -43,6 +43,15 @@ const HomePage = () => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  /**
+   * Construit l'URL complète de l'image
+   */
+  const getEventImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith("http")) return path;
+    return `${STATIC_BASE_URL}/${path}`;
+  };
   
   const [liveNews, setLiveNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(true);
@@ -150,23 +159,29 @@ const HomePage = () => {
                    const shouldShow = lastSeen !== today;
                    if (!shouldShow) return null;
                    localStorage.setItem('last_greeting_date', today);
-                   const displayName = user?.nom || user?.firstName || user?.name || "Invité";
-                   return (
-                    <div className="flex items-center justify-between px-1 pt-2">
-                      <div className="space-y-0.5">
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Content de vous revoir !</p>
-                        <h1 className="text-xl font-black text-slate-900 tracking-tight">Bonjour, <span className="text-orange-500">{displayName}</span> !</h1>
-                      </div>
-                      <Link to={token ? "/user-profile" : "/login"} className="w-11 h-11 rounded-2xl bg-slate-50 border border-slate-100 p-1 shrink-0">
-                        <div className="w-full h-full rounded-xl overflow-hidden relative flex items-center justify-center bg-gradient-to-br from-orange-400 to-amber-600">
-                          {(user?.image || user?.profilePicture) ? (
-                            <img src={`${STATIC_BASE_URL}/${user?.image || user?.profilePicture}`} className="w-full h-full object-cover" alt="Profile" loading="lazy" decoding="async" onError={(e) => { e.target.style.display = 'none'; }} />
-                          ) : null}
-                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black italic pointer-events-none">{displayName.charAt(0).toUpperCase()}</span>
+
+                    const displayName = user?.nom || user?.firstName || user?.name || "Invité";
+                    const userImagePath = user?.image || user?.profilePicture;
+                    const finalUserImageUrl = userImagePath 
+                      ? (userImagePath.startsWith("http") ? userImagePath : `${STATIC_BASE_URL}/${userImagePath}`)
+                      : null;
+
+                    return (
+                      <div className="flex items-center justify-between px-1 pt-2">
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Content de vous revoir !</p>
+                          <h1 className="text-xl font-black text-slate-900 tracking-tight">Bonjour, <span className="text-orange-500">{displayName}</span> !</h1>
                         </div>
-                      </Link>
-                    </div>
-                   );
+                        <Link to={token ? "/user-profile" : "/login"} className="w-11 h-11 rounded-2xl bg-slate-50 border border-slate-100 p-1 shrink-0">
+                          <div className="w-full h-full rounded-xl overflow-hidden relative flex items-center justify-center bg-gradient-to-br from-orange-400 to-amber-600">
+                            {finalUserImageUrl ? (
+                              <img src={finalUserImageUrl} className="w-full h-full object-cover" alt="Profile" loading="lazy" decoding="async" onError={(e) => { e.target.style.display = 'none'; }} />
+                            ) : null}
+                            <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black italic pointer-events-none">{displayName.charAt(0).toUpperCase()}</span>
+                          </div>
+                        </Link>
+                      </div>
+                    );
                 })()}
 
                 {/* ---- 2. Barre de recherche + bouton Filtre côte à côte ---- */}
@@ -235,9 +250,9 @@ const HomePage = () => {
                         onClick={() => navigate(`/events/${featuredEvent._id}`)}
                         className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden shadow-xl group active:scale-[0.99] transition-transform cursor-pointer"
                       >
-                        {featuredEvent.coverImage || featuredEvent.imageUrl ? (
+                        {getEventImageUrl(featuredEvent.coverImage || featuredEvent.imageUrl) ? (
                           <img
-                            src={featuredEvent.coverImage || featuredEvent.imageUrl}
+                            src={getEventImageUrl(featuredEvent.coverImage || featuredEvent.imageUrl)}
                             alt={featuredEvent.title || featuredEvent.name}
                             loading="eager"
                             decoding="async"
@@ -451,9 +466,9 @@ const HomePage = () => {
                           >
                             {/* Gauche : image */}
                             <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-slate-100 relative self-center">
-                              {event.coverImage || event.imageUrl ? (
+                              {getEventImageUrl(event.coverImage || event.imageUrl) ? (
                                 <img
-                                  src={event.coverImage || event.imageUrl}
+                                  src={getEventImageUrl(event.coverImage || event.imageUrl)}
                                   className="w-full h-full object-cover"
                                   alt={event.title}
                                   loading="lazy"
@@ -581,8 +596,8 @@ const HomePage = () => {
                           style={{ contentVisibility: 'auto' }}
                         >
                           <div className="h-40 md:h-60 overflow-hidden relative bg-slate-100 flex items-center justify-center">
-                            {event.coverImage || event.imageUrl ? (
-                              <img src={event.coverImage || event.imageUrl} alt={event.title || event.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+                            {getEventImageUrl(event.coverImage || event.imageUrl) ? (
+                              <img src={getEventImageUrl(event.coverImage || event.imageUrl)} alt={event.title || event.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
                             ) : (
                               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-500 to-amber-600 text-white font-black text-5xl md:text-6xl group-hover:scale-105 transition-transform duration-1000">
                                 {(event.title || event.name)?.charAt(0).toUpperCase() || "?"}

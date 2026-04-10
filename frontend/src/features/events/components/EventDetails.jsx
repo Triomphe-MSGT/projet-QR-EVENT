@@ -19,6 +19,7 @@ import {
   CheckCircle,
   ArrowLeft,
 } from "lucide-react";
+import { getSafeImageUrl } from "../../../utils/imageUtils";
 
 import { API_BASE_URL } from "../../../slices/axiosInstance";
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
@@ -151,11 +152,7 @@ const EventDetails = ({ event }) => {
     };
   };
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith("http")) return imagePath;
-    return `${STATIC_BASE_URL}/${imagePath}`;
-  };
+  const imageUrl = getSafeImageUrl(event.imageUrl);
 
   const handleShare = async () => {
     const shareData = {
@@ -176,7 +173,6 @@ const EventDetails = ({ event }) => {
     }
   };
 
-  const imageUrl = getImageUrl(event.imageUrl);
   const dateInfo = formatDate(event.startDate);
 
   return (
@@ -565,9 +561,9 @@ const EventDetails = ({ event }) => {
                   className="flex gap-4 bg-white p-4 rounded-3xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 active:scale-[0.98] transition-all cursor-pointer group hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] hover:-translate-y-1"
                 >
                   <div className="w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-inner relative">
-                    {similarEvent.imageUrl ? (
+                    {getSafeImageUrl(similarEvent.imageUrl) ? (
                       <img
-                        src={getImageUrl(similarEvent.imageUrl)}
+                        src={getSafeImageUrl(similarEvent.imageUrl)}
                         alt={similarEvent.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />

@@ -30,6 +30,7 @@ import {
   useUserEvents,
 } from "../../hooks/useUserProfile";
 import { API_BASE_URL } from "../../slices/axiosInstance";
+import { getSafeImageUrl } from "../../utils/imageUtils";
 
 const STATIC_BASE_URL = API_BASE_URL.replace("/api", "");
 
@@ -86,11 +87,7 @@ const ProfilePage = () => {
 
   const handleUploadPhoto = (file) => uploadAvatar(file);
 
-  const getAvatarUrl = (imagePath) => {
-    if (!imagePath) return `https://ui-avatars.com/api/?name=${user?.nom || 'User'}&background=F97316&color=fff&bold=true`;
-    if (imagePath.startsWith("http")) return imagePath;
-    return `${STATIC_BASE_URL}/${imagePath}`;
-  };
+  const avatarUrl = getSafeImageUrl(user.image, 'user', user.nom);
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("fr-FR", {
@@ -142,7 +139,7 @@ const ProfilePage = () => {
                  <div className="relative shrink-0">
                     <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-sm overflow-hidden bg-slate-100">
                        <img
-                         src={getAvatarUrl(user.image)}
+                         src={avatarUrl}
                          alt={user.nom}
                          className="w-full h-full object-cover"
                        />
